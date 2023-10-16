@@ -8,3 +8,4 @@ from .chat import chat
 from .login import login
 from .list_plugins import list_plugins
 from .add_plugin import add_plugin
+from .add_source import add_source

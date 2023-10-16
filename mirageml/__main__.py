@@ -2,7 +2,7 @@ import argparse
 import keyring
 import time
 
-from .commands import hello, chat, login, list_plugins, add_plugin
+from .commands import hello, chat, login, list_plugins, add_plugin, add_source
 from .constants import SERVICE_ID, supabase
 
 def main():
@@ -13,15 +13,21 @@ def main():
     subparsers.add_parser('login', help='Login to Mirage ML')
     subparsers.add_parser('chat', help='Chat with Mirage ML')
 
+    # List Parser
     list_parser = subparsers.add_parser('list', help='List resources')
     list_subparser = list_parser.add_subparsers(dest="subcommand")
     list_subparser.add_parser('plugins', help='List connected plugins')
 
+    # Add Parser
     add_parser = subparsers.add_parser('add', help='Add a new resource')
     add_subparser = add_parser.add_subparsers(dest="subcommand")
-
+    ## Add Plugin
     add_plugin_parser = add_subparser.add_parser('plugin', help='Name of the plugin.')
     add_plugin_parser.add_argument('name', help='Name of the plugin. Supported plugins: gdrive, notion')
+    ## Add Source
+    add_source_parser = add_subparser.add_parser('source', help='Add a new source')
+    add_source_parser.add_argument('-n', '--name', help='Name of the source')
+    add_source_parser.add_argument('-l', '--link', help='Link for the source')
 
     args = parser.parse_args()
 
@@ -53,6 +59,8 @@ def main():
         list_plugins()
     elif args.command == "add" and args.subcommand == "plugin":
         add_plugin({ "plugin": args.name })
+    elif args.command == "add" and args.subcommand == "source":
+        add_source({ "name": args.name, "link": args.link })
     else:
         parser.print_help()
 
