@@ -30,6 +30,11 @@ pip3 install -U mirageml
 
 ## Usage
 
+Before using <mirageml>, please set the following environment variables:
+
+- OPENAI_API_KEY: Used for <using ChatGPT and quering embeddings>. 
+
+
 ### Hello Command
 
 To use the `hello` command, run the following command:
