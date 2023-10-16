@@ -3,8 +3,8 @@ from setuptools import setup, find_packages
 setup(
     name='mirageml',
     version='0.0.11',
-    author='Aman Kishore',
-    author_email='aman@mirageml.com',
+    author='Mirage ML Inc',
+    author_email='support@mirageml.com',
     description='A basic pip package with basic commands like help and hello world',
     packages=find_packages(),
     install_requires=[
