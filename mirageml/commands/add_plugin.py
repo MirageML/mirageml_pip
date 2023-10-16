@@ -21,9 +21,22 @@ def add_gdrive():
     m.start_web_server()
     m.open_browser()
 
-def add(args):
+def add_notion():
+    m = LoginManager(
+        handler="notion_auth_handler",
+        provider="notion",
+        provider_options={
+            "redirect_to": constants.REDIRECT_URI,
+        }
+    )
+    m.start_web_server()
+    m.open_browser()
+
+def add_plugin(args):
     plugin_name = args["plugin"]
     if plugin_name == "gdrive":
         add_gdrive()
+    elif plugin_name == "notion":
+        add_notion()
     else:
         print("Plugin not support. Supported plugins: gdrive")

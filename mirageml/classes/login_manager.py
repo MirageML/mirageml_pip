@@ -29,6 +29,8 @@ class LoginManager:
       return Handler
     elif self._handler == "google_auth_handler":
       return GoogleHandler
+    elif self._handler == "notion_auth_handler":
+      return NotionHandler
 
   def _start_local_server(self):
     self._server = http.server.HTTPServer(('localhost', PORT), self.select_handler())
@@ -141,6 +143,31 @@ class GoogleHandler(Handler):
       requests.post(f"{SUPABASE_URL}/rest/v1/user_google_tokens", json=params, headers=headers)
 
 
+    sys.exit(0)
+
+class NotionHandler(Handler):
+  def capture_fragment_handler(self):
+    self.send_response(200)
+    self.send_header('Content-type', 'text/html')
+    self.end_headers()
+    self.wfile.write(b'All set, feel free to close this tab')
+    # parse the fragment for the access token and refresh token
+    fragment = self.path.split('?')[1]
+    info = dict(kv.split('=') for kv in fragment.split('&'))
+    access_token, user_id = self.update_keyring(info)
+    provider_token = info['provider_token']
+    if provider_token:
+      params = {
+        "user_id": user_id,
+        "provider_token": provider_token,
+      }
+      headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+        "Prefer": "resolution=merge-duplicates",
+      }
+      requests.post(f"{SUPABASE_URL}/rest/v1/user_notion_tokens", json=params, headers=headers)
     sys.exit(0)
 
   def do_GET(self):
