@@ -1,35 +1,100 @@
-import webbrowser
-import requests
+import http.server
+import threading
+import platform
+import subprocess
+import sys
+import time
 
-SUPABASE_URL = "https://kfskvbhwrwpbruczecka.supabase.co"
-SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imtmc2t2Ymh3cndwYnJ1Y3plY2thIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTY5NzA1MjkwNiwiZXhwIjoyMDEyNjI4OTA2fQ.HhMCQvmOHFo13E2fCBDXtm9KEZZOPvQ41jnz6MCJ3Rk"
+from mirageml import constants
 
-def google_login():
-    # Construct the Supabase Google login URL
-    auth_url = f"{SUPABASE_URL}/auth/v1/authorize?provider=google&redirect_to=http://mirageml.com"
+PORT = constants.PORT
+REDIRECT_URI = constants.REDIRECT_URI
+supabase = constants.supabase
 
-    # Open the authentication URL in the user's browser
-    webbrowser.open(auth_url)
+class LoginManager:
+  def __init__(self):
+    self._server = None
+    self._thread = None
 
-    # Ask the user to paste the redirect URL after logging in with Google
-    print("Please copy the full redirect URL from the browser after logging in and paste it here.")
-    redirect_url = input("Enter the redirect URL: ")
+  def stop_web_server(self):
+    """Stop the local web server."""
+    if self._server:
+        self._server.shutdown()
+        self._server.server_close()
 
-    # Extract the access token from the redirect URL
-    token = extract_token_from_url(redirect_url)
-    if token:
-        print("Logged in successfully!")
-        # You can save this token and use it for making authenticated Supabase API calls
-        return token
-    else:
-        print("Failed to log in.")
-        return None
+  def start_web_server(self):
+    """Kick off a thread for the local webserver."""
+    th = threading.Thread(target=self._start_local_server)
+    th.start()
 
-def extract_token_from_url(url):
-    # Simple parsing to get the access token from the redirect URL
-    token_prefix = "access_token="
-    if token_prefix in url:
-        token = url.split(token_prefix)[-1].split("&")[0]
-        return token
-    return None
+  def _start_local_server(self):
+    self._server = http.server.HTTPServer(('localhost', PORT), Handler)
+    print(f'Serving on port {PORT}')
+    self._server.serve_forever()
 
+  def open_browser(self):
+    """Opens the browser to the login page."""
+    # Waits for the server to start.
+    while self._server is None:
+        time.sleep(1)
+        oauth_response = supabase.auth.sign_in_with_oauth({
+            "provider": "google",
+            "options": {
+                "redirect_to": REDIRECT_URI
+            }
+        })
+        url = oauth_response.url
+        system = platform.system()
+        if system == 'Darwin':
+            cmd = ['open', url]
+        elif system == 'Linux':
+            cmd = ['xdg-open', url]
+        elif system == 'Windows':
+            cmd = ['cmd', '/c', 'start', url.replace('&', '^&')]
+        else:
+            raise RuntimeError(f'Unsupported system: {system}')
+        subprocess.run(cmd, check=True)
+
+class Handler(http.server.SimpleHTTPRequestHandler):
+  """Handle the response from accounts.google.com."""
+
+  # Sketchy static variable to hold response.
+  info = None
+
+  def do_GET(self):
+    if self.path.startswith("/callback"):
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        # Serve an HTML page with JavaScript to send the fragment to the server
+        self.wfile.write(b"""
+        <html>
+            <body>
+                <script>
+                    // Send the fragment to the server
+                    fetch('/capture_fragment?' + location.hash.substr(1))
+                    .then(() => {
+                        document.body.innerHTML = 'All set, feel free to close this tab';
+                        setTimeout(() => window.close(), 1000);
+                    });
+                </script>
+            </body>
+        </html>
+        """)
+    elif self.path.startswith("/capture_fragment"):
+        print(self.path)
+        self.send_response(200)
+        self.send_header('Content-type', 'text/html')
+        self.end_headers()
+        self.wfile.write(b'All set, feel free to close this tab')
+        # close the server and thread
+        sys.exit(0)
+
+
+def is_header(info):
+  return 'alg' in info and 'typ' in info
+
+def login():
+  m = LoginManager()
+  m.start_web_server()
+  m.open_browser()
