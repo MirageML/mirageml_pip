@@ -4,9 +4,12 @@ import platform
 import subprocess
 import sys
 import time
+import keyring
+import jwt
 
 from mirageml import constants
 
+SERVICE_ID = constants.SERVICE_ID
 PORT = constants.PORT
 REDIRECT_URI = constants.REDIRECT_URI
 supabase = constants.supabase
@@ -82,12 +85,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         </html>
         """)
     elif self.path.startswith("/capture_fragment"):
-        print(self.path)
         self.send_response(200)
         self.send_header('Content-type', 'text/html')
         self.end_headers()
         self.wfile.write(b'All set, feel free to close this tab')
-        # close the server and thread
+        # parse the fragment for the access token and refresh token
+        fragment = self.path.split('?')[1]
+        info = dict(kv.split('=') for kv in fragment.split('&'))
+        access_token = info['access_token']
+        decoded = jwt.decode(access_token, algorithms=["HS256"], options={ "verify_signature": False })
+        keyring.set_password(SERVICE_ID, 'access_token', info['access_token'])
+        keyring.set_password(SERVICE_ID, 'refresh_token', info['refresh_token'])
+        keyring.set_password(SERVICE_ID, 'user_id', decoded["sub"])
+        keyring.set_password(SERVICE_ID, 'email', decoded["email"])
         sys.exit(0)
 
 

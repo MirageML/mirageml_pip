@@ -1,4 +1,7 @@
 from supabase import create_client
+
+SERVICE_ID = "mirageml"
+
 PORT = 9998
 REDIRECT_URI = f"http://localhost:{PORT}/callback"
 SUPABASE_URL = "https://kfskvbhwrwpbruczecka.supabase.co"
