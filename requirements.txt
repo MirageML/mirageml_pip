@@ -1,3 +1,4 @@
 supabase
 keyring
 pyjwt
+requests
