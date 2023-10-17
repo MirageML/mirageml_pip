@@ -12,6 +12,18 @@ PACKAGE_DIR = os.path.dirname(__file__)
 def get_qdrant_db():
     return QdrantClient(path=PACKAGE_DIR)
 
+def exists_qdrant_db(collection_name="test"):
+    qdrant_client = get_qdrant_db()
+    return collection_name in [x.name for x in qdrant_client.get_collections().collections]
+
+def list_qdrant_db():
+    qdrant_client = get_qdrant_db()
+    return [x.name for x in qdrant_client.get_collections().collections]
+
+def delete_qdrant_db(collection_name="test"):
+    qdrant_client = get_qdrant_db()
+    qdrant_client.delete_collection(collection_name=collection_name)
+    
 def create_qdrant_db(data, metadata, collection_name="test"):
     qdrant_client = get_qdrant_db()
     vectors = get_embedding(data)

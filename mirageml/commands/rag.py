@@ -9,7 +9,6 @@ def rag_chat(collections: list = None):
         print("Please specify at least 1 source! Use `mirageml list sources` to see available sources.")
         return
     
-    breakpoint()
     if "local" in collections:
         collections.remove("local")
         collections.append(add_local_source())
@@ -21,15 +20,14 @@ def rag_chat(collections: list = None):
     # qdrant_client = create_qdrant_db(data, metadata, collection_name=collection_name)
     qdrant_client = get_qdrant_db()
 
-    _template = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
+    template = """Answer the question based only on the following context, if the context isn't relevant answer without it. If the context is relevant, mention which sources you used.:
+    {context}
 
     Chat History:
     {chat_history}
-    Follow Up Input: {question}
-    Standalone question:"""
 
-    template = """Answer the question based only on the following context:
-    {context}
+    Sources:
+    {sources}
 
     Question: {question}
     """
@@ -43,15 +41,12 @@ def rag_chat(collections: list = None):
         if user_input.lower() == 'exit':
             break
 
-        messages = "\n".join([f"{'AI' if x['role'] == 'system' else 'Human'}: {x['content']}" for x in chat_history])
-        standalone_prompt = chat_history + [{"role": "user", "content": _template.format(chat_history=messages, question=user_input)}]
-        standalone_question = llm_call(standalone_prompt, stream=False).json()
-
         hits = []
+        print("Searching through sources...")
         for collection_name in collections:
             hits.extend(qdrant_client.search(
                 collection_name=collection_name,
-                query_vector=get_embedding([standalone_question])[0],
+                query_vector=get_embedding([user_input])[0],
                 limit=10
             ))
 
@@ -61,10 +56,11 @@ def rag_chat(collections: list = None):
         context = "\n\n".join([str(x.payload["source"]) + ": " + x.payload["data"] for x in sorted_hits])
 
         messages = [
-            {"role": "system", "content": "You are a helpful assistant."},
-            {"role": "user", "content": template.format(context=context, question=standalone_question)}
+            {"role": "system", "content": "You are a helpful assistant that responds to questions concisely with the given context in the following format:\n{answer}\n\nSources:\n{sources}"},
+            {"role": "user", "content": template.format(chat_history=chat_history, context=context, question=user_input, sources=sources)}
         ]
         
+        print("Found relevant sources! Answering question...\n")
         response = llm_call(messages, stream=True)
 
         ai_response = ""
@@ -75,8 +71,8 @@ def rag_chat(collections: list = None):
                 ai_response += decoded_chunk
         print("\n\n")
 
-        if sources:
-            print("Relevant Sources:\n" + sources + "\n\n")
+        # if sources:
+        #     print("Relevant Sources:\n" + sources + "\n\n")
 
         chat_history.append({"role": "user", "content": user_input})
         chat_history.append({"role": "system", "content": ai_response})

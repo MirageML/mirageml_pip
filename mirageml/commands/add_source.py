@@ -17,7 +17,6 @@ def add_local_source():
     print("Indexing Local Files...")
     # Crawl the files under the current directory
     data, metadata = crawl_files()
-    breakpoint()
     # collection_name should be absolute path
     collection_name = os.path.abspath('.').replace('/', '_')
     create_qdrant_db(data, metadata, collection_name=collection_name)

@@ -13,4 +13,6 @@ from .list_sources import list_sources
 from .add_plugin import add_plugin
 from .add_source import add_source
 
+from .delete_source import delete_source
+
 from .sync_plugin import sync_plugin

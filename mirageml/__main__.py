@@ -2,7 +2,7 @@ import argparse
 import keyring
 import time
 
-from .commands import login, chat, rag_chat, list_plugins, add_plugin, list_sources, add_source, sync_plugin
+from .commands import login, chat, rag_chat, list_plugins, add_plugin, list_sources, add_source, sync_plugin, delete_source
 from .constants import SERVICE_ID, supabase
 
 def main():
@@ -33,6 +33,13 @@ def main():
     add_source_parser = add_subparser.add_parser('source', help='Add a new source')
     add_source_parser.add_argument('-n', '--name', help='Name of the source')
     add_source_parser.add_argument('-l', '--link', help='Link for the source')
+
+    # Delete Parser
+    delete_parser = subparsers.add_parser('delete', help='delete a new resource')
+    delete_subparser = delete_parser.add_subparsers(dest="subcommand")
+    ## Delete Source
+    delete_source_parser = delete_subparser.add_parser('source', help='delete a new source')
+    delete_source_parser.add_argument('-n', '--name', help='Name of the source')
 
     # Sync Parser
     sync_parser = subparsers.add_parser('sync', help='Sync resources')
@@ -81,6 +88,11 @@ def main():
             add_source(args)
         else:
             add_parser.print_help()
+    elif args.command == "delete":
+        if args.subcommand == "source":
+            delete_source(args)
+        else:
+            delete_parser.print_help()
     elif args.command == "sync" and args.subcommand == "plugin":
         sync_plugin({ "plugin": args.name })
     else:
