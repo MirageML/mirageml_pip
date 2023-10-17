@@ -1,16 +1,14 @@
 
 
-from mirageml import constants
+from mirageml.constants import REDIRECT_URI
 from mirageml.classes import LoginManager
-
-supabase = constants.supabase
 
 def add_gdrive():
     m = LoginManager(
         handler="google_auth_handler",
         provider="google",
         provider_options={
-            "redirect_to": constants.REDIRECT_URI,
+            "redirect_to": REDIRECT_URI,
             "scopes": "https://www.googleapis.com/auth/drive",
             "query_params": {
                 "access_type": "offline",
@@ -26,7 +24,7 @@ def add_notion():
         handler="notion_auth_handler",
         provider="notion",
         provider_options={
-            "redirect_to": constants.REDIRECT_URI,
+            "redirect_to": REDIRECT_URI,
         }
     )
     m.start_web_server()
@@ -34,9 +32,9 @@ def add_notion():
 
 def add_plugin(args):
     plugin_name = args["plugin"]
-    if plugin_name == "gdrive":
-        add_gdrive()
-    elif plugin_name == "notion":
+    if plugin_name == "notion":
         add_notion()
+    # elif plugin_name == "gdrive":
+    #     add_gdrive()
     else:
-        print("Plugin not support. Supported plugins: gdrive")
+        print("Plugin not support. Supported plugins: notion")

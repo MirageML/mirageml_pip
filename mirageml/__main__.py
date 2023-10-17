@@ -22,7 +22,7 @@ def main():
     add_subparser = add_parser.add_subparsers(dest="subcommand")
     ## Add Plugin
     add_plugin_parser = add_subparser.add_parser('plugin', help='Name of the plugin.')
-    add_plugin_parser.add_argument('name', help='Name of the plugin. Supported plugins: gdrive, notion')
+    add_plugin_parser.add_argument('name', help='Name of the plugin. Supported plugins: notion')
     ## Add Source
     add_source_parser = add_subparser.add_parser('source', help='Add a new source')
     add_source_parser.add_argument('-n', '--name', help='Name of the source')
