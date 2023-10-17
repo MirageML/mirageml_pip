@@ -2,7 +2,7 @@ import argparse
 import keyring
 import time
 
-from .commands import chat, login, list_plugins, add_plugin, add_source, sync_plugin
+from .commands import login, chat, rag_chat, list_plugins, add_plugin, list_sources, add_source, sync_plugin
 from .constants import SERVICE_ID, supabase
 
 def main():
@@ -12,10 +12,16 @@ def main():
     subparsers.add_parser('login', help='Login to Mirage ML')
     subparsers.add_parser('chat', help='Chat with Mirage ML')
 
+    # RAG Parser
+    rag_parser = subparsers.add_parser('rag', help='Chat with Mirage ML using RAG')
+    rag_parser.add_argument('-s', '--sources', nargs='+', default=["local"],
+                            help='Sources to search for answers, specify `local` to index local files.')
+
     # List Parser
     list_parser = subparsers.add_parser('list', help='List resources')
     list_subparser = list_parser.add_subparsers(dest="subcommand")
     list_subparser.add_parser('plugins', help='List connected plugins')
+    list_subparser.add_parser('sources', help='List created sources')
 
     # Add Parser
     add_parser = subparsers.add_parser('add', help='Add a new resource')
@@ -59,12 +65,22 @@ def main():
         login()
     elif args.command == "chat":
         chat()
-    elif args.command == "list" and args.subcommand == "plugins":
-        list_plugins()
-    elif args.command == "add" and args.subcommand == "plugin":
-        add_plugin({ "plugin": args.name })
-    elif args.command == "add" and args.subcommand == "source":
-        add_source({ "name": args.name, "link": args.link })
+    elif args.command == "rag":
+        rag_chat(args.sources)
+    elif args.command == "list":
+        if args.subcommand == "plugins":
+            list_plugins()
+        elif args.subcommand == "sources":
+            list_sources()
+        else:
+            list_parser.print_help()
+    elif args.command == "add":
+        if args.subcommand == "plugin":
+            add_plugin({ "plugin": args.name })
+        elif args.subcommand == "source":
+            add_source(args)
+        else:
+            add_parser.print_help()
     elif args.command == "sync" and args.subcommand == "plugin":
         sync_plugin({ "plugin": args.name })
     else:

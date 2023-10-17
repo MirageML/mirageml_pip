@@ -1,14 +1,25 @@
 import os
-from .brain import load_embedding_model, load_llm, get_embedding, llm_call
-from .vectordb import get_qdrant_db, create_qdrant_db
+from .utils.brain import load_embedding_model, load_llm, get_embedding, llm_call
+from .utils.vectordb import get_qdrant_db, create_qdrant_db
+from .add_source import add_local_source
 
 
-def rag_question(collection_name=None):
-    collection_name = "test"
-    data = ["harrison worked at kensho"]
-    metadata = [{"data": "harrison worked at kensho", "source": 1}]
+def rag_chat(collections: list = None):
+    if not collections:
+        print("Please specify at least 1 source! Use `mirageml list sources` to see available sources.")
+        return
+    
+    breakpoint()
+    if "local" in collections:
+        collections.remove("local")
+        collections.append(add_local_source())
+    
+    # collection_name = "test"
+    # data = ["harrison worked at kensho"]
+    # metadata = [{"data": "harrison worked at kensho", "source": 1}]
 
-    qdrant_client = create_qdrant_db(data, metadata, collection_name=collection_name)
+    # qdrant_client = create_qdrant_db(data, metadata, collection_name=collection_name)
+    qdrant_client = get_qdrant_db()
 
     _template = """Given the following conversation and a follow up question, rephrase the follow up question to be a standalone question, in its original language.
 
@@ -36,13 +47,15 @@ def rag_question(collection_name=None):
         standalone_prompt = chat_history + [{"role": "user", "content": _template.format(chat_history=messages, question=user_input)}]
         standalone_question = llm_call(standalone_prompt, stream=False).json()
 
-        hits = qdrant_client.search(
-            collection_name=collection_name,
-            query_vector=get_embedding([standalone_question])[0],
-            limit=5
-        )
+        hits = []
+        for collection_name in collections:
+            hits.extend(qdrant_client.search(
+                collection_name=collection_name,
+                query_vector=get_embedding([standalone_question])[0],
+                limit=10
+            ))
 
-        sorted_hits = sorted(hits, key=lambda x: x.score, reverse=True)
+        sorted_hits = sorted(hits, key=lambda x: x.score, reverse=True)[:10]
 
         sources = "\n".join([str(x.payload["source"]) for x in sorted_hits])
         context = "\n\n".join([str(x.payload["source"]) + ": " + x.payload["data"] for x in sorted_hits])

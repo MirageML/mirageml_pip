@@ -17,6 +17,10 @@ setup(
         "transformers==4.34.0",
         "sentence_transformers==2.2.2",
         "torch==2.0.1",
+        "pyjwt==2.8.0",
+        "keyring==24.2.0",
+        "requests==2.31.0",
+        "supabase==1.2.0"
     ],
     entry_points={
         'console_scripts': [

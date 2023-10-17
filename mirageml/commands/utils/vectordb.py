@@ -31,8 +31,6 @@ def create_qdrant_db(data, metadata, collection_name="test"):
         vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
     )
     
-
-
     qdrant_client.upsert(
         collection_name=collection_name,
         points=Batch(
