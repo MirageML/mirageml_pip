@@ -4,6 +4,7 @@ import urllib.parse
 from urllib.parse import urlparse, urlunparse
 import os
 import tempfile
+import subprocess
 import shutil
 import os
 from langchain.document_loaders import AsyncChromiumLoader
@@ -96,11 +97,24 @@ def download_html(url, folder):
     with open(file_name, 'w') as file:
         file.write(cleaned_html)
 
+def check_playwright_chromium():
+    try:
+        # Try to launch chromium and close immediately. This is just to check its presence.
+        subprocess.run(['playwright', 'chromium', '--version'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        return True
+    except (subprocess.CalledProcessError, FileNotFoundError):
+        return False
+
 def crawl_website(start_url):
     visited_links = set()
     to_visit = [start_url]
-    
 
+    # Check if playwright is installed
+    if not check_playwright_chromium():
+        print("Playwright Chromium required for webscraping.")
+        print("Please run `python3 -m playwright install chromium`")
+        return
+    
     with tempfile.TemporaryDirectory() as tmp_dir:
         print(f"Created temporary directory: {tmp_dir}")
         while to_visit:
