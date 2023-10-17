@@ -1,6 +1,8 @@
 import os
+import re
 import uuid
 import requests
+import tiktoken
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Batch, VectorParams, Distance
 
@@ -26,7 +28,25 @@ def delete_qdrant_db(collection_name="test"):
     
 def create_qdrant_db(data, metadata, collection_name="test"):
     qdrant_client = get_qdrant_db()
-    vectors = get_embedding(data)
+
+    final_data, final_metadata = [], []
+
+    # For each data chunk it based on number of tokens
+    enc = tiktoken.get_encoding("cl100k_base")
+    for curr_data, curr_metadata in zip(data, metadata):
+        split_data = re.split(r"(?<=\.)\s+", curr_data)
+        i, chunks, meta = 0, [], []
+        while i < len(split_data):
+            curr_chunk = ""
+            while i < len(split_data) and len(enc.encode(str(curr_chunk))) < 1000:
+                curr_chunk += " " + split_data[i]
+                i += 1
+            chunks.append(curr_chunk)
+            meta.append({"data": curr_chunk, "source": curr_metadata["source"]})
+        final_data.extend(chunks)
+        final_metadata.extend(meta)
+
+    vectors = get_embedding(final_data)
 
     if collection_name in [x.name for x in qdrant_client.get_collections().collections]:
         return qdrant_client
@@ -47,9 +67,11 @@ def create_qdrant_db(data, metadata, collection_name="test"):
         collection_name=collection_name,
         points=Batch(
             vectors=vectors,
-            ids=[uuid.uuid4().hex for _ in range(len(data))],
-            payloads=metadata,
+            ids=[uuid.uuid4().hex for _ in range(len(final_data))],
+            payloads=final_metadata,
         )
     )
+
+    print(f"Created Source: {collection_name}")
 
     return qdrant_client

@@ -52,6 +52,8 @@ def rag_chat(collections: list = None):
 
         sorted_hits = sorted(hits, key=lambda x: x.score, reverse=True)[:10]
 
+        breakpoint()
+
         sources = "\n".join([str(x.payload["source"]) for x in sorted_hits])
         context = "\n\n".join([str(x.payload["source"]) + ": " + x.payload["data"] for x in sorted_hits])
 

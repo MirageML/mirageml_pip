@@ -11,7 +11,12 @@ from langchain.document_loaders import AsyncChromiumLoader
 from langchain.document_transformers import BeautifulSoupTransformer
 
 import logging
-logging.basicConfig(level=logging.WARNING)
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.CRITICAL)
+logging.basicConfig(level=logging.CRITICAL)
+logging.disable(logging.CRITICAL)
+logging.getLogger("langchain").setLevel(logging.CRITICAL)
+
 
 def get_all_links(url):
     response = requests.get(url)
@@ -52,6 +57,7 @@ def crawl_website(start_url):
                     to_visit.append(link)
 
         loader = AsyncChromiumLoader(visited_links)
+        print("Scraping Pages...")
         html = loader.load()
         bs_transformer = BeautifulSoupTransformer()
         docs_transformed = bs_transformer.transform_documents(html)
