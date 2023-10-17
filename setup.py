@@ -15,6 +15,7 @@ setup(
         "playwright==1.38.0",
         "beautifulsoup4==4.12.2",
         "transformers==4.34.0",
+        "ctransformers==0.2.27",
         "sentence_transformers==2.2.2",
         "torch==2.0.1",
         "pyjwt==2.8.0",
