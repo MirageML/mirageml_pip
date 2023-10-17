@@ -9,6 +9,7 @@ import urllib.parse
 import requests
 
 from mirageml.constants import SERVICE_ID, PORT, supabase, SUPABASE_KEY, SUPABASE_URL
+from mirageml.index_handlers import index_notion
 
 class LoginManager:
   def __init__(self, handler="mirage_auth_handler", provider="google", provider_options={}):
@@ -157,6 +158,7 @@ class NotionHandler(Handler):
     access_token, user_id = self.update_keyring(info)
     provider_token = info['provider_token']
     if provider_token:
+      keyring.set_password(SERVICE_ID, 'notion_provider_token', info['provider_token'])
       params = {
         "user_id": user_id,
         "provider_token": provider_token,
@@ -168,6 +170,7 @@ class NotionHandler(Handler):
         "Prefer": "resolution=merge-duplicates",
       }
       requests.post(f"{SUPABASE_URL}/rest/v1/user_notion_tokens", json=params, headers=headers)
+    index_notion(provider_token)
     sys.exit(0)
 
   def do_GET(self):
