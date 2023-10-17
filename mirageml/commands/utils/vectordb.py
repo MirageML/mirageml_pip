@@ -6,7 +6,7 @@ import tiktoken
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Batch, VectorParams, Distance
 
-from .brain import load_embedding_model, get_embedding
+from .brain import get_embedding
 
 PACKAGE_DIR = os.path.dirname(__file__)
 

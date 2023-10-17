@@ -20,7 +20,7 @@ setup(
         "pyjwt==2.8.0",
         "keyring==24.2.0",
         "requests==2.31.0",
-        "supabase==1.2.0"
+        "supabase==1.2.0",
     ],
     entry_points={
         'console_scripts': [
@@ -28,3 +28,5 @@ setup(
         ]
     }
 )
+
+from fastembed.embedding import FlagEmbedding as Embedding
