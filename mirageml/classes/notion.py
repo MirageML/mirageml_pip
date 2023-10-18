@@ -94,15 +94,15 @@ class Notion:
             pages.extend(data["results"])
             has_more = data.get("has_more", False)
             cursor = data.get("next_cursor", None)
-        printProgressBar(0, len(pages[0:10]), prefix = 'Progress:', suffix = 'Complete')
-        for i, page in enumerate(pages[0:10]):
+        printProgressBar(0, len(pages), prefix = 'Progress:', suffix = 'Complete')
+        for i, page in enumerate(pages):
             processed_page_data = self._process_page(page)
             page_data.append({
                 "id": page["id"],
                 "data": processed_page_data,
                 "source": page["url"]
             })
-            printProgressBar(i + 1, len(pages[0:10]), prefix = 'Progress:', suffix = 'Complete')
+            printProgressBar(i + 1, len(pages), prefix = 'Progress:', suffix = 'Complete')
         text_data = [x["data"] for x in page_data]
         create_qdrant_db(text_data, page_data, "notion")
 

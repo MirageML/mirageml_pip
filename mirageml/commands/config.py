@@ -12,7 +12,7 @@ def load_config():
             return json.load(f)
     return {
         "local_mode": False,
-        "model": "gpt-3.5-turbo"
+        "model": "gpt-4"
     }
 
 def save_config(config):
