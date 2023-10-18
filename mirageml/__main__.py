@@ -1,6 +1,7 @@
 import typer
 import keyring
 import time
+# from typing_extensions import Annotated
 
 from .commands import (
     login, show_config, set_config, normal_chat, rag_chat,
@@ -14,18 +15,20 @@ app = typer.Typer(
     add_completion=False,
     rich_markup_mode="markdown",
     help="""
-    Mirage ML CLI.
+    MirageML CLI.
 
     See the website at https://mirageml.com/ for documentation and more information
-    about running code on Mirage.
+    about running code on MirageML.
     """,
 )
 
+config_app = typer.Typer(name="config", help="Manage the config", no_args_is_help=True)
 add_app = typer.Typer(name="add", help="Add a new resource", no_args_is_help=True)
 list_app = typer.Typer(name="list", help="List resources", no_args_is_help=True)
 sync_app = typer.Typer(name="sync", help="Sync resources", no_args_is_help=True)
 delete_app = typer.Typer(name="delete", help="Delete resources", no_args_is_help=True)
 
+app.add_typer(config_app)
 app.add_typer(add_app)
 app.add_typer(list_app)
 app.add_typer(sync_app)
@@ -71,9 +74,22 @@ def chat():
 
 
 @app.command()
-def rag(sources: list[str] = typer.Option([], '-s', '--sources', help='Sources to search for answers, specify `local` to index local files.')):
+def rag(sources: list[str] = typer.Option(prompt=True, help='List of sources to search for answers, specify `local` to index local files.')):
     """Chat with Mirage ML using RAG"""
     rag_chat(sources)
+
+@config_app.command(name="show")
+def show_config_command():
+    """Show the current config"""
+    show_config()
+
+
+@config_app.command(name="set")
+def set_config_command():
+    """
+    Set the config file for MirageML
+    """
+    set_config()
 
 # List Commands
 @list_app.command(name="plugins")
@@ -95,7 +111,7 @@ def add_plugin_command(name: str):
 
 
 @add_app.command(name="source")
-def add_source_command(name: str, link: str = typer.Option("", '-l', '--link', help='Link for the source')):
+def add_source_command(name: str, link: str = typer.Option(prompt=True, help='Link for the source')):
     """Add a new source"""
     add_source(name, link)
 

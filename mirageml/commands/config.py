@@ -1,8 +1,10 @@
-import json
 import os
+import json
+import typer
 
 def show_config():
     config = load_config()
+    from rich import print
     print(json.dumps(config, indent=4))
 
 def load_config():
@@ -24,27 +26,22 @@ def set_config():
     config = load_config()
 
     valid = {
-        "local_mode": ("(True, False)", bool),
-        "model": ("(gpt-3.5-turbo, gpt-3.5-turbo-16k, gpt-4)", str)
+        "local_mode": (("True", "False"), json.loads),
+        "model": (("gpt-3.5-turbo", "gpt-4"), str)
     }
 
-    print("Current configuration:")
     for key, value in config.items():
-        print(f"{key}: {value}")
-
-    print("\n")
-
-    for key, value in config.items():
+        curvalue = value
         while True:
-            value = input(f"Enter the value for '{key}' {valid[key][0]} [{value}]: ")
+            question = f"Enter the value for '{key}' [{', '.join(valid[key][0])}] (current value: {curvalue}): "
+            value = input(question)
             if value == "": break
-            try: 
-                value = valid[key][1](value)
-            except:
-                print(f"Invalid value for '{key}'. Please enter a value of type {valid[key][1]}")
+            if value not in valid[key][0]:
+                typer.secho(f"Invalid value for '{key}'. Please use one of these options {valid[key][0]}", fg=typer.colors.BRIGHT_RED)
                 continue
-            config[key] = value
+            config[key] = valid[key][1](value.lower())
             save_config(config)
             break
 
-    print("MirageML Config updated!")
+    typer.secho("MirageML Config updated!", fg=typer.colors.BRIGHT_GREEN)
+    show_config()
