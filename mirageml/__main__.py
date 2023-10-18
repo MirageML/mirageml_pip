@@ -74,9 +74,9 @@ def chat():
 
 
 @app.command()
-def rag(sources: list[str] = typer.Option(prompt=True, help='List of sources to search for answers, specify `local` to index local files.')):
+def rag():
     """Chat with Mirage ML using RAG"""
-    rag_chat(sources)
+    rag_chat()
 
 @config_app.command(name="show")
 def show_config_command():
