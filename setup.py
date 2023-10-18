@@ -10,7 +10,7 @@ setup(
     install_requires=[
         # List your package's dependencies here
         "rich==13.5.2",
-        "click==8.1.7",
+        "typer==0.9.0",
         "chardet==5.2.0",
         "qdrant-client==1.6.0",
         "langchain==0.0.314",
