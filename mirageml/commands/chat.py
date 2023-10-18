@@ -1,8 +1,9 @@
 import requests 
 from .utils.brain import llm_call
+from .config import load_config
 
-def chat(model="gpt-3.5-turbo", local=False):
-    local = True
+def normal_chat(model="gpt-3.5-turbo", local=False):
+    config = load_config()
     chat_history = [{"role": "system", "content": "You are a helpful assistant."}]
     print("Starting chat. Type 'exit' to end the chat.")
     while True:
@@ -11,7 +12,7 @@ def chat(model="gpt-3.5-turbo", local=False):
             break
 
         chat_history.append({"role": "user", "content": user_input})
-        response = llm_call(chat_history, model=model, stream=True, local=local)
+        response = llm_call(chat_history, model=model, stream=True, local=config["local_mode"])
 
         ai_response = ""
         if local: 

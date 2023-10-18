@@ -9,6 +9,8 @@ setup(
     packages=find_packages(),
     install_requires=[
         # List your package's dependencies here
+        "rich==13.5.2",
+        "click==8.1.7",
         "chardet==5.2.0",
         "qdrant-client==1.6.0",
         "langchain==0.0.314",
@@ -25,9 +27,7 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'mirageml=mirageml.__main__:main'
+            'mirageml=mirageml.__main__:app'
         ]
     }
 )
-
-from fastembed.embedding import FlagEmbedding as Embedding

@@ -6,6 +6,7 @@ import tiktoken
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Batch, VectorParams, Distance
 
+from ..config import load_config
 from .brain import get_embedding
 
 PACKAGE_DIR = os.path.dirname(__file__)
@@ -27,6 +28,7 @@ def delete_qdrant_db(collection_name="test"):
     qdrant_client.delete_collection(collection_name=collection_name)
     
 def create_qdrant_db(data, metadata, collection_name="test"):
+    config = load_config()
     qdrant_client = get_qdrant_db()
 
     final_data, final_metadata = [], []
@@ -46,7 +48,7 @@ def create_qdrant_db(data, metadata, collection_name="test"):
         final_data.extend(chunks)
         final_metadata.extend(meta)
 
-    vectors = get_embedding(final_data)
+    vectors = get_embedding(final_data, local=config["local_model"])
 
     if collection_name in [x.name for x in qdrant_client.get_collections().collections]:
         return qdrant_client

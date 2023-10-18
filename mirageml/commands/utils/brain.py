@@ -13,11 +13,19 @@ def local_get_embedding(text_list, embedding_model_id="BAAI/bge-small-en-v1.5"):
         os.makedirs(model_dir, exist_ok=True)   
         print("Downloading model to:", model_dir)
         print("This will take a few minutes and only happen once!")
+    
+    # Suppress stdout/stderr
+    original_stdout, original_stderr = sys.stdout, sys.stderr
+    sys.stdout, sys.stderr = StringIO(), StringIO()
+
     model = SentenceTransformer(
         embedding_model_id, 
         cache_folder=model_dir
         )
     embeddings = model.encode(text_list, normalize_embeddings=False)
+
+    # Restore stdout/stderr
+    sys.stdout, sys.stderr = original_stdout, original_stderr
     
     # Convert the embeddings to a list
     embeddings = embeddings.tolist()
