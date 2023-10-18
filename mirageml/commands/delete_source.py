@@ -1,5 +1,5 @@
 from .utils.vectordb import delete_qdrant_db
 
-def delete_source(args):
-    delete_qdrant_db(args.name)
-    print(f"Deleted Source: {args.name}")
+def delete_source(name: str):
+    delete_qdrant_db(name)
+    print(f"Deleted Source: {name}")
