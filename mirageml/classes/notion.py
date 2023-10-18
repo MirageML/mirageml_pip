@@ -1,4 +1,5 @@
 import requests
+import time
 from rich.progress import track
 
 from mirageml.constants import NOTION_API_URL, NOTION_VERSION
@@ -29,6 +30,8 @@ class Notion:
             has_more = data.get("has_more", False)
             cursor = data.get("next_cursor", None)
             blocks.extend(data["results"])
+            # sleep for 1 sec to avoid rate limit
+            time.sleep(0.5)
         return blocks
 
     def _extract_text(self, block):
@@ -67,10 +70,16 @@ class Notion:
         return content
 
     def _extract_title(self, page):
-        if page["object"] == "page":
-            return page["properties"]["title"]["title"][0]["plain_text"] if len(page["properties"]["title"]["title"]) > 0 else ""
-        elif page["object"] == "database":
-            return page["title"][0]["plain_text"] if len(page["title"]) > 0 else ""
+        try:
+            if page["object"] == "page" and 'Name' in page["properties"]:
+                return page["properties"]["Name"]["title"][0]["plain_text"] if len(page["properties"]["Name"]["title"]) > 0 else ""
+            elif page["object"] == "page":
+                return page["properties"]["title"]["title"][0]["plain_text"] if len(page["properties"]["title"]["title"]) > 0 else ""
+            elif page["object"] == "database":
+                return page["title"][0]["plain_text"] if len(page["title"]) > 0 else ""
+        except:
+            print(page)
+            return ""
 
     def _process_page(self, page):
         content = self._process_block(page)
