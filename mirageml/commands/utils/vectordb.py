@@ -26,7 +26,7 @@ def list_qdrant_db():
 def delete_qdrant_db(collection_name="test"):
     qdrant_client = get_qdrant_db()
     qdrant_client.delete_collection(collection_name=collection_name)
-    
+
 def create_qdrant_db(data, metadata, collection_name="test"):
     config = load_config()
     qdrant_client = get_qdrant_db()
@@ -48,7 +48,7 @@ def create_qdrant_db(data, metadata, collection_name="test"):
         final_data.extend(chunks)
         final_metadata.extend(meta)
 
-    vectors = get_embedding(final_data, local=config["local_model"])
+    vectors = get_embedding(final_data, local=config["local_mode"])
 
     if collection_name in [x.name for x in qdrant_client.get_collections().collections]:
         return qdrant_client

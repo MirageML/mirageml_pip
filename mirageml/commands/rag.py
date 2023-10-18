@@ -46,9 +46,17 @@ def rag_chat(sources: list = None):
     for source_name in sources:
         try:
             hits.extend(qdrant_client.search(
+                limit=10,
                 collection_name=source_name,
                 query_vector=get_embedding([user_input], local=config["local_mode"])[0],
-                limit=5
+                # query_filter=Filter(
+                #     must=[
+                #         FieldCondition(
+                #             key="source",
+                #             match=MatchValue(value="https://www.notion.so/Sequoia-3ec4d3a758cb4775a74f5267b9b2f286")
+                #         )
+                #     ]
+                # )
             ))
         except:
             if config["local_mode"]:
@@ -59,7 +67,6 @@ def rag_chat(sources: list = None):
                 return
 
     sorted_hits = sorted(hits, key=lambda x: x.score, reverse=True)[:10]
-
     sources = "\n".join([str(x.payload["source"]) for x in sorted_hits])
     context = "\n\n".join([str(x.payload["source"]) + ": " + x.payload["data"] for x in sorted_hits])
 

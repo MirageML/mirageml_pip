@@ -76,7 +76,7 @@ def rag(sources: list[str] = typer.Option([], '-s', '--sources', help='Sources t
     """Chat with Mirage ML using RAG"""
     rag_chat(sources)
 
-
+# List Commands
 @list_app.command(name="plugins")
 def list_plugins_command():
     """List connected plugins"""
@@ -88,7 +88,7 @@ def list_sources_command():
     """List created sources"""
     list_sources()
 
-
+# Add Commands
 @add_app.command(name="plugin")
 def add_plugin_command(name: str):
     """Add a plugin by name"""
@@ -100,14 +100,14 @@ def add_source_command(name: str, link: str = typer.Option("", '-l', '--link', h
     """Add a new source"""
     add_source(name, link)
 
-
+# Delete Commands
 @delete_app.command(name="delete")
 def delete_source_command(name: str):
     """Delete a source"""
     delete_source(name)
 
-
-@sync_app.command(name="sync")
+# Sync Commands
+@sync_app.command(name="plugin")
 def sync_plugin_command(name: str):
     """Sync a plugin"""
     sync_plugin({"plugin": name})
