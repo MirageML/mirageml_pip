@@ -1,6 +1,6 @@
 import requests
+from rich.progress import track
 
-from mirageml.utils.progress_print import printProgressBar
 from mirageml.constants import NOTION_API_URL, NOTION_VERSION
 from mirageml.commands.utils.vectordb import delete_qdrant_db, create_qdrant_db
 
@@ -94,21 +94,19 @@ class Notion:
             pages.extend(data["results"])
             has_more = data.get("has_more", False)
             cursor = data.get("next_cursor", None)
-        printProgressBar(0, len(pages), prefix = 'Progress:', suffix = 'Complete')
-        for i, page in enumerate(pages):
+        for page in track(pages, description="Processing pages..."):
             processed_page_data = self._process_page(page)
             page_data.append({
                 "id": page["id"],
                 "data": processed_page_data,
                 "source": page["url"]
             })
-            printProgressBar(i + 1, len(pages), prefix = 'Progress:', suffix = 'Complete')
         text_data = [x["data"] for x in page_data]
         create_qdrant_db(text_data, page_data, "notion")
 
 
     def sync(self):
-        print("starting notion sync...")
+        print("Starting notion sync...")
         self._delete_notion_collection()
         self.parse_pages()
-        print("done syncing notion")
+        print("Done syncing notion")

@@ -3,8 +3,8 @@ import keyring
 import time
 
 from .commands import (
-    login, show_config, set_config, normal_chat, rag_chat, 
-    list_plugins, add_plugin, list_sources, add_source, 
+    login, show_config, set_config, normal_chat, rag_chat,
+    list_plugins, add_plugin, list_sources, add_source,
     sync_plugin, delete_source
 )
 from .constants import SERVICE_ID, supabase
@@ -37,7 +37,6 @@ def main(ctx: typer.Context):
     user_id = keyring.get_password(SERVICE_ID, 'user_id')
     refresh_token = keyring.get_password(SERVICE_ID, 'refresh_token')
     expires_at = keyring.get_password(SERVICE_ID, 'expires_at')
-
     if not user_id and ctx.invoked_subcommand != "login_command":
         typer.echo("Please login first. Run `mirageml login`")
         raise typer.Exit()
