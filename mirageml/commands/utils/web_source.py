@@ -54,6 +54,7 @@ def check_playwright_chromium():
         return False
 
 def crawl_website(start_url):
+    if not start_url.endswith("/"): start_url += "/"
     urls = {start_url: set()}
     visited_links = set()
     to_visit = [start_url]
@@ -89,7 +90,7 @@ def crawl_website(start_url):
             if not url_key: continue
 
             try:
-                url = url.replace(url_key, "").split("/")[1]
+                url = url.replace(url_key, "").split("/")[0]
                 urls[url_key].add(url)
             except: continue
 
@@ -103,7 +104,7 @@ def crawl_website(start_url):
 
         user_input = input("Do you want to index another URL? (yes/no): ")
         user_input = user_input.strip()
-        if user_input and user_input.lower().startswith() != 'n':
+        if user_input and not user_input.lower().startswith('n'):
             while True:
                 link = input("Link for the source (exit to skip): ")
                 if link.lower().strip() == 'exit': break
@@ -112,6 +113,7 @@ def crawl_website(start_url):
                     continue
                 break
             if link.lower().strip() != 'exit':
+                if not user_input.endswith("/"): user_input += "/"
                 to_visit = [user_input]
                 urls[user_input] = set()
             else: to_visit = []

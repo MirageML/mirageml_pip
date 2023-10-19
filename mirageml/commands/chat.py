@@ -46,7 +46,7 @@ def normal_chat(file_path: str = None):
 
         # Show the typing indicator using Live
         with Live(Panel("Assistant is typing...", title="[bold blue]Assistant[/bold blue]", border_style="blue"),
-                  console=console, screen=True, auto_refresh=True, vertical_overflow="visible") as live:
+                  console=console, screen=False, auto_refresh=True, vertical_overflow="visible") as live:
             response = llm_call(chat_history, model=config["model"], stream=True, local=config["local_mode"])
 
             ai_response = ""

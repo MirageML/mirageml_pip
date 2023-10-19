@@ -24,6 +24,7 @@ def add_local_source(name=None, path=None):
     return collection_name
 
 def add_source(name, link, remote=False):
+    name = name.replace(' ', '_')
     if link:
         add_web_source(name, link, remote)
     else:

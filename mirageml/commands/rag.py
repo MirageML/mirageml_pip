@@ -50,7 +50,7 @@ def get_local_sources():
         typer.secho("Here are the possible local sources you can use:", fg=typer.colors.BRIGHT_GREEN, bold=True)
         for source in possible_sources:
             if source == "local":
-                typer.secho(f" - {source} (this will index the files in your local directory)", fg=typer.colors.GREEN, bold=True)
+                typer.secho(f" - {source} (this will index the files in your current directory)", fg=typer.colors.GREEN, bold=True)
             else:
                 typer.secho(f" - {source}", fg=typer.colors.GREEN, bold=True)
 
@@ -174,7 +174,7 @@ def rag_chat():
             chat_history.append({"role": "user", "content": user_input})
 
             with Live(Panel("Assistant is typing...", title="[bold blue]Assistant[/bold blue]", border_style="blue"),
-                    console=console, screen=True, auto_refresh=True, vertical_overflow="visible") as live:
+                    console=console, screen=False, auto_refresh=True, vertical_overflow="visible") as live:
 
                 response = llm_call(chat_history, model=config["model"], stream=True, local=config["local_mode"])
 
