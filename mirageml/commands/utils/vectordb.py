@@ -65,7 +65,7 @@ def create_qdrant_db(data, metadata, collection_name="test", remote=False):
     #     ids=[uuid.uuid4().hex for _ in range(len(data))]
     # )
 
-    size = 1536 if config["local_mode"] else 384
+    size = 384 if config["local_mode"] else 1536
     qdrant_client.recreate_collection(
         collection_name=collection_name,
         vectors_config=VectorParams(size=size, distance=Distance.COSINE),

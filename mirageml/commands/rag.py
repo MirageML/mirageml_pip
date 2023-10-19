@@ -152,7 +152,7 @@ def rag_chat():
     while True:
         try:
             user_input = Prompt.ask("Ask a follow-up", default="exit", show_default=False)
-            if user_input.lower() == 'exit':
+            if user_input.lower().strip() == 'exit':
                 typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
                 break
         except KeyboardInterrupt:
