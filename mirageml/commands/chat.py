@@ -1,16 +1,31 @@
+import typer
 from rich.box import HORIZONTALS
 from rich.markdown import Markdown
 from rich.console import Console
 from rich.live import Live
 from rich.panel import Panel
 from rich.prompt import Prompt
-from .utils.brain import llm_call
+
 from .config import load_config
-import typer
+from .utils.brain import llm_call
+from .utils.prompt_templates import CHAT_TEMPLATE
+
 
 console = Console()
 
-def normal_chat():
+def normal_chat(file_path: str = None):
+    # Try loading in data from file
+    file_data = ""
+    if file_path:
+        try:
+            # Read the file content
+            with open(file_path, 'r', encoding='utf-8') as file:
+                file_content = file.read()
+                file_data = file_path + ": " + file_content
+        except Exception as e:
+            # If unable to read a file, you can print an error or continue to the next file
+            typer.secho(f"Unable to read file: {file_path}", fg=typer.colors.BRIGHT_RED, bold=True)
+
     config = load_config()
     chat_history = [{"role": "system", "content": "You are a helpful assistant."}]
 
@@ -25,6 +40,8 @@ def normal_chat():
             typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
             break
 
+        if file_data and len(chat_history) == 1:
+            user_input = CHAT_TEMPLATE.format(context=file_data, question=user_input)
         chat_history.append({"role": "user", "content": user_input})
 
         # Show the typing indicator using Live

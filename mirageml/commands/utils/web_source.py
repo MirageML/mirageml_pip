@@ -39,7 +39,7 @@ def get_all_links(url):
 def check_playwright_chromium():
     try:
         # Try to launch chromium and close immediately. This is just to check its presence.
-        subprocess.run(['playwright', 'chromium', '--version'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        subprocess.run(['python3', '-m', 'playwright', 'chromium', '--version'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
         return False

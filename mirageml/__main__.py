@@ -74,13 +74,13 @@ def login_command():
 
 
 @app.command()
-def chat():
+def chat(file_path: str = typer.Argument(None, help="Path to a file to use as a chat history.")):
     """Chat with Mirage ML"""
-    normal_chat()
+    normal_chat(file_path=file_path)
 
 
 @app.command()
-def rag():
+def rag(sources: list[str] = typer.Argument(None, help="Sources to use for RAG")):
     """Chat with Mirage ML using RAG"""
     rag_chat()
 
