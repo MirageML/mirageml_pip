@@ -17,6 +17,7 @@ config = load_config()
 
 def get_remote_sources():
     # Get a list of available data sources and include the local directory as an option
+    typer.secho("Searching for any remote sources", fg=typer.colors.BRIGHT_GREEN, bold=True)
     possible_sources = list_remote_qdrant_db()
 
     if not possible_sources: return []
@@ -27,7 +28,7 @@ def get_remote_sources():
         for source in possible_sources:
             typer.secho(f" - {source}", fg=typer.colors.GREEN, bold=True)
 
-        sources_input = Prompt.ask("Which sources would you like to use? (separate multiple sources with a space or comma)", default="", show_default=False)
+        sources_input = Prompt.ask("Which sources would you like to use? (leave empty for none)", default="", show_default=False)
         sources = [source.strip() for source in re.split(',|\s+', sources_input) if source.strip()]
 
         invalid_sources = [source for source in sources if source not in possible_sources]
@@ -52,7 +53,7 @@ def get_local_sources():
             else:
                 typer.secho(f" - {source}", fg=typer.colors.GREEN, bold=True)
 
-        sources_input = Prompt.ask("Which sources would you like to use? (separate multiple sources with a space or comma)", default="local", show_default=True)
+        sources_input = Prompt.ask("Which sources would you like to use? (leave empty for none)")
         sources = [source.strip() for source in re.split(',|\s+', sources_input) if source.strip()]
 
         invalid_sources = [source for source in sources if source not in possible_sources]
@@ -62,15 +63,6 @@ def get_local_sources():
             continue
         else:
             break
-
-    # Check if user doesn't specify any source
-    if not sources:
-        typer.secho("By default Mirage will index the files under the current directory.", fg=typer.colors.RED, bold=True)
-        typer.secho("If you want to run RAG over other sources, please specify them with `--sources`.", fg=typer.colors.BRIGHT_RED, bold=True)
-        user_input = Prompt.ask("If you'd like to proceed type 'yes'", default="yes", show_default=True)
-        if user_input.lower().startswith("y"):
-            sources = ["local"]
-        else: return []
 
     # Handle local source
     if "local" in sources:
