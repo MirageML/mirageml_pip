@@ -125,7 +125,10 @@ def add_source_command():
 @delete_app.command(name="delete")
 def delete_source_command(name: str):
     """Delete a source"""
-    delete_source(name)
+    from rich.prompt import Prompt
+    remote = Prompt.ask("Is the source remote? (y/n)", default="n", show_default=True)
+    remote = remote.lower().startswith("y")
+    delete_source(name, remote)
 
 # Sync Commands
 @sync_app.command(name="plugin")
