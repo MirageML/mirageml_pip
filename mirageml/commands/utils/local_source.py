@@ -22,6 +22,6 @@ def crawl_files(start_dir="."):
                 # If unable to read a file, you can print an error or continue to the next file
                 pass
 
-    data = [x[0] for x in file_data]
+    data = [x[1] + ": " + x[0] for x in file_data]
     metadata = [dict({"data": x[0]}, **{"source": x[1]}) for x in file_data]
     return data, metadata

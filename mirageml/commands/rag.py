@@ -1,5 +1,6 @@
 import re
 import typer
+from rich.box import HORIZONTALS
 from rich.markdown import Markdown
 from rich.console import Console
 from rich.live import Live
@@ -113,60 +114,36 @@ def rag_chat():
     sources = remote_sources + local_sources
 
     # Beginning of the chat sequence
-    user_input = Prompt.ask(f"Chat with Mirage ({', '.join(sources)})", default="exit", show_default=False)
-
-    # Live display while searching for relevant sources
-    with Live(Panel("Searching for the relevant sources...",
-                title="[bold blue]Assistant[/bold blue]", border_style="blue"),
-                console=console, screen=True, auto_refresh=True, vertical_overflow="visible") as live:
-
-        sorted_hits = search_and_rank(live, user_input, local_sources, remote_sources)
-        context = create_context(sorted_hits)
-
-        # Chat history that will be sent to the AI model
-        chat_history = [
-            {"role": "system", "content": "You are a helpful assistant that responds to questions concisely with the given context in the following format:\n{answer}\n\nSources:\n{sources}"},
-            {"role": "user", "content": RAG_TEMPLATE.format(context=context, question=user_input, sources=sources)}
-        ]
-
-        # Fetch the AI's response
-        ai_response = ""
-        live.update(Panel("Found relevant sources! Answering question...", title="[bold blue]Assistant[/bold blue]", border_style="blue"))
-        response = llm_call(chat_history, model=config["model"], stream=True, local=config["local_mode"])
-
-        if config["local_mode"]:
-            for chunk in response:
-                ai_response += chunk
-                live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
-        else:
-            for chunk in response.iter_content(1024):
-                if chunk:
-                    decoded_chunk = chunk.decode('utf-8')
-                    ai_response += decoded_chunk
-                    live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
-
-    # Print the AI's response
-    console.print(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
-
-    # Loop for follow-up questions
     while True:
         try:
-            user_input = Prompt.ask("Ask a follow-up", default="exit", show_default=False)
+            user_input = Prompt.ask(f"Chat with Mirage ({', '.join(sources)})", default="exit", show_default=False)
             if user_input.lower().strip() == 'exit':
                 typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
-                break
+                return
         except KeyboardInterrupt:
             typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
-            break
+            return
 
-        chat_history.append({"role": "user", "content": user_input})
 
-        with Live(Panel("Assistant is typing...", title="[bold blue]Assistant[/bold blue]", border_style="blue"),
-                console=console, screen=True, auto_refresh=True, vertical_overflow="visible") as live:
+        # Live display while searching for relevant sources
+        with Live(Panel("Searching for the relevant sources...",
+                    title="[bold blue]Assistant[/bold blue]", border_style="blue"),
+                    console=console, screen=True, auto_refresh=True, vertical_overflow="visible") as live:
 
+            sorted_hits = search_and_rank(live, user_input, local_sources, remote_sources)
+            context = create_context(sorted_hits)
+
+            # Chat history that will be sent to the AI model
+            chat_history = [
+                {"role": "system", "content": "You are a helpful assistant that responds to questions concisely with the given context in the following format:\n{answer}\n\nSources:\n{sources}"},
+                {"role": "user", "content": RAG_TEMPLATE.format(context=context, question=user_input, sources=sources)}
+            ]
+
+            # Fetch the AI's response
+            ai_response = ""
+            live.update(Panel("Found relevant sources! Answering question...", title="[bold blue]Assistant[/bold blue]", border_style="blue"))
             response = llm_call(chat_history, model=config["model"], stream=True, local=config["local_mode"])
 
-            ai_response = ""
             if config["local_mode"]:
                 for chunk in response:
                     ai_response += chunk
@@ -178,5 +155,40 @@ def rag_chat():
                         ai_response += decoded_chunk
                         live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
 
-        chat_history.append({"role": "system", "content": ai_response})
-        console.print(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
+        # Print the AI's response
+        console.print(Panel(Markdown(ai_response), box=HORIZONTALS, title="[bold blue]Assistant[/bold blue]", border_style="blue", padding=(1, 0)))
+
+        while True:
+            # Loop for follow-up questions
+            try:
+                user_input = Prompt.ask("Ask a follow-up. Type reset to search again", default="exit", show_default=False)
+                if user_input.lower().strip() == 'exit':
+                    typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
+                    return
+                elif user_input.lower().strip() == 'reset':
+                    break
+            except KeyboardInterrupt:
+                typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
+                return
+
+            chat_history.append({"role": "user", "content": user_input})
+
+            with Live(Panel("Assistant is typing...", title="[bold blue]Assistant[/bold blue]", border_style="blue"),
+                    console=console, screen=True, auto_refresh=True, vertical_overflow="visible") as live:
+
+                response = llm_call(chat_history, model=config["model"], stream=True, local=config["local_mode"])
+
+                ai_response = ""
+                if config["local_mode"]:
+                    for chunk in response:
+                        ai_response += chunk
+                        live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
+                else:
+                    for chunk in response.iter_content(1024):
+                        if chunk:
+                            decoded_chunk = chunk.decode('utf-8')
+                            ai_response += decoded_chunk
+                            live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
+
+            chat_history.append({"role": "system", "content": ai_response})
+            console.print(Panel(Markdown(ai_response), box=HORIZONTALS, title="[bold blue]Assistant[/bold blue]", border_style="blue", padding=(1, 0)))

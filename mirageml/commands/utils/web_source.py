@@ -15,6 +15,7 @@ from rich.console import Console
 from rich.live import Live
 from rich.panel import Panel
 from rich.prompt import Prompt
+from rich.progress import track
 
 import logging
 logger = logging.getLogger(__name__)
@@ -65,12 +66,21 @@ def crawl_website(start_url):
                     for link in get_all_links(current_url):
                         to_visit.append(link)
 
-            loader = AsyncChromiumLoader(visited_links)
-            live.update(Panel("Scraping Pages...", title="[bold green]Indexer[/bold green]", border_style="green"))
-            html = loader.load()
-            bs_transformer = BeautifulSoupTransformer()
-            live.update(Panel("Cleaning HTML...", title="[bold green]Indexer[/bold green]", border_style="green"))
-            docs_transformed = bs_transformer.transform_documents(html)
-            data = [x.page_content for x in docs_transformed]
-            metadata = [dict({"data": x.page_content}, **x.metadata) for x in docs_transformed]
-            return data, metadata
+    # with Live(progress, console=console, transient=True, auto_refresh=True, vertical_overflow="visible") as live2:
+    data, metadata = [], []
+    for link in track(visited_links, transient=True, description="[cyan]Scraping Pages & Cleaning HTML..."):
+        loader = AsyncChromiumLoader([link])
+        # live2.update(Panel("Scraping Pages...", title="[bold green]Indexer[/bold green]", border_style="green"))
+        html = loader.load()
+        bs_transformer = BeautifulSoupTransformer()
+        # live2.update(Panel("Cleaning HTML...", title="[bold green]Indexer[/bold green]", border_style="green"))
+        docs_transformed = bs_transformer.transform_documents(html)
+        data.extend([x.page_content for x in docs_transformed])
+        metadata.extend([dict({"data": x.page_content}, **x.metadata) for x in docs_transformed])
+    return data, metadata
+
+if __name__ == "__main__":
+    import time
+    start_time = time.time()
+    crawl_website("https://rich.readthedocs.io/en/stable")
+    print(f"Time taken: {time.time() - start_time}")
