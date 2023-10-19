@@ -9,7 +9,7 @@ def sync_plugin(args):
     if plugin_name == "notion":
         notion_provider_token = keyring.get_password(SERVICE_ID, "notion_provider_token")
         if not notion_provider_token:
-            print("Please add the notion plugin first. Run `mirageml add plugin notion`")
+            typer.secho("Please add the notion plugin first. Run `mirageml add plugin notion`", fg=typer.colors.BRIGHT_RED, bold=True)
             return
         else:
             access_token = keyring.get_password(SERVICE_ID, "access_token")
@@ -23,5 +23,5 @@ def sync_plugin(args):
             else:
                 typer.secho("Syncing notion triggered successfully. You will receive an email when the sync is complete.", fg=typer.colors.BRIGHT_GREEN, bold=True)
     else:
-        print("Only notion plugin syncing is supported for now.")
+        typer.secho("Only notion plugin is supported for now.", fg=typer.colors.BRIGHT_RED, bold=True)
         return

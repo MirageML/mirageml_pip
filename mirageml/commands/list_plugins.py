@@ -1,5 +1,6 @@
 import keyring
 import requests
+import typer
 
 from mirageml.constants import SERVICE_ID, SUPABASE_URL, SUPABASE_KEY
 
@@ -23,4 +24,4 @@ def list_plugins():
     for key in response_data:
         if (response_data[key]):
             connected_plugin_string += f"{plugin_mapping[key]}, "
-    print(connected_plugin_string[:-2])
+    typer.secho(connected_plugin_string[:-2], fg=typer.colors.BRIGHT_GREEN, bold=True)
