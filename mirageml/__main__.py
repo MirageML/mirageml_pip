@@ -1,14 +1,15 @@
 import typer
 import keyring
 import time
-# from typing_extensions import Annotated
+import sys
+import requests
 
 from .commands import (
     login, show_config, set_config, normal_chat, rag_chat,
     list_plugins, add_plugin, list_sources, add_source,
     sync_plugin, delete_source
 )
-from .constants import SERVICE_ID, supabase
+from .constants import SERVICE_ID, SUPABASE_URL, SUPABASE_KEY, supabase
 
 app = typer.Typer(
     no_args_is_help=True,
@@ -53,6 +54,19 @@ def main(ctx: typer.Context):
         except:
             typer.echo("Please login again. Run `mirageml login`")
             raise typer.Exit()
+
+    full_command = " ".join(sys.argv[1:])
+    access_token = keyring.get_password(SERVICE_ID, 'access_token')
+    params = {
+        "user_id": user_id,
+        "command": full_command,
+    }
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+    }
+    requests.post(f"{SUPABASE_URL}/rest/v1/user_commands", json=params, headers=headers)
 
 
 @app.command(name="help", hidden=True)
