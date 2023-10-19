@@ -8,8 +8,7 @@ import jwt
 import urllib.parse
 import requests
 
-from mirageml.constants import SERVICE_ID, PORT, supabase, SUPABASE_KEY, SUPABASE_URL
-from mirageml.classes.notion import Notion
+from mirageml.constants import SERVICE_ID, PORT, supabase, SUPABASE_KEY, SUPABASE_URL, NOTION_SYNC_ENDPOINT
 
 class LoginManager:
   def __init__(self, handler="mirage_auth_handler", provider="google", provider_options={}):
@@ -169,8 +168,15 @@ class NotionHandler(Handler):
         "Prefer": "resolution=merge-duplicates",
       }
       requests.post(f"{SUPABASE_URL}/rest/v1/user_notion_tokens", json=params, headers=headers)
-    n = Notion(provider_token)
-    n.sync()
+      headers = {
+        "Authorization": f"Bearer {access_token}",
+      }
+      sync_response = requests.post(NOTION_SYNC_ENDPOINT, json={}, headers=headers)
+      sync_response_data = sync_response.json()
+      if "error" in sync_response_data:
+          print(sync_response_data["error"])
+      else:
+          print("Syncing notion triggered successfully. You will receive an email when the sync is complete.")
     sys.exit(0)
 
   def do_GET(self):

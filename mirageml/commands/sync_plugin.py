@@ -1,7 +1,6 @@
 import keyring
-
-from mirageml.constants import SERVICE_ID
-from mirageml.classes import Notion
+import requests
+from mirageml.constants import SERVICE_ID, NOTION_SYNC_ENDPOINT
 
 def sync_plugin(args):
     plugin_name = args["plugin"]
@@ -11,8 +10,16 @@ def sync_plugin(args):
             print("Please add the notion plugin first. Run `mirageml add plugin notion`")
             return
         else:
-            n = Notion(notion_provider_token)
-            n.sync()
+            access_token = keyring.get_password(SERVICE_ID, "access_token")
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+            }
+            sync_response = requests.post(NOTION_SYNC_ENDPOINT, json={}, headers=headers)
+            sync_response_data = sync_response.json()
+            if "error" in sync_response_data:
+                print(sync_response_data["error"])
+            else:
+                print("Syncing notion triggered successfully. You will receive an email when the sync is complete.")
     else:
         print("Only notion plugin syncing is supported for now.")
         return
