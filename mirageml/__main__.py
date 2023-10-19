@@ -6,7 +6,11 @@ app = typer.Typer(
     add_completion=False,
     rich_markup_mode="markdown",
     help="""
-    MirageML CLI.
+    MirageML CLI
+
+    **You can use 'mml' to call the package.**
+
+
 
     See the website at https://mirageml.com/ for documentation and more information
     about running code on MirageML.
@@ -19,7 +23,7 @@ list_app = typer.Typer(name="list", help="List resources", no_args_is_help=True)
 sync_app = typer.Typer(name="sync", help="Sync resources", no_args_is_help=True)
 delete_app = typer.Typer(name="delete", help="Delete resources", no_args_is_help=True)
 
-app.add_typer(config_app)
+app.add_typer(config_app, rich_help_panel="Utils and Configs")
 app.add_typer(add_app)
 app.add_typer(list_app)
 app.add_typer(sync_app)
@@ -63,7 +67,7 @@ def custom_help():
     typer.echo("Your Custom Help Message Here")
 
 
-@app.command(name="login")
+@app.command(name="login", rich_help_panel="Utils and Configs")
 def login_command():
     from .commands import login
     """Login to Mirage ML"""

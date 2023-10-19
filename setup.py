@@ -2,7 +2,7 @@ from setuptools import setup, find_packages
 
 setup(
     name='mirageml',
-    version='0.0.11',
+    version='0.0.12',
     author='Mirage ML Inc',
     author_email='support@mirageml.com',
     description='Your Personal AGI',
@@ -28,7 +28,8 @@ setup(
     ],
     entry_points={
         'console_scripts': [
-            'mirageml=mirageml.__main__:app'
+            'mirageml=mirageml.__main__:app',
+            'mml=mirageml.__main__:app'        # This is the alias 'mml'
         ]
     }
 )
