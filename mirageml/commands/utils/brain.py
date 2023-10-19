@@ -3,9 +3,9 @@ import sys
 import requests
 import keyring
 
-from mirageml.constants import SERVICE_ID
 from io import StringIO
 from sentence_transformers import SentenceTransformer
+from mirageml.constants import SERVICE_ID, VECTORDB_EMBED_ENDPOINT, LLM_GPT_ENDPOINT
 
 PACKAGE_DIR = os.path.dirname(__file__)
 os.environ['TRANSFORMERS_CACHE'] = os.path.join(PACKAGE_DIR, 'models')
@@ -65,7 +65,7 @@ def get_embedding(text_list, model="BAAI/bge-small-en-v1.5", local=False):
     headers = {
         "Authorization": f"Bearer {access_token}"
     }
-    response = requests.post('https://mirageml--vectordb-embed-text.modal.run', json={'data': text_list}, headers=headers)
+    response = requests.post(VECTORDB_EMBED_ENDPOINT, json={'data': text_list}, headers=headers)
     response.raise_for_status()  # Raise an exception if the request failed
     return response.json()['embedding']
 
@@ -80,4 +80,4 @@ def llm_call(messages, model="gpt-3.5-turbo", stream=False, local=False):
     headers={
         "Authorization": f"Bearer {access_token}"
     }
-    return requests.post('https://mirageml--llm-gpt.modal.run', json=json_data, headers=headers, stream=stream)
+    return requests.post(LLM_GPT_ENDPOINT, json=json_data, headers=headers, stream=stream)

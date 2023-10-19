@@ -7,7 +7,7 @@ from qdrant_client import QdrantClient
 from qdrant_client.http.models import Batch, VectorParams, Distance
 
 import keyring
-from ...constants import SERVICE_ID
+from ...constants import SERVICE_ID, VECTORDB_SEARCH_ENDPOINT, VECTORDB_LIST_ENDPOINT, VECTORDB_CREATE_ENDPOINT, VECTORDB_DELETE_ENDPOINT
 
 from ..config import load_config
 from .brain import get_embedding
@@ -29,7 +29,7 @@ def create_remote_qdrant_db(data, metadata, collection_name="test"):
         "metadata": metadata,
         "collection_name": collection_name
     }
-    response = requests.post('https://mirageml--vectordb-create-db.modal.run', json=json_data)
+    response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data)
     response.raise_for_status()  # Raise an exception if the request failed
     print(response.json())
     return response.json()
@@ -89,7 +89,7 @@ def list_remote_qdrant_db():
     json_data = {
         "user_id": keyring.get_password(SERVICE_ID, 'user_id'),
     }
-    response = requests.post('https://mirageml--vectordb-list-db.modal.run', json=json_data)
+    response = requests.post(VECTORDB_LIST_ENDPOINT, json=json_data)
     response.raise_for_status()  # Raise an exception if the request failed
     return response.json()
 
@@ -104,7 +104,7 @@ def remote_qdrant_search(source_name, user_input):
         "collection_name": source_name,
         "search_query": user_input
     }
-    response = requests.post('https://mirageml--vectordb-search-db.modal.run', json=json_data)
+    response = requests.post(VECTORDB_SEARCH_ENDPOINT, json=json_data)
     response.raise_for_status()  # Raise an exception if the request failed
     return response.json()
 
@@ -129,7 +129,7 @@ def delete_remote_qdrant_db(collection_name="test"):
         "user_id": keyring.get_password(SERVICE_ID, 'user_id'),
         "collection_name": collection_name,
     }
-    response = requests.post('https://mirageml--vectordb-delete-db.modal.run', json=json_data)
+    response = requests.post(VECTORDB_DELETE_ENDPOINT, json=json_data)
     response.raise_for_status()  # Raise an exception if the request failed
     return response.json()
 
