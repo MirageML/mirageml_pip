@@ -102,7 +102,7 @@ def crawl_website(start_url):
             print()
 
 
-        user_input = input("Do you want to index another URL? (yes/no): ")
+        user_input = input("Do you want to index another URL? [yes/no] (default: no): ")
         user_input = user_input.strip()
         if user_input and not user_input.lower().startswith('n'):
             while True:
