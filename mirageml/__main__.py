@@ -122,11 +122,11 @@ def add_source_command():
     add_source(name, link, remote)
 
 # Delete Commands
-@delete_app.command(name="delete")
+@delete_app.command(name="source")
 def delete_source_command():
     """Delete a source"""
     from rich.prompt import Prompt
-    name = Prompt.ask("Name for the source")
+    name = Prompt.ask("Name of the source")
     remote = Prompt.ask("Is the source remote? (y/n)", default="n", show_default=True)
     remote = remote.lower().startswith("y")
     delete_source(name, remote)
