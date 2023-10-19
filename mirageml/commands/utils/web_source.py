@@ -10,11 +10,13 @@ import os
 from langchain.document_loaders import AsyncChromiumLoader
 from langchain.document_transformers import BeautifulSoupTransformer
 
+import typer
 from rich.markdown import Markdown
 from rich.console import Console
 from rich.live import Live
 from rich.panel import Panel
-from rich.prompt import Prompt
+from rich.table import Table
+from rich.tree import Tree
 from rich.progress import track
 
 import logging
@@ -25,6 +27,13 @@ logging.disable(logging.CRITICAL)
 logging.getLogger("langchain").setLevel(logging.CRITICAL)
 
 console = Console()
+
+def tree_to_paths(node, path=None):
+    path = path or []
+    for child in node.children:
+        yield from tree_to_paths(child, path + [child.label])
+    if path:
+        yield path
 
 def get_all_links(url):
     response = requests.get(url)
@@ -45,6 +54,7 @@ def check_playwright_chromium():
         return False
 
 def crawl_website(start_url):
+    urls = {start_url: set()}
     visited_links = set()
     to_visit = [start_url]
 
@@ -54,17 +64,59 @@ def crawl_website(start_url):
         print("Please run `python3 -m playwright install chromium`")
         return
 
-    with Live(Panel("Preparing to Index", title="[bold green]Indexer[/bold green]", border_style="green"),
-                  console=console, transient=True, auto_refresh=True, vertical_overflow="visible") as live:
-        with tempfile.TemporaryDirectory() as tmp_dir:
-            # print(f"Created temporary directory: {tmp_dir}")
-            while to_visit:
-                current_url = to_visit.pop(0)
-                if current_url not in visited_links:
-                    visited_links.add(current_url)
-                    live.update(Panel(f"Indexing: {current_url}", title="[bold green]Indexer[/bold green]", border_style="green"))
-                    for link in get_all_links(current_url):
-                        to_visit.append(link)
+    while to_visit:
+        with Live(Panel("Preparing to Index", title="[bold green]Indexer[/bold green]", border_style="green"),
+                    console=console, transient=True, auto_refresh=True, vertical_overflow="visible") as live:
+            with tempfile.TemporaryDirectory() as tmp_dir:
+                # print(f"Created temporary directory: {tmp_dir}")
+                while to_visit:
+                    current_url = to_visit.pop(0)
+                    if current_url not in visited_links:
+                        visited_links.add(current_url)
+                        live.update(Panel(f"Indexing: {current_url}", title="[bold green]Indexer[/bold green]", border_style="green"))
+                        for link in get_all_links(current_url):
+                            to_visit.append(link)
+        # pretty print all of the subpages that were indexed and ask the user if they want to continue
+        typer.secho("These are the subpaths we visited:", fg=typer.colors.BRIGHT_GREEN, bold=True)
+
+        # Process each link and add to tree
+        for url in visited_links:
+            # Check which key in urls the visited link is under
+            url_key = ""
+            for key in urls.keys():
+                if key in url: url_key = key
+
+            if not url_key: continue
+
+            try:
+                url = url.replace(url_key, "").split("/")[1]
+                urls[url_key].add(url)
+            except: continue
+
+        # Print the results
+        for domain, paths in urls.items():
+            print(f"{domain}:")
+            for path in sorted(paths):
+                print(path)
+            print()
+
+
+        user_input = input("Do you want to index another URL? (yes/no): ")
+        user_input = user_input.strip()
+        if user_input and user_input.lower().startswith() != 'n':
+            while True:
+                link = input("Link for the source (exit to skip): ")
+                if link.lower().strip() == 'exit': break
+                elif not link.startswith("https://"):
+                    typer.echo("Please enter a valid link starting with https://")
+                    continue
+                break
+            if link.lower().strip() != 'exit':
+                to_visit = [user_input]
+                urls[user_input] = set()
+            else: to_visit = []
+        else:
+            to_visit = []
 
     # with Live(progress, console=console, transient=True, auto_refresh=True, vertical_overflow="visible") as live2:
     data, metadata = [], []
