@@ -63,7 +63,7 @@ def get_embedding(text_list, model="BAAI/bge-small-en-v1.5", local=False):
     if local: return local_get_embedding(text_list, embedding_model_id=model)
     access_token = keyring.get_password(SERVICE_ID, 'access_token')
     headers = {
-        "x-access-token": access_token
+        "Authorization": f"Bearer {access_token}"
     }
     response = requests.post('https://mirageml--brain-embed-text.modal.run', json={'data': text_list}, headers=headers)
     response.raise_for_status()  # Raise an exception if the request failed
@@ -76,4 +76,8 @@ def llm_call(messages, model="gpt-3.5-turbo", stream=False, local=False):
         "messages": messages,
         "stream": stream
     }
-    return requests.post('https://mirageml--brain-gpt.modal.run', json=json_data, stream=stream)
+    access_token = keyring.get_password(SERVICE_ID, 'access_token')
+    headers={
+        "Authorization": f"Bearer {access_token}"
+    }
+    return requests.post('https://mirageml--brain-gpt.modal.run', json=json_data, headers=headers, stream=stream)
