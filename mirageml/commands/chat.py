@@ -63,4 +63,3 @@ def normal_chat(file_path: str = None):
 
         # Print the final AI response outside of the Live context so it persists
         chat_history.append({"role": "system", "content": ai_response})
-        console.print(Panel(Markdown(ai_response), box=HORIZONTALS, title="[bold blue]Assistant[/bold blue]", border_style="blue", padding=(1, 0)))

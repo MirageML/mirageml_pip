@@ -127,8 +127,8 @@ def rag_chat():
 
         # Live display while searching for relevant sources
         with Live(Panel("Searching for the relevant sources...",
-                    title="[bold blue]Assistant[/bold blue]", border_style="blue"),
-                    console=console, screen=True, auto_refresh=True, vertical_overflow="visible") as live:
+                    title="[bold blue]Assistant[/bold blue]", border_style="blue", box=HORIZONTALS),
+                    console=console, screen=False, auto_refresh=True, vertical_overflow="visible") as live:
 
             sorted_hits = search_and_rank(live, user_input, local_sources, remote_sources)
             context = create_context(sorted_hits)
@@ -154,9 +154,7 @@ def rag_chat():
                         decoded_chunk = chunk.decode('utf-8')
                         ai_response += decoded_chunk
                         live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
-
-        # Print the AI's response
-        console.print(Panel(Markdown(ai_response), box=HORIZONTALS, title="[bold blue]Assistant[/bold blue]", border_style="blue", padding=(1, 0)))
+            chat_history.append({"role": "system", "content": ai_response})
 
         while True:
             # Loop for follow-up questions
@@ -173,7 +171,7 @@ def rag_chat():
 
             chat_history.append({"role": "user", "content": user_input})
 
-            with Live(Panel("Assistant is typing...", title="[bold blue]Assistant[/bold blue]", border_style="blue"),
+            with Live(Panel("Assistant is typing...", title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"),
                     console=console, screen=False, auto_refresh=True, vertical_overflow="visible") as live:
 
                 response = llm_call(chat_history, model=config["model"], stream=True, local=config["local_mode"])
@@ -191,4 +189,3 @@ def rag_chat():
                             live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
 
             chat_history.append({"role": "system", "content": ai_response})
-            console.print(Panel(Markdown(ai_response), box=HORIZONTALS, title="[bold blue]Assistant[/bold blue]", border_style="blue", padding=(1, 0)))
