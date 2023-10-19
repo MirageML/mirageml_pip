@@ -5,7 +5,7 @@ setup(
     version='0.0.11',
     author='Mirage ML Inc',
     author_email='support@mirageml.com',
-    description='A basic pip package with basic commands like help and hello world',
+    description='Your Personal AGI',
     packages=find_packages(),
     install_requires=[
         # List your package's dependencies here

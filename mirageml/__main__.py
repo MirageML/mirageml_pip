@@ -128,6 +128,7 @@ def add_source_command():
     from urllib.parse import urlparse
     parsed_url = urlparse(link)
     name = parsed_url.netloc.split('.')[0]
+    if name == "docs": name = parsed_url.netloc.split('.')[1]
     name = input(f"Name for the source [default: {name}]: ") or name
     remote = input("Store the source remotely? (y/n): ")
     remote = remote.lower().startswith("y")
