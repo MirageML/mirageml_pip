@@ -7,6 +7,7 @@ import keyring
 import jwt
 import urllib.parse
 import requests
+import typer
 
 from mirageml.constants import SERVICE_ID, PORT, supabase, SUPABASE_KEY, SUPABASE_URL, NOTION_SYNC_ENDPOINT
 
@@ -174,9 +175,9 @@ class NotionHandler(Handler):
       sync_response = requests.post(NOTION_SYNC_ENDPOINT, json={}, headers=headers)
       sync_response_data = sync_response.json()
       if "error" in sync_response_data:
-          print(sync_response_data["error"])
+          typer.secho(f"Error syncing notion: {sync_response_data['error']}", fg=typer.colors.BRIGHT_RED, bold=True)
       else:
-          print("Syncing notion triggered successfully. You will receive an email when the sync is complete.")
+          typer.secho("Syncing notion triggered successfully. You will receive an email when the sync is complete.", fg=typer.colors.BRIGHT_GREEN, bold=True)
     sys.exit(0)
 
   def do_GET(self):

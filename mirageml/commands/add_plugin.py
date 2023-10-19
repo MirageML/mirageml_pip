@@ -1,4 +1,4 @@
-
+import typer
 
 from mirageml.constants import REDIRECT_URI
 from mirageml.classes import LoginManager
@@ -37,4 +37,4 @@ def add_plugin(args):
     # elif plugin_name == "gdrive":
     #     add_gdrive()
     else:
-        print("Plugin not support. Supported plugins: notion")
+        typer.secho("Only notion plugin is supported for now.", fg=typer.colors.BRIGHT_RED, bold=True)

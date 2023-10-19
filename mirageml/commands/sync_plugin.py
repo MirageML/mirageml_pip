@@ -1,5 +1,7 @@
 import keyring
 import requests
+import typer
+
 from mirageml.constants import SERVICE_ID, NOTION_SYNC_ENDPOINT
 
 def sync_plugin(args):
@@ -17,9 +19,9 @@ def sync_plugin(args):
             sync_response = requests.post(NOTION_SYNC_ENDPOINT, json={}, headers=headers)
             sync_response_data = sync_response.json()
             if "error" in sync_response_data:
-                print(sync_response_data["error"])
+                typer.secho(sync_response_data["error"], fg=typer.colors.BRIGHT_RED, bold=True)
             else:
-                print("Syncing notion triggered successfully. You will receive an email when the sync is complete.")
+                typer.secho("Syncing notion triggered successfully. You will receive an email when the sync is complete.", fg=typer.colors.BRIGHT_GREEN, bold=True)
     else:
         print("Only notion plugin syncing is supported for now.")
         return
