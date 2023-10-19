@@ -10,6 +10,12 @@ import os
 from langchain.document_loaders import AsyncChromiumLoader
 from langchain.document_transformers import BeautifulSoupTransformer
 
+from rich.markdown import Markdown
+from rich.console import Console
+from rich.live import Live
+from rich.panel import Panel
+from rich.prompt import Prompt
+
 import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.CRITICAL)
@@ -17,6 +23,7 @@ logging.basicConfig(level=logging.CRITICAL)
 logging.disable(logging.CRITICAL)
 logging.getLogger("langchain").setLevel(logging.CRITICAL)
 
+console = Console()
 
 def get_all_links(url):
     response = requests.get(url)
@@ -45,22 +52,25 @@ def crawl_website(start_url):
         print("Playwright Chromium required for webscraping.")
         print("Please run `python3 -m playwright install chromium`")
         return
-    
-    with tempfile.TemporaryDirectory() as tmp_dir:
-        # print(f"Created temporary directory: {tmp_dir}")
-        while to_visit:
-            current_url = to_visit.pop(0)
-            if current_url not in visited_links:
-                visited_links.add(current_url)
-                print(f"Indexing: {current_url}")
-                for link in get_all_links(current_url):
-                    to_visit.append(link)
 
-        loader = AsyncChromiumLoader(visited_links)
-        print("Scraping Pages...")
-        html = loader.load()
-        bs_transformer = BeautifulSoupTransformer()
-        docs_transformed = bs_transformer.transform_documents(html)
-        data = [x.page_content for x in docs_transformed]
-        metadata = [dict({"data": x.page_content}, **x.metadata) for x in docs_transformed]
-        return data, metadata
+    with Live(Panel("Preparing to Index", title="[bold green]Indexer[/bold green]", border_style="green"),
+                  console=console, transient=True, auto_refresh=True, vertical_overflow="visible") as live:
+        with tempfile.TemporaryDirectory() as tmp_dir:
+            # print(f"Created temporary directory: {tmp_dir}")
+            while to_visit:
+                current_url = to_visit.pop(0)
+                if current_url not in visited_links:
+                    visited_links.add(current_url)
+                    live.update(Panel(f"Indexing: {current_url}", title="[bold green]Indexer[/bold green]", border_style="green"))
+                    for link in get_all_links(current_url):
+                        to_visit.append(link)
+
+            loader = AsyncChromiumLoader(visited_links)
+            live.update(Panel("Scraping Pages...", title="[bold green]Indexer[/bold green]", border_style="green"))
+            html = loader.load()
+            bs_transformer = BeautifulSoupTransformer()
+            live.update(Panel("Cleaning HTML...", title="[bold green]Indexer[/bold green]", border_style="green"))
+            docs_transformed = bs_transformer.transform_documents(html)
+            data = [x.page_content for x in docs_transformed]
+            metadata = [dict({"data": x.page_content}, **x.metadata) for x in docs_transformed]
+            return data, metadata

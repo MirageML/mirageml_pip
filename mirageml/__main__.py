@@ -111,9 +111,15 @@ def add_plugin_command(name: str):
 
 
 @add_app.command(name="source")
-def add_source_command(name: str, link: str = typer.Option(prompt=True, help='Link for the source')):
+def add_source_command():
     """Add a new source"""
-    add_source(name, link)
+    from rich.prompt import Prompt
+    name = Prompt.ask("Name for the source")
+    link = Prompt.ask("Link for the source")
+    remote = Prompt.ask("Store the source remotely? (y/n)", default="n", show_default=True)
+    remote = remote.lower().startswith("y")
+
+    add_source(name, link, remote)
 
 # Delete Commands
 @delete_app.command(name="delete")

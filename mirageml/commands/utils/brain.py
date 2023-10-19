@@ -65,7 +65,7 @@ def get_embedding(text_list, model="BAAI/bge-small-en-v1.5", local=False):
     headers = {
         "x-access-token": access_token
     }
-    response = requests.post('https://mirageml--brain-embed-text.modal.run', json={'text_list': text_list}, headers=headers)
+    response = requests.post('https://mirageml--brain-embed-text.modal.run', json={'data': text_list}, headers=headers)
     response.raise_for_status()  # Raise an exception if the request failed
     return response.json()['embedding']
 

@@ -6,6 +6,9 @@ import tiktoken
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Batch, VectorParams, Distance
 
+import keyring
+from ...constants import SERVICE_ID
+
 from ..config import load_config
 from .brain import get_embedding
 
@@ -23,11 +26,32 @@ def list_qdrant_db():
     qdrant_client = get_qdrant_db()
     return [x.name for x in qdrant_client.get_collections().collections]
 
+def list_remote_qdrant_db():
+    json_data = {
+        "user_id": keyring.get_password(SERVICE_ID, 'user_id'),
+    }
+    response = requests.post('https://mirageml--brain-list-qdrant-db.modal.run', json=json_data)
+    response.raise_for_status()  # Raise an exception if the request failed
+    return response.json()
+
 def delete_qdrant_db(collection_name="test"):
     qdrant_client = get_qdrant_db()
     qdrant_client.delete_collection(collection_name=collection_name)
 
-def create_qdrant_db(data, metadata, collection_name="test"):
+def create_remote_qdrant_db(data, metadata, collection_name="test"):
+    json_data = {
+        "user_id": keyring.get_password(SERVICE_ID, 'user_id'),
+        "data": data,
+        "metadata": metadata,
+        "collection_name": collection_name
+    }
+    response = requests.post('https://mirageml--brain-create-qdrant-db.modal.run', json=json_data)
+    response.raise_for_status()  # Raise an exception if the request failed
+    print(response.json())
+    return response.json()
+
+def create_qdrant_db(data, metadata, collection_name="test", remote=True):
+    if remote: return create_remote_qdrant_db(data, metadata, collection_name=collection_name)
     config = load_config()
     qdrant_client = get_qdrant_db()
 
@@ -50,9 +74,6 @@ def create_qdrant_db(data, metadata, collection_name="test"):
 
     vectors = get_embedding(final_data, local=config["local_mode"])
 
-    if collection_name in [x.name for x in qdrant_client.get_collections().collections]:
-        return qdrant_client
-
     # qdrant_client.add(
     #     collection_name="demo_collection",
     #     documents=data,
@@ -60,9 +81,10 @@ def create_qdrant_db(data, metadata, collection_name="test"):
     #     ids=[uuid.uuid4().hex for _ in range(len(data))]
     # )
 
+    size = 1536 if config["local_mode"] else 384
     qdrant_client.recreate_collection(
         collection_name=collection_name,
-        vectors_config=VectorParams(size=1536, distance=Distance.COSINE),
+        vectors_config=VectorParams(size=size, distance=Distance.COSINE),
     )
 
     qdrant_client.upsert(
@@ -77,3 +99,28 @@ def create_qdrant_db(data, metadata, collection_name="test"):
     print(f"Created Source: {collection_name}")
 
     return qdrant_client
+
+def qdrant_search(source_name, user_input):
+    config = load_config()
+    qdrant_client = get_qdrant_db()
+
+    hits = qdrant_client.search(
+                limit=5,
+                collection_name=source_name,
+                query_vector=get_embedding([user_input], local=config["local_mode"])[0],
+            )
+    hits = [{
+        "score": hit.score,
+        "payload": hit.payload
+    } for hit in hits]
+    return hits
+
+def remote_qdrant_search(source_name, user_input):
+    json_data = {
+        "user_id": keyring.get_password(SERVICE_ID, 'user_id'),
+        "collection_name": source_name,
+        "search_query": user_input
+    }
+    response = requests.post('https://mirageml--brain-search-qdrant-db.modal.run', json=json_data)
+    response.raise_for_status()  # Raise an exception if the request failed
+    return response.json()
