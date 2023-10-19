@@ -80,4 +80,4 @@ def llm_call(messages, model="gpt-3.5-turbo", stream=False, local=False):
     headers={
         "Authorization": f"Bearer {access_token}"
     }
-    return requests.post('https://mirageml--brain-gpt.modal.run', json=json_data, headers=headers, stream=stream)
+    return requests.post('https://mirageml--llm-gpt.modal.run', json=json_data, headers=headers, stream=stream)

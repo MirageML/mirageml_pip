@@ -22,22 +22,6 @@ def exists_qdrant_db(collection_name="test"):
     qdrant_client = get_qdrant_db()
     return collection_name in [x.name for x in qdrant_client.get_collections().collections]
 
-def list_qdrant_db():
-    qdrant_client = get_qdrant_db()
-    return [x.name for x in qdrant_client.get_collections().collections]
-
-def list_remote_qdrant_db():
-    json_data = {
-        "user_id": keyring.get_password(SERVICE_ID, 'user_id'),
-    }
-    response = requests.post('https://mirageml--brain-list-qdrant-db.modal.run', json=json_data)
-    response.raise_for_status()  # Raise an exception if the request failed
-    return response.json()
-
-def delete_qdrant_db(collection_name="test"):
-    qdrant_client = get_qdrant_db()
-    qdrant_client.delete_collection(collection_name=collection_name)
-
 def create_remote_qdrant_db(data, metadata, collection_name="test"):
     json_data = {
         "user_id": keyring.get_password(SERVICE_ID, 'user_id'),
@@ -45,7 +29,7 @@ def create_remote_qdrant_db(data, metadata, collection_name="test"):
         "metadata": metadata,
         "collection_name": collection_name
     }
-    response = requests.post('https://mirageml--brain-create-qdrant-db.modal.run', json=json_data)
+    response = requests.post('https://mirageml--vectordb-create-db.modal.run', json=json_data)
     response.raise_for_status()  # Raise an exception if the request failed
     print(response.json())
     return response.json()
@@ -100,6 +84,30 @@ def create_qdrant_db(data, metadata, collection_name="test", remote=True):
 
     return qdrant_client
 
+
+def list_remote_qdrant_db():
+    json_data = {
+        "user_id": keyring.get_password(SERVICE_ID, 'user_id'),
+    }
+    response = requests.post('https://mirageml--vectordb-list-db.modal.run', json=json_data)
+    response.raise_for_status()  # Raise an exception if the request failed
+    return response.json()
+
+def list_qdrant_db():
+    qdrant_client = get_qdrant_db()
+    return [x.name for x in qdrant_client.get_collections().collections]
+
+
+def remote_qdrant_search(source_name, user_input):
+    json_data = {
+        "user_id": keyring.get_password(SERVICE_ID, 'user_id'),
+        "collection_name": source_name,
+        "search_query": user_input
+    }
+    response = requests.post('https://mirageml--vectordb-search-db.modal.run', json=json_data)
+    response.raise_for_status()  # Raise an exception if the request failed
+    return response.json()
+
 def qdrant_search(source_name, user_input):
     config = load_config()
     qdrant_client = get_qdrant_db()
@@ -115,12 +123,17 @@ def qdrant_search(source_name, user_input):
     } for hit in hits]
     return hits
 
-def remote_qdrant_search(source_name, user_input):
+
+def delete_remote_qdrant_db(collection_name="test"):
     json_data = {
         "user_id": keyring.get_password(SERVICE_ID, 'user_id'),
-        "collection_name": source_name,
-        "search_query": user_input
+        "collection_name": collection_name,
     }
-    response = requests.post('https://mirageml--brain-search-qdrant-db.modal.run', json=json_data)
+    response = requests.post('https://mirageml--vectordb-delete-db.modal.run', json=json_data)
     response.raise_for_status()  # Raise an exception if the request failed
     return response.json()
+
+def delete_qdrant_db(collection_name="test", remote=False):
+    if remote: return delete_remote_qdrant_db(collection_name=collection_name)
+    qdrant_client = get_qdrant_db()
+    qdrant_client.delete_collection(collection_name=collection_name)
