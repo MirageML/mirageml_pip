@@ -113,10 +113,17 @@ def add_plugin_command(name: str):
 @add_app.command(name="source")
 def add_source_command():
     """Add a new source"""
-    from rich.prompt import Prompt
-    name = Prompt.ask("Name for the source")
-    link = Prompt.ask("Link for the source")
-    remote = Prompt.ask("Store the source remotely? (y/n)", default="n", show_default=True)
+    while True:
+        link = input("Link for the source: ")
+        if not link.startswith("https://"):
+            typer.echo("Please enter a valid link starting with https://")
+            continue
+        break
+    from urllib.parse import urlparse
+    parsed_url = urlparse(link)
+    name = parsed_url.netloc.split('.')[0]
+    name = input(f"Name for the source [default: {name}]: ") or name
+    remote = input("Store the source remotely? (y/n): ")
     remote = remote.lower().startswith("y")
 
     add_source(name, link, remote)
