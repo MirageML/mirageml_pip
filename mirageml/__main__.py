@@ -41,10 +41,10 @@ def main(ctx: typer.Context):
     user_id = keyring.get_password(SERVICE_ID, 'user_id')
     refresh_token = keyring.get_password(SERVICE_ID, 'refresh_token')
     expires_at = keyring.get_password(SERVICE_ID, 'expires_at')
-    if not user_id and ctx.invoked_subcommand != "login_command":
+    if not user_id and ctx.invoked_subcommand != "login":
         typer.echo("Please login first. Run `mirageml login`")
         raise typer.Exit()
-    elif expires_at and float(expires_at) < time.time() and ctx.invoked_subcommand != "login_command":
+    elif expires_at and float(expires_at) < time.time() and ctx.invoked_subcommand != "login":
         try:
             response = supabase.auth._refresh_access_token(refresh_token)
             session = response.session
