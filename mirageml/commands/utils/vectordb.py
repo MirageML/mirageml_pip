@@ -34,7 +34,7 @@ def create_remote_qdrant_db(data, metadata, collection_name="test"):
     print(response.json())
     return response.json()
 
-def create_qdrant_db(data, metadata, collection_name="test", remote=True):
+def create_qdrant_db(data, metadata, collection_name="test", remote=False):
     if remote: return create_remote_qdrant_db(data, metadata, collection_name=collection_name)
     config = load_config()
     qdrant_client = get_qdrant_db()
