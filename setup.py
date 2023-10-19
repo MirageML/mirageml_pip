@@ -24,6 +24,7 @@ setup(
         "keyring==24.2.0",
         "requests==2.31.0",
         "supabase==1.2.0",
+        "segement-analytics-python=2.2.3"
     ],
     entry_points={
         'console_scripts': [

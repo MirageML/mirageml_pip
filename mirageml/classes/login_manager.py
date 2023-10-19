@@ -8,9 +8,10 @@ import jwt
 import urllib.parse
 import requests
 import typer
+import segment.analytics as analytics
+from mirageml.constants import SERVICE_ID, PORT, ANALYTICS_WRITE_KEY, supabase, SUPABASE_KEY, SUPABASE_URL, NOTION_SYNC_ENDPOINT
 
-from mirageml.constants import SERVICE_ID, PORT, supabase, SUPABASE_KEY, SUPABASE_URL, NOTION_SYNC_ENDPOINT
-
+analytics.write_key = ANALYTICS_WRITE_KEY
 class LoginManager:
   def __init__(self, handler="mirage_auth_handler", provider="google", provider_options={}):
     self._server = None
@@ -75,6 +76,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
     keyring.set_password(SERVICE_ID, 'expires_at', info['expires_at'])
     keyring.set_password(SERVICE_ID, 'user_id', decoded["sub"])
     keyring.set_password(SERVICE_ID, 'email', decoded["email"])
+    analytics.identify(decoded["sub"], {
+      "email": decoded["email"],
+    })
     return access_token, decoded["sub"]
 
   def callback_handler(self):

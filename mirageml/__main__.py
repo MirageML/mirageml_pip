@@ -2,15 +2,16 @@ import typer
 import keyring
 import time
 import sys
-import requests
+import segment.analytics as analytics
 
+from .constants import SERVICE_ID, ANALYTICS_WRITE_KEY, supabase
 from .commands import (
     login, show_config, set_config, normal_chat, rag_chat,
     list_plugins, add_plugin, list_sources, add_source,
     sync_plugin, delete_source
 )
-from .constants import SERVICE_ID, SUPABASE_URL, SUPABASE_KEY, supabase
 
+analytics.write_key = ANALYTICS_WRITE_KEY
 app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
@@ -51,22 +52,13 @@ def main(ctx: typer.Context):
             keyring.set_password(SERVICE_ID, 'access_token', session.access_token)
             keyring.set_password(SERVICE_ID, 'refresh_token', session.refresh_token)
             keyring.set_password(SERVICE_ID, 'expires_at', str(session.expires_at))
+            analytics.identify(user_id)
         except:
             typer.echo("Please login again. Run `mirageml login`")
             raise typer.Exit()
 
     full_command = " ".join(sys.argv[1:])
-    access_token = keyring.get_password(SERVICE_ID, 'access_token')
-    params = {
-        "user_id": user_id,
-        "command": full_command,
-    }
-    headers = {
-        "apikey": SUPABASE_KEY,
-        "Authorization": f"Bearer {access_token}",
-        "Content-Type": "application/json",
-    }
-    requests.post(f"{SUPABASE_URL}/rest/v1/user_commands", json=params, headers=headers)
+    analytics.track(user_id, "command", {"command": full_command})
 
 
 @app.command(name="help", hidden=True)
