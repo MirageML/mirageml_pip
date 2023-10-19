@@ -4,13 +4,13 @@ import requests
 import keyring
 
 from io import StringIO
-from sentence_transformers import SentenceTransformer
 from mirageml.constants import SERVICE_ID, VECTORDB_EMBED_ENDPOINT, LLM_GPT_ENDPOINT
 
 PACKAGE_DIR = os.path.dirname(__file__)
 os.environ['TRANSFORMERS_CACHE'] = os.path.join(PACKAGE_DIR, 'models')
 
 def local_get_embedding(text_list, embedding_model_id="BAAI/bge-small-en-v1.5"):
+    from sentence_transformers import SentenceTransformer
     model_dir = os.path.join(PACKAGE_DIR, 'models', embedding_model_id)
     if not os.path.exists(model_dir):
         os.makedirs(model_dir, exist_ok=True)

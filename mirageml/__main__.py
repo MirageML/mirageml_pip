@@ -1,17 +1,6 @@
-import typer
-import keyring
 import time
-import sys
-import segment.analytics as analytics
+import typer
 
-from .constants import SERVICE_ID, ANALYTICS_WRITE_KEY, supabase
-from .commands import (
-    login, show_config, set_config, normal_chat, rag_chat,
-    list_plugins, add_plugin, list_sources, add_source,
-    sync_plugin, delete_source
-)
-
-analytics.write_key = ANALYTICS_WRITE_KEY
 app = typer.Typer(
     no_args_is_help=True,
     add_completion=False,
@@ -39,6 +28,13 @@ app.add_typer(delete_app)
 
 @app.callback()
 def main(ctx: typer.Context):
+    import sys
+    import keyring
+    from .constants import SERVICE_ID, ANALYTICS_WRITE_KEY, supabase
+    import segment.analytics as analytics
+
+    analytics.write_key = ANALYTICS_WRITE_KEY
+
     user_id = keyring.get_password(SERVICE_ID, 'user_id')
     refresh_token = keyring.get_password(SERVICE_ID, 'refresh_token')
     expires_at = keyring.get_password(SERVICE_ID, 'expires_at')
@@ -69,6 +65,7 @@ def custom_help():
 
 @app.command(name="login")
 def login_command():
+    from .commands import login
     """Login to Mirage ML"""
     login()
 
@@ -76,17 +73,20 @@ def login_command():
 @app.command()
 def chat(file_path: str = typer.Argument(None, help="Path to a file to use as a chat history.")):
     """Chat with Mirage ML"""
+    from .commands import normal_chat
     normal_chat(file_path=file_path)
 
 
 @app.command()
 def rag(sources: list[str] = typer.Argument(None, help="Sources to use for RAG")):
     """Chat with Mirage ML using RAG"""
+    from .commands import rag_chat
     rag_chat()
 
 @config_app.command(name="show")
 def show_config_command():
     """Show the current config"""
+    from .commands import show_config
     show_config()
 
 
@@ -95,30 +95,35 @@ def set_config_command():
     """
     Set the config file for MirageML
     """
+    from .commands import set_config
     set_config()
 
 # List Commands
 @list_app.command(name="plugins")
 def list_plugins_command():
     """List connected plugins"""
+    from .commands import list_plugins
     list_plugins()
 
 
 @list_app.command(name="sources")
 def list_sources_command():
     """List created sources"""
+    from .commands import list_sources
     list_sources()
 
 # Add Commands
 @add_app.command(name="plugin")
 def add_plugin_command(name: str):
     """Add a plugin by name"""
+    from .commands import add_plugin
     add_plugin({"plugin": name})
 
 
 @add_app.command(name="source")
 def add_source_command():
     """Add a new source"""
+    from .commands import add_source
     while True:
         link = input("Link for the source: ")
         if not link.startswith("https://"):
@@ -139,6 +144,7 @@ def add_source_command():
 @delete_app.command(name="source")
 def delete_source_command():
     """Delete a source"""
+    from .commands import delete_source
     from rich.prompt import Prompt
     name = Prompt.ask("Name of the source")
     remote = Prompt.ask("Is the source remote? (y/n)", default="n", show_default=True)
@@ -149,6 +155,7 @@ def delete_source_command():
 @sync_app.command(name="plugin")
 def sync_plugin_command(name: str):
     """Sync a plugin"""
+    from .commands import sync_plugin
     sync_plugin({"plugin": name})
 
 
