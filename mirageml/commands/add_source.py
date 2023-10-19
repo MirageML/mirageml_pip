@@ -19,6 +19,7 @@ def add_local_source(name=None, path=None):
     data, metadata = crawl_files()
     # collection_name should be absolute path
     collection_name = os.path.abspath('.').replace('/', '_') if name is None else name
+    collection_name = collection_name.replace(' ', '_')
     create_qdrant_db(data, metadata, collection_name=collection_name)
     return collection_name
 
