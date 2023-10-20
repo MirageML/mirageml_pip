@@ -1,7 +1,6 @@
 import time
 import typer
 from typing import List
-from typing_extensions import Annotated
 
 app = typer.Typer(
     no_args_is_help=True,
@@ -36,24 +35,19 @@ app.add_typer(delete_app, rich_help_panel="Manage Resources")
 def main(ctx: typer.Context):
     import sys
     import keyring
-    from .constants import SERVICE_ID, ANALYTICS_WRITE_KEY, supabase
+    from .constants import SERVICE_ID, ANALYTICS_WRITE_KEY, fetch_new_access_token
     import segment.analytics as analytics
 
     analytics.write_key = ANALYTICS_WRITE_KEY
 
     user_id = keyring.get_password(SERVICE_ID, 'user_id')
-    refresh_token = keyring.get_password(SERVICE_ID, 'refresh_token')
     expires_at = keyring.get_password(SERVICE_ID, 'expires_at')
     if not user_id and ctx.invoked_subcommand != "login":
         typer.echo("Please login first. Run `mirageml login`")
         raise typer.Exit()
     elif expires_at and float(expires_at) < time.time() and ctx.invoked_subcommand != "login":
         try:
-            response = supabase.auth._refresh_access_token(refresh_token)
-            session = response.session
-            keyring.set_password(SERVICE_ID, 'access_token', session.access_token)
-            keyring.set_password(SERVICE_ID, 'refresh_token', session.refresh_token)
-            keyring.set_password(SERVICE_ID, 'expires_at', str(session.expires_at))
+            fetch_new_access_token()
             analytics.identify(user_id)
         except:
             typer.echo("Please login again. Run `mirageml login`")
