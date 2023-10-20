@@ -78,7 +78,8 @@ def crawl_website(start_url):
                         for link in get_all_links(current_url):
                             to_visit.append(link)
         # pretty print all of the subpages that were indexed and ask the user if they want to continue
-        typer.secho("These are the subpaths we visited:", fg=typer.colors.BRIGHT_GREEN, bold=True)
+        typer.secho("Subpaths Per URL:", fg=typer.colors.GREEN, bold=True)
+        print()
 
         # Process each link and add to tree
         for url in visited_links:
@@ -91,27 +92,37 @@ def crawl_website(start_url):
 
             try:
                 url = url.replace(url_key, "").split("/")[0]
-                urls[url_key].add(url)
+                if url: urls[url_key].add(url)
             except: continue
 
         # Print the results
         for domain, paths in urls.items():
-            print(f"{domain}:")
+            typer.secho(f"{domain}:", fg=typer.colors.BRIGHT_GREEN, bold=True)
+            if len (paths) == 0:
+                print("No subpaths found, you may have to manually add the url when prompted.")
+                print()
+                continue
             for path in sorted(paths):
                 print(path)
             print()
 
 
-        user_input = input("Do you want to index another URL? [yes/no] (default: no): ")
+        user_input = input("Do you want to index another URL? Enter a URL or leave empty (default: no): ")
         user_input = user_input.strip()
         if user_input and not user_input.lower().startswith('n'):
-            while True:
-                link = input("Link for the source (exit to skip): ")
-                if link.lower().strip() == 'exit': break
-                elif not link.startswith("https://"):
-                    typer.echo("Please enter a valid link starting with https://")
-                    continue
-                break
+            if user_input.lower().startswith('https://'):
+                link = user_input
+                if not link.endswith("/"): link += "/"
+                to_visit = [link]
+                urls[link] = set()
+            else:
+                while True:
+                    link = input("Link for the source (exit to skip): ")
+                    if link.lower().strip() == 'exit': break
+                    elif not link.startswith("https://"):
+                        typer.echo("Please enter a valid link starting with https://")
+                        continue
+                    break
             if link.lower().strip() != 'exit':
                 if not link.endswith("/"): link += "/"
                 to_visit = [link]
@@ -152,7 +163,6 @@ def extract_file_or_url(file_or_url):
             html = loader.load()
             bs_transformer = BeautifulSoupTransformer()
             docs_transformed = bs_transformer.transform_documents(html)
-            breakpoint()
             source, file_or_url_data = docs_transformed[0].metadata["source"], docs_transformed[0].page_content
         except Exception as e:
             typer.secho(f"Unable to read url make sure that the url starts with http: {file_or_url}", fg=typer.colors.BRIGHT_RED, bold=True)
@@ -163,5 +173,5 @@ def extract_file_or_url(file_or_url):
 if __name__ == "__main__":
     import time
     start_time = time.time()
-    extract_file_or_url("https://rich.readthedocs.io/en/stable")
+    crawl_website("https://code.visualstudio.com/api")
     print(f"Time taken: {time.time() - start_time}")
