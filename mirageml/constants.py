@@ -34,6 +34,7 @@ def get_headers():
     import typer
     import keyring
     expires_at = keyring.get_password(SERVICE_ID, 'expires_at')
+    access_token = keyring.get_password(SERVICE_ID, 'access_token')
     if expires_at and float(expires_at) < time.time():
         try:
             refresh_token = keyring.get_password(SERVICE_ID, 'refresh_token')
@@ -43,11 +44,11 @@ def get_headers():
             keyring.set_password(SERVICE_ID, 'refresh_token', session.refresh_token)
             keyring.set_password(SERVICE_ID, 'expires_at', str(session.expires_at))
             access_token = session.access_token
-            headers = {
-                "Authorization": f"Bearer {access_token}"
-            }
-            return headers
         except Exception as e:
             print(e)
             typer.echo("Please login again. Run `mirageml login`")
             raise typer.Exit()
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+    return headers
