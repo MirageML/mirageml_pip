@@ -20,8 +20,23 @@ VECTORDB_DELETE_ENDPOINT = "https://mirageml--vectordb-delete-db.modal.run"
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
 def get_headers():
+    import time
+    import typer
     import keyring
     access_token = keyring.get_password(SERVICE_ID, 'access_token')
+    expires_at = keyring.get_password(SERVICE_ID, 'expires_at')
+    if expires_at and float(expires_at) < time.time():
+        try:
+            refresh_token = keyring.get_password(SERVICE_ID, 'refresh_token')
+            response = supabase.auth._refresh_access_token(refresh_token)
+            session = response.session
+            keyring.set_password(SERVICE_ID, 'access_token', session.access_token)
+            keyring.set_password(SERVICE_ID, 'refresh_token', session.refresh_token)
+            keyring.set_password(SERVICE_ID, 'expires_at', str(session.expires_at))
+            access_token = session.access_token
+        except:
+            typer.echo("Please login again. Run `mirageml login`")
+            raise typer.Exit()
     headers = {
         "Authorization": f"Bearer {access_token}"
     }

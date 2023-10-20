@@ -38,7 +38,7 @@ def normal_chat(file_or_url: str = None):
         chat_history.append({"role": "user", "content": user_input})
 
         # Show the typing indicator using Live
-        with Live(Panel("Assistant is typing...", title="[bold blue]Assistant[/bold blue]", border_style="blue"),
+        with Live(Panel("Assistant is typing...", title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"),
                   console=console, screen=False, auto_refresh=True, vertical_overflow="visible") as live:
             response = llm_call(chat_history, model=config["model"], stream=True, local=config["local_mode"])
 
@@ -46,13 +46,13 @@ def normal_chat(file_or_url: str = None):
             if config["local_mode"]:
                 for chunk in response:
                     ai_response += chunk
-                    live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
+                    live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
             else:
                 for chunk in response.iter_content(1024):
                     if chunk:
                         decoded_chunk = chunk.decode('utf-8')
                         ai_response += decoded_chunk
-                        live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
+                        live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
 
         # Print the final AI response outside of the Live context so it persists
         chat_history.append({"role": "assistant", "content": ai_response})

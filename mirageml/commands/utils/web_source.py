@@ -152,6 +152,7 @@ def extract_file_or_url(file_or_url):
             with open(file_or_url, 'r', encoding='utf-8') as file:
                 file_content = file.read()
                 source, file_or_url_data = file_or_url, file_or_url + ": " + file_content
+                typer.secho(f"Loaded file: {file_or_url}", fg=typer.colors.BRIGHT_GREEN, bold=True)
         except Exception as e:
             typer.secho(f"Unable to read file: {file_or_url}", fg=typer.colors.BRIGHT_RED, bold=True)
     else:
@@ -164,6 +165,7 @@ def extract_file_or_url(file_or_url):
             bs_transformer = BeautifulSoupTransformer()
             docs_transformed = bs_transformer.transform_documents(html)
             source, file_or_url_data = docs_transformed[0].metadata["source"], docs_transformed[0].page_content
+            typer.secho(f"Loaded webpage: {file_or_url}", fg=typer.colors.BRIGHT_GREEN, bold=True)
         except Exception as e:
             typer.secho(f"Unable to read url make sure that the url starts with http: {file_or_url}", fg=typer.colors.BRIGHT_RED, bold=True)
 
