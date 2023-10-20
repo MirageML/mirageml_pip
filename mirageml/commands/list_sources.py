@@ -15,7 +15,7 @@ def list_sources():
 
 def help_list_sources():
     sources = list_qdrant_db()
-    final_string = "Please specify sources to use for RAG using mml rag --sources <sources>\n\n\n\n"
+    final_string = "Please specify sources to use for RAG using:\n\n\n**mml chat -s {source1} -s {source2}**\n\n\n\n"
     if len(sources) != 0:
         final_string += "**Local Sources:**\n\n* "
         final_string +="\n\n* ".join(sources)

@@ -76,20 +76,24 @@ def login_command():
     login()
 
 
-@app.command()
-def chat(file_path: str = typer.Argument(None, help="Path to a file to use as a chat history.")):
-    """Chat with Mirage ML"""
-    from .commands import normal_chat
-    normal_chat(file_path=file_path)
-
 def generate_help_text():
     from .commands import help_list_sources
     return help_list_sources()
 
-@app.command(no_args_is_help=True, help=generate_help_text())
-def rag(sources: List[str] = typer.Argument(..., help="A list of names.")):
-    from .commands import rag_chat
-    rag_chat(sources)
+@app.command()
+def chat(
+        file_or_url: str = typer.Option(None, "--file-or-url", "-f", help="Path to a file or URL to use as context. \n\n\n**mml chat -f {filepath_or_url}**"),
+        sources: List[str] = typer.Option([], "--sources", "-s", help=generate_help_text())
+    ):
+    """Chat with Mirage ML"""
+    breakpoint()
+    if sources:
+        from .commands import rag_chat
+        rag_chat(sources)
+    else:
+        from .commands import normal_chat
+        normal_chat(file_or_url=file_or_url)
+
 
 @config_app.command(name="show")
 def show_config_command():
@@ -106,6 +110,7 @@ def set_config_command():
     from .commands import set_config
     set_config()
 
+
 # List Commands
 @list_app.command(name="plugins")
 def list_plugins_command():
@@ -119,6 +124,7 @@ def list_sources_command():
     """List created sources"""
     from .commands import list_sources
     list_sources()
+
 
 # Add Commands
 @add_app.command(name="plugin")
@@ -148,6 +154,7 @@ def add_source_command():
 
     add_source(name, link, remote)
 
+
 # Delete Commands
 @delete_app.command(name="source")
 def delete_source_command():
@@ -158,6 +165,7 @@ def delete_source_command():
     remote = Prompt.ask("Is the source remote? (y/n)", default="n", show_default=True)
     remote = remote.lower().startswith("y")
     delete_source(name, remote)
+
 
 # Sync Commands
 @sync_app.command(name="plugin")
