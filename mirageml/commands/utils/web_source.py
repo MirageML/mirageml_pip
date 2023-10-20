@@ -35,15 +35,55 @@ def tree_to_paths(node, path=None):
     if path:
         yield path
 
-def get_all_links(url):
+def crawl_with_playwright(live, start_url):
+    urls = {start_url: set()}
+    visited_links = set()
+    from playwright.sync_api import sync_playwright
+
+    def get_all_play_links(page):
+        # Execute script on the page to get all links
+        links = page.eval_on_selector_all("a", '''(anchors) => {
+            return anchors.map(anchor => anchor.href);
+        }''')
+        for link in links:
+            parsed_link = urlparse(link)
+            cleaned_link = urlunparse((parsed_link.scheme, parsed_link.netloc, parsed_link.path, "", "", ""))
+            yield cleaned_link
+
+    with sync_playwright() as p:
+        browser = p.chromium.launch()
+        page = browser.new_page()
+        page.goto(start_url)
+        to_visit = [start_url]
+
+        while to_visit:
+            current_url = to_visit.pop(0)
+            if current_url not in visited_links:
+                visited_links.add(current_url)
+                live.update(Panel(f"Scraping: {current_url}", title="[bold green]Scraper[/bold green]", border_style="green"))
+                page.goto(current_url)
+                links_on_page = get_all_play_links(page)
+                for link in links_on_page:
+                    if link.startswith(start_url):
+                        to_visit.append(link)
+        browser.close()
+    return visited_links
+
+def get_all_links(live, url):
     response = requests.get(url)
     soup = BeautifulSoup(response.text, 'html.parser')
-    for link in soup.find_all('a'):
-        absolute_link = urllib.parse.urljoin(url, link.get('href'))
-        parsed_link = urlparse(absolute_link)
-        cleaned_link = urlunparse((parsed_link.scheme, parsed_link.netloc, parsed_link.path, "", "", ""))
-        if cleaned_link.startswith(url):  # Only yield child URLs
-            yield cleaned_link
+    a_tags = soup.find_all('a')
+    if a_tags:
+        for link in soup.find_all('a'):
+            absolute_link = urllib.parse.urljoin(url, link.get('href'))
+            parsed_link = urlparse(absolute_link)
+            cleaned_link = urlunparse((parsed_link.scheme, parsed_link.netloc, parsed_link.path, "", "", ""))
+            if cleaned_link.startswith(url):  # Only yield child URLs 
+                live.update(Panel(f"Scraping: {cleaned_link}", title="[bold green]Scraper[/bold green]", border_style="green"))
+                yield cleaned_link
+    else:
+        for link in crawl_with_playwright(live, url):
+            yield link
 
 def check_playwright_chromium():
     try:
@@ -66,7 +106,7 @@ def crawl_website(start_url):
         return
 
     while to_visit:
-        with Live(Panel("Preparing to Scrape", title="[bold green]Scraper[/bold green]", border_style="green"),
+        with Live(Panel("Preparing to Scrape...", title="[bold green]Scraper[/bold green]", border_style="green"),
                     console=console, transient=True, auto_refresh=True, vertical_overflow="visible") as live:
             with tempfile.TemporaryDirectory() as tmp_dir:
                 # print(f"Created temporary directory: {tmp_dir}")
@@ -74,8 +114,7 @@ def crawl_website(start_url):
                     current_url = to_visit.pop(0)
                     if current_url not in visited_links:
                         visited_links.add(current_url)
-                        live.update(Panel(f"Scraping: {current_url}", title="[bold green]Scraper[/bold green]", border_style="green"))
-                        for link in get_all_links(current_url):
+                        for link in get_all_links(live, current_url):
                             to_visit.append(link)
         # pretty print all of the subpages that were indexed and ask the user if they want to continue
         typer.secho("Subpaths Per URL:", fg=typer.colors.GREEN, bold=True)
@@ -131,7 +170,6 @@ def crawl_website(start_url):
         else:
             to_visit = []
 
-    # with Live(progress, console=console, transient=True, auto_refresh=True, vertical_overflow="visible") as live2:
     data, metadata = [], []
     with Live(Panel("Preparing to Clean", title="[bold green]Cleaner[/bold green]", border_style="green"),
                     console=console, transient=True, auto_refresh=True, vertical_overflow="visible") as live:
@@ -175,5 +213,5 @@ def extract_file_or_url(file_or_url):
 if __name__ == "__main__":
     import time
     start_time = time.time()
-    crawl_website("https://nodejs.org/dist/latest-v18.x/docs/api/")
+    crawl_website("https://code.visualstudio.com/api")
     print(f"Time taken: {time.time() - start_time}")
