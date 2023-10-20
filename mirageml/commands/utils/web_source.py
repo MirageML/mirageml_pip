@@ -51,6 +51,8 @@ def check_playwright_chromium():
         subprocess.run(['python3', '-m', 'playwright', 'chromium', '--version'], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
         return True
     except (subprocess.CalledProcessError, FileNotFoundError):
+        print("Playwright Chromium required for webscraping.")
+        print("Please run `python3 -m playwright install chromium`")
         return False
 
 def crawl_website(start_url):
@@ -61,8 +63,6 @@ def crawl_website(start_url):
 
     # Check if playwright is installed
     if not check_playwright_chromium():
-        print("Playwright Chromium required for webscraping.")
-        print("Please run `python3 -m playwright install chromium`")
         return
 
     while to_visit:
@@ -133,8 +133,34 @@ def crawl_website(start_url):
         metadata.extend([dict({"data": x.page_content}, **x.metadata) for x in docs_transformed])
     return data, metadata
 
+def extract_file_or_url(file_or_url):
+    if not file_or_url.startswith("http"):
+        try:
+            # Read the file content
+            with open(file_or_url, 'r', encoding='utf-8') as file:
+                file_content = file.read()
+                source, file_or_url_data = file_or_url, file_or_url + ": " + file_content
+        except Exception as e:
+            typer.secho(f"Unable to read file: {file_or_url}", fg=typer.colors.BRIGHT_RED, bold=True)
+    else:
+        try:
+            if not check_playwright_chromium(): return
+            from langchain.document_loaders import AsyncChromiumLoader
+            from langchain.document_transformers import BeautifulSoupTransformer
+            loader = AsyncChromiumLoader([file_or_url])
+            html = loader.load()
+            bs_transformer = BeautifulSoupTransformer()
+            docs_transformed = bs_transformer.transform_documents(html)
+            breakpoint()
+            source, file_or_url_data = docs_transformed[0].metadata["source"], docs_transformed[0].page_content
+        except Exception as e:
+            typer.secho(f"Unable to read url make sure that the url starts with http: {file_or_url}", fg=typer.colors.BRIGHT_RED, bold=True)
+
+    return source, file_or_url_data
+
+
 if __name__ == "__main__":
     import time
     start_time = time.time()
-    crawl_website("https://rich.readthedocs.io/en/stable")
+    extract_file_or_url("https://rich.readthedocs.io/en/stable")
     print(f"Time taken: {time.time() - start_time}")

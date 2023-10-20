@@ -60,8 +60,14 @@ def search_and_rank(live, user_input, sources):
     sorted_hits = rank_hits(hits)
     return sorted_hits
 
-def rag_chat(sources):
+
+## MAIN FUNCTION
+def rag_chat(file_or_url, sources):
     # Beginning of the chat sequence
+    if file_or_url:
+        from .utils.web_source import extract_file_or_url
+        file_url_source, file_or_url_data = extract_file_or_url(file_or_url)
+
     while True:
         try:
             user_input = Prompt.ask(f"Ask a question over these sources ({', '.join(sources)})", default="exit", show_default=False)
@@ -72,7 +78,6 @@ def rag_chat(sources):
             typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
             return
 
-
         # Live display while searching for relevant sources
         with Live(Panel("Searching through the relevant sources...",
                     title="[bold blue]Assistant[/bold blue]", border_style="blue", box=HORIZONTALS),
@@ -80,6 +85,10 @@ def rag_chat(sources):
 
             sorted_hits = search_and_rank(live, user_input, sources)
             context = create_context(sorted_hits)
+
+            if file_or_url:
+                context += "\n\n" + file_url_source + ": " + file_or_url_data
+                sources.append(file_url_source)
 
             # Chat history that will be sent to the AI model
             chat_history = [
