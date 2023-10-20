@@ -80,6 +80,7 @@ def chat(
         sources: List[str] = typer.Option([], "--sources", "-s", help=generate_help_text())
     ):
     """Chat with Mirage ML"""
+    typer.secho("Starting chat. Type 'exit' to end the chat.", fg=typer.colors.BRIGHT_GREEN, bold=True)
     if sources:
         from .commands import rag_chat
         rag_chat(file_or_url, sources)

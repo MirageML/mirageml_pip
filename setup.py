@@ -24,7 +24,9 @@ setup(
         "keyring==24.2.0",
         "requests==2.31.0",
         "supabase==1.2.0",
-        "segment-analytics-python==2.2.3"
+        "segment-analytics-python==2.2.3",
+        "pyperclip==1.8.2",
+        "prompt-toolkit==3.0.39",
     ],
     entry_points={
         'console_scripts': [

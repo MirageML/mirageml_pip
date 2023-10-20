@@ -10,6 +10,8 @@ from rich.prompt import Prompt
 from .config import load_config
 from .add_source import add_local_source
 from .utils.brain import llm_call
+from .utils.multiline import multiline_input
+from .utils.codeblocks import extract_code_from_markdown, add_indices_to_code_blocks, copy_code_to_clipboard
 from .utils.vectordb import list_qdrant_db, list_remote_qdrant_db, qdrant_search, remote_qdrant_search
 from .utils.prompt_templates import RAG_TEMPLATE
 
@@ -70,7 +72,7 @@ def rag_chat(file_or_url, sources):
 
     while True:
         try:
-            user_input = Prompt.ask(f"Ask a question over these sources ({', '.join(sources)})", default="exit", show_default=False)
+            user_input = multiline_input(f"Ask a question over these sources ({', '.join(sources)})")
             if user_input.lower().strip() == 'exit':
                 typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
                 return
@@ -116,7 +118,17 @@ def rag_chat(file_or_url, sources):
         while True:
             # Loop for follow-up questions
             try:
-                user_input = Prompt.ask("Ask a follow-up. Type reset to search again", default="exit", show_default=False)
+                code_blocks = extract_code_from_markdown(ai_response)
+                if code_blocks:
+                    selected_indices = multiline_input("Enter the numbers of the code blocks you want to copy, separated by commas (e.g. '1,3,4') or ask a follow-up. Type reset to search again")
+                    try:
+                        selected_indices = list(map(int, selected_indices.split(',')))
+                        copy_code_to_clipboard(code_blocks, selected_indices)
+                        ai_response = ""
+                        continue
+                    except ValueError: user_input = selected_indices
+                else:
+                    user_input = multiline_input("Ask a follow-up. Type reset to search again")
                 if user_input.lower().strip() == 'exit':
                     typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
                     return
@@ -129,7 +141,7 @@ def rag_chat(file_or_url, sources):
             chat_history.append({"role": "user", "content": user_input})
 
             with Live(Panel("Assistant is typing...", title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"),
-                    console=console, screen=False, auto_refresh=True, vertical_overflow="visible") as live:
+                    console=console, transient=True, auto_refresh=True, refresh_per_second=8) as live:
 
                 response = llm_call(chat_history, model=config["model"], stream=True, local=config["local_mode"])
 
@@ -139,10 +151,12 @@ def rag_chat(file_or_url, sources):
                         ai_response += chunk
                         live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
                 else:
-                    for chunk in response.iter_content(1024):
+                    for chunk in response.iter_content():
                         if chunk:
                             decoded_chunk = chunk.decode('utf-8')
                             ai_response += decoded_chunk
                             live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
 
             chat_history.append({"role": "assistant", "content": ai_response})
+            indexed_ai_response = add_indices_to_code_blocks(ai_response)
+            console.print(Panel(Markdown(indexed_ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
