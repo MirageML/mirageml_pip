@@ -15,11 +15,19 @@ def list_sources():
 
 def help_list_sources():
     sources = list_qdrant_db()
-    final_string = "Please specify sources to use for RAG using:\n\n\n**mml chat -s {source1} -s {source2}**\n\n\n\n"
+    remote_sources = list_remote_qdrant_db()
+    all_sources = list(set(sources + remote_sources))
+    if len(all_sources) == 0:
+        final_string = "Specify sources to use as context:\n\n\n**mml chat -s {source1} -s {source2}**\n\n\n\n"
+    elif len(all_sources) == 1:
+        final_string = f"Specify sources to use as context:\n\n\nEx: **mml chat -s {all_sources[0]}**\n\n\n\n"
+    else:
+        final_string = f"Specify sources to use as context:\n\n\nEx: **mml chat -s {all_sources[0]} -s {all_sources[1]}**\n\n\n\n"
+
+    sources.append("local (this will index the files in your current directory)")
     if len(sources) != 0:
         final_string += "**Local Sources:**\n\n* "
         final_string +="\n\n* ".join(sources)
-    remote_sources = list_remote_qdrant_db()
     final_string +="\n\n---\n\n"
     if len(remote_sources) != 0:
         final_string += "**Remote Sources:**\n\n* "

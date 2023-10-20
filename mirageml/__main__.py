@@ -69,10 +69,10 @@ def custom_help():
     typer.echo("Your Custom Help Message Here")
 
 
-@app.command(name="login", rich_help_panel="Utils and Configs")
+@app.command(name="login")
 def login_command():
-    from .commands import login
     """Login to Mirage ML"""
+    from .commands import login
     login()
 
 
