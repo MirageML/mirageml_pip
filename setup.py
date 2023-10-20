@@ -29,6 +29,7 @@ setup(
     entry_points={
         'console_scripts': [
             'mirageml=mirageml.__main__:app',
+            'mirage=mirageml.__main__:app',
             'mml=mirageml.__main__:app'        # This is the alias 'mml'
         ]
     }

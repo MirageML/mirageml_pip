@@ -1,5 +1,6 @@
 import os
 import re
+import json
 import time
 import uuid
 import requests
@@ -30,6 +31,8 @@ def fake_progress_bar(progress, task_id, length):
         progress.update(task_id, advance=1)
 
 def get_qdrant_db():
+    QDRANT_LOCKFILE_PATH = os.path.join(PACKAGE_DIR, ".lock")
+    if os.path.exists(QDRANT_LOCKFILE_PATH): os.remove(QDRANT_LOCKFILE_PATH)
     return QdrantClient(path=PACKAGE_DIR)
 
 def exists_qdrant_db(collection_name="test"):
@@ -139,9 +142,14 @@ def list_remote_qdrant_db():
     return response.json()
 
 def list_qdrant_db():
-    qdrant_client = get_qdrant_db()
-    return [x.name for x in qdrant_client.get_collections().collections]
-
+    QDRANT_JSON_PATH = os.path.join(PACKAGE_DIR, "meta.json")
+    if os.path.exists(QDRANT_JSON_PATH):
+        with open(QDRANT_JSON_PATH) as json_file:
+            collection = json.load(json_file)
+            collection_names = list(collection["collections"].keys())
+    else:
+        collection_names = []
+    return collection_names
 
 def remote_qdrant_search(source_name, user_input):
     json_data = {

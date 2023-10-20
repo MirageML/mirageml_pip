@@ -1,5 +1,7 @@
 import time
 import typer
+from typing import List
+from typing_extensions import Annotated
 
 app = typer.Typer(
     no_args_is_help=True,
@@ -24,10 +26,10 @@ sync_app = typer.Typer(name="sync", help="Sync resources", no_args_is_help=True)
 delete_app = typer.Typer(name="delete", help="Delete resources", no_args_is_help=True)
 
 app.add_typer(config_app, rich_help_panel="Utils and Configs")
-app.add_typer(add_app)
-app.add_typer(list_app)
-app.add_typer(sync_app)
-app.add_typer(delete_app)
+app.add_typer(add_app, rich_help_panel="Manage Resources")
+app.add_typer(list_app, rich_help_panel="Manage Resources")
+app.add_typer(sync_app, rich_help_panel="Manage Resources")
+app.add_typer(delete_app, rich_help_panel="Manage Resources")
 
 
 @app.callback()
@@ -80,12 +82,14 @@ def chat(file_path: str = typer.Argument(None, help="Path to a file to use as a 
     from .commands import normal_chat
     normal_chat(file_path=file_path)
 
+def generate_help_text():
+    from .commands import help_list_sources
+    return help_list_sources()
 
-@app.command()
-def rag(sources: list[str] = typer.Argument(None, help="Sources to use for RAG")):
-    """Chat with Mirage ML using RAG"""
+@app.command(no_args_is_help=True, help=generate_help_text())
+def rag(sources: List[str] = typer.Argument(..., help="A list of names.")):
     from .commands import rag_chat
-    rag_chat()
+    rag_chat(sources)
 
 @config_app.command(name="show")
 def show_config_command():

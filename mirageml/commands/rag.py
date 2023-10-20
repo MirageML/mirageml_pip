@@ -16,64 +16,18 @@ from .utils.prompt_templates import RAG_TEMPLATE
 console = Console()
 config = load_config()
 
-def get_remote_sources():
-    # Get a list of available data sources and include the local directory as an option
-    typer.secho("Searching for any remote sources", fg=typer.colors.BRIGHT_GREEN, bold=True)
-    possible_sources = list_remote_qdrant_db()
+def search(live, user_input, sources): # ,local_sources, remote_sources=None):
+    hits = []
+    local = list_qdrant_db()
+    remote = list_remote_qdrant_db()
 
-    if not possible_sources: return []
-
-    # User selection of sources to use
-    while True:
-        typer.secho("Here are the possible remote sources you can use:", fg=typer.colors.BRIGHT_GREEN, bold=True)
-        for source in possible_sources:
-            typer.secho(f" - {source}", fg=typer.colors.GREEN, bold=True)
-
-        sources_input = Prompt.ask("Which sources would you like to use? (leave empty for none)", default="", show_default=False)
-        sources = [source.strip() for source in re.split(',|\s+', sources_input) if source.strip()]
-
-        invalid_sources = [source for source in sources if source not in possible_sources]
-        if invalid_sources:
-            for source in invalid_sources:
-                typer.secho(f"Invalid source: {source}", fg=typer.colors.BRIGHT_RED, bold=True)
-            continue
-        else: break
-
-    return sources
-
-def get_local_sources():
-    # Get a list of available data sources and include the local directory as an option
-    possible_sources = list_qdrant_db() + ["local"]
-
-    # User selection of sources to use
-    while True:
-        typer.secho("Here are the possible local sources you can use:", fg=typer.colors.BRIGHT_GREEN, bold=True)
-        for source in possible_sources:
-            if source == "local":
-                typer.secho(f" - {source} (this will index the files in your current directory)", fg=typer.colors.GREEN, bold=True)
-            else:
-                typer.secho(f" - {source}", fg=typer.colors.GREEN, bold=True)
-
-        sources_input = Prompt.ask("Which sources would you like to use? (leave empty for none)")
-        sources = [source.strip() for source in re.split(',|\s+', sources_input) if source.strip()]
-
-        invalid_sources = [source for source in sources if source not in possible_sources]
-        if invalid_sources:
-            for source in invalid_sources:
-                typer.secho(f"Invalid source: {source}", fg=typer.colors.BRIGHT_RED, bold=True)
-            continue
-        else:
-            break
-
-    # Handle local source
-    if "local" in sources:
+    if "local" == sources:
         sources.remove("local")
         sources.append(add_local_source())
 
-    return sources
+    local_sources = [source for source in sources if source in local]
+    remote_sources = [source for source in sources if source in remote]
 
-def search(live, user_input, local_sources, remote_sources=None):
-    hits = []
     for source_name in local_sources:
         live.update(Panel("Searching through local sources...", title="[bold blue]Assistant[/bold blue]", border_style="blue"))
         try:
@@ -101,22 +55,16 @@ def rank_hits(hits):
 def create_context(sorted_hits):
     return "\n\n".join([str(x["payload"]["source"]) + ": " + x["payload"]["data"] for x in sorted_hits])
 
-def search_and_rank(live, user_input, local_sources, remote_sources=None):
-    hits = search(live, user_input, local_sources, remote_sources)
+def search_and_rank(live, user_input, sources):
+    hits = search(live, user_input, sources)
     sorted_hits = rank_hits(hits)
     return sorted_hits
 
-def rag_chat():
-    # Load configuration settings
-    local_sources = get_local_sources()
-    remote_sources = get_remote_sources()
-
-    sources = remote_sources + local_sources
-
+def rag_chat(sources):
     # Beginning of the chat sequence
     while True:
         try:
-            user_input = Prompt.ask(f"Chat with Mirage ({', '.join(sources)})", default="exit", show_default=False)
+            user_input = Prompt.ask(f"Ask a question over these sources ({', '.join(sources)})", default="exit", show_default=False)
             if user_input.lower().strip() == 'exit':
                 typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
                 return
@@ -126,11 +74,11 @@ def rag_chat():
 
 
         # Live display while searching for relevant sources
-        with Live(Panel("Searching for the relevant sources...",
+        with Live(Panel("Searching through the relevant sources...",
                     title="[bold blue]Assistant[/bold blue]", border_style="blue", box=HORIZONTALS),
                     console=console, screen=False, auto_refresh=True, vertical_overflow="visible") as live:
 
-            sorted_hits = search_and_rank(live, user_input, local_sources, remote_sources)
+            sorted_hits = search_and_rank(live, user_input, sources)
             context = create_context(sorted_hits)
 
             # Chat history that will be sent to the AI model
