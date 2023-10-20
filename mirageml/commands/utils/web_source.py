@@ -173,5 +173,5 @@ def extract_file_or_url(file_or_url):
 if __name__ == "__main__":
     import time
     start_time = time.time()
-    crawl_website("https://code.visualstudio.com/api")
+    crawl_website("https://nodejs.org/dist/latest-v18.x/docs/api/")
     print(f"Time taken: {time.time() - start_time}")

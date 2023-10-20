@@ -55,4 +55,4 @@ def normal_chat(file_or_url: str = None):
                         live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
 
         # Print the final AI response outside of the Live context so it persists
-        chat_history.append({"role": "system", "content": ai_response})
+        chat_history.append({"role": "assistant", "content": ai_response})

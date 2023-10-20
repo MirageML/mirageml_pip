@@ -111,7 +111,7 @@ def rag_chat(file_or_url, sources):
                         decoded_chunk = chunk.decode('utf-8')
                         ai_response += decoded_chunk
                         live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
-            chat_history.append({"role": "system", "content": ai_response})
+            chat_history.append({"role": "assistant", "content": ai_response})
 
         while True:
             # Loop for follow-up questions
@@ -145,4 +145,4 @@ def rag_chat(file_or_url, sources):
                             ai_response += decoded_chunk
                             live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
 
-            chat_history.append({"role": "system", "content": ai_response})
+            chat_history.append({"role": "assistant", "content": ai_response})
