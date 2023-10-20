@@ -70,7 +70,7 @@ def crawl_with_playwright(live, start_url):
     return visited_links
 
 def get_all_links(live, url):
-    response = requests.get(url)
+    response = requests.get(url, headers={'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3'})
     soup = BeautifulSoup(response.text, 'html.parser')
     a_tags = soup.find_all('a')
     if a_tags:
@@ -78,7 +78,7 @@ def get_all_links(live, url):
             absolute_link = urllib.parse.urljoin(url, link.get('href'))
             parsed_link = urlparse(absolute_link)
             cleaned_link = urlunparse((parsed_link.scheme, parsed_link.netloc, parsed_link.path, "", "", ""))
-            if cleaned_link.startswith(url):  # Only yield child URLs 
+            if cleaned_link.startswith(url):  # Only yield child URLs
                 live.update(Panel(f"Scraping: {cleaned_link}", title="[bold green]Scraper[/bold green]", border_style="green"))
                 yield cleaned_link
     else:
@@ -213,5 +213,5 @@ def extract_file_or_url(file_or_url):
 if __name__ == "__main__":
     import time
     start_time = time.time()
-    crawl_website("https://code.visualstudio.com/api")
+    crawl_website("https://segment.com/docs/")
     print(f"Time taken: {time.time() - start_time}")
