@@ -11,6 +11,7 @@ def list_sources():
     print("------------------")
     if len(remote_sources) != 0:
         typer.secho("Remote Sources:", fg=typer.colors.BRIGHT_GREEN, bold=True)
+        remote_sources[0] = f"* {remote_sources[0]}"
         print("\n* ".join(remote_sources))
 
 def help_list_sources():
