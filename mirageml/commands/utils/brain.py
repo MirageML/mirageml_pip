@@ -4,7 +4,7 @@ import requests
 import keyring
 
 from io import StringIO
-from mirageml.constants import SERVICE_ID, VECTORDB_EMBED_ENDPOINT, LLM_GPT_ENDPOINT
+from ...constants import get_headers, SERVICE_ID, VECTORDB_EMBED_ENDPOINT, LLM_GPT_ENDPOINT
 
 PACKAGE_DIR = os.path.dirname(__file__)
 os.environ['TRANSFORMERS_CACHE'] = os.path.join(PACKAGE_DIR, 'models')
@@ -61,11 +61,7 @@ def local_llm_call(messages, llm_model_id="TheBloke/Llama-2-7b-Chat-GGUF", strea
 
 def get_embedding(text_list, model="BAAI/bge-small-en-v1.5", local=False):
     if local: return local_get_embedding(text_list, embedding_model_id=model)
-    access_token = keyring.get_password(SERVICE_ID, 'access_token')
-    headers = {
-        "Authorization": f"Bearer {access_token}"
-    }
-    response = requests.post(VECTORDB_EMBED_ENDPOINT, json={'data': text_list}, headers=headers)
+    response = requests.post(VECTORDB_EMBED_ENDPOINT, json={'data': text_list}, headers=get_headers())
     response.raise_for_status()  # Raise an exception if the request failed
     return response.json()['embedding']
 
@@ -76,8 +72,4 @@ def llm_call(messages, model="gpt-3.5-turbo", stream=False, local=False):
         "messages": messages,
         "stream": stream
     }
-    access_token = keyring.get_password(SERVICE_ID, 'access_token')
-    headers={
-        "Authorization": f"Bearer {access_token}"
-    }
-    return requests.post(LLM_GPT_ENDPOINT, json=json_data, headers=headers, stream=stream)
+    return requests.post(LLM_GPT_ENDPOINT, json=json_data, headers=get_headers(), stream=stream)

@@ -18,3 +18,11 @@ VECTORDB_CREATE_ENDPOINT = "https://mirageml--vectordb-create-db.modal.run"
 VECTORDB_DELETE_ENDPOINT = "https://mirageml--vectordb-delete-db.modal.run"
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
+
+def get_headers():
+    import keyring
+    access_token = keyring.get_password(SERVICE_ID, 'access_token')
+    headers = {
+        "Authorization": f"Bearer {access_token}"
+    }
+    return headers
