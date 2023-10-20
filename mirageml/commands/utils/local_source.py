@@ -4,9 +4,7 @@ def crawl_files(start_dir="."):
     file_data = []
 
     # Walk through the directory structure
-    from rich.progress import track
-
-    for dirpath, dirnames, filenames in track(os.walk(os.path.abspath(start_dir)), description="Indexing files..."):
+    for dirpath, dirnames, filenames in os.walk(os.path.abspath(start_dir)):
         for filename in filenames:
             # Skip hidden files
             if filename.startswith('.') or dirpath.split('/')[-1].startswith('.'):

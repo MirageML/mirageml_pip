@@ -8,7 +8,7 @@ import tiktoken
 import threading
 from tqdm import tqdm
 from qdrant_client import QdrantClient
-from qdrant_client.http.models import Batch, VectorParams, Distance
+from qdrant_client.http.models import PointStruct, VectorParams, Distance
 
 import keyring
 from ...constants import SERVICE_ID, VECTORDB_SEARCH_ENDPOINT, VECTORDB_LIST_ENDPOINT, VECTORDB_CREATE_ENDPOINT, VECTORDB_DELETE_ENDPOINT
@@ -22,13 +22,6 @@ from rich.progress import Progress
 PACKAGE_DIR = os.path.dirname(__file__)
 
 progress = Progress()
-
-def fake_progress_bar(progress, task_id, length):
-    for second in range(length):
-        if progress.finished:
-            return
-        time.sleep(5)
-        progress.update(task_id, advance=1)
 
 def get_qdrant_db():
     QDRANT_LOCKFILE_PATH = os.path.join(PACKAGE_DIR, ".lock")
@@ -47,26 +40,22 @@ def create_remote_qdrant_db(data, metadata, collection_name="test"):
         "collection_name": collection_name
     }
 
-    with Progress(transient=True) as progress:
-        task_id = progress.add_task(f"[cyan]Creating Source ({collection_name}) on Remote...", total=len(data))
+    from rich.console import Console
+    from rich.live import Live
+    from rich.panel import Panel
 
-        # Start the fake progress bar in a separate thread
-        thread = threading.Thread(target=fake_progress_bar, args=(progress, task_id, len(data)))
-        thread.start()
+    console = Console()
+    with Live(Panel("Creating Embeddings...", title="[bold green]Indexer[/bold green]", border_style="green"),
+                    console=console, transient=True, auto_refresh=True, vertical_overflow="visible") as live:
 
-        response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data)
+        response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, stream=True)
+        if response.status_code == 200:
+            for chunk in response.iter_content(chunk_size=None):
+                # process line here
+                live.update(Panel(f"Indexing: {chunk.decode()}", title="[bold green]Indexer[/bold green]", border_style="green"))
 
-        # If the request is completed but the progress bar is still running,
-        # immediately complete the progress bar
-        progress.update(task_id, completed=True)
-
-        # Wait for the fake progress bar thread to finish (if it hasn't already)
-        thread.join()
-
-    response.raise_for_status()  # Raise an exception if the request failed
-    # print(response.json())
     typer.secho(f"Created Source: {collection_name}", fg=typer.colors.GREEN, bold=True)
-    return response.json()
+    return True
 
 def create_qdrant_db(data, metadata, collection_name="test", remote=False):
     if remote: return create_remote_qdrant_db(data, metadata, collection_name=collection_name)
@@ -75,12 +64,13 @@ def create_qdrant_db(data, metadata, collection_name="test", remote=False):
 
     final_data, final_metadata = [], []
 
-    with Progress(transient=True) as progress:
-        task_id = progress.add_task("[cyan]Creating Source Locally...", total=len(data))
+    from rich.console import Console
+    from rich.live import Live
+    from rich.panel import Panel
 
-        # Start the fake progress bar in a separate thread
-        thread = threading.Thread(target=fake_progress_bar, args=(progress, task_id, len(data)))
-        thread.start()
+    console = Console()
+    with Live(Panel("Indexing files...", title="[bold green]Indexer[/bold green]", border_style="green"),
+                    console=console, transient=True, auto_refresh=True, vertical_overflow="visible") as live:
 
         # For each data chunk it based on number of tokens
         enc = tiktoken.get_encoding("cl100k_base")
@@ -97,36 +87,27 @@ def create_qdrant_db(data, metadata, collection_name="test", remote=False):
             final_data.extend(chunks)
             final_metadata.extend(meta)
 
+        live.update(Panel(f"Creating Embeddings...", title="[bold green]Indexer[/bold green]", border_style="green"))
+
         vectors = get_embedding(final_data, local=config["local_mode"])
-
-        # qdrant_client.add(
-        #     collection_name="demo_collection",
-        #     documents=data,
-        #     metadata=metadata,
-        #     ids=[uuid.uuid4().hex for _ in range(len(data))]
-        # )
-
         size = 384 if config["local_mode"] else 1536
+
         qdrant_client.recreate_collection(
             collection_name=collection_name,
             vectors_config=VectorParams(size=size, distance=Distance.COSINE),
         )
 
-        qdrant_client.upsert(
-            collection_name=collection_name,
-            points=Batch(
-                vectors=vectors,
-                ids=[uuid.uuid4().hex for _ in range(len(final_data))],
-                payloads=final_metadata,
+        for vector, f_metadata in zip(vectors, final_metadata):
+            filepath = f_metadata["source"]
+
+            live.update(Panel(f"Indexing: {filepath}", title="[bold green]Indexer[/bold green]", border_style="green"))
+
+            qdrant_client.upsert(
+                collection_name=collection_name,
+                points=[
+                    PointStruct(vector=vector, payload=f_metadata, id=uuid.uuid4().hex)
+                ]
             )
-        )
-
-        # If the request is completed but the progress bar is still running,
-        # immediately complete the progress bar
-        progress.update(task_id, completed=True)
-
-        # Wait for the fake progress bar thread to finish (if it hasn't already)
-        thread.join()
 
     typer.secho(f"Created Source: {collection_name}", fg=typer.colors.GREEN, bold=True)
 

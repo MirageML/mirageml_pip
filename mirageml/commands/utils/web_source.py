@@ -66,7 +66,7 @@ def crawl_website(start_url):
         return
 
     while to_visit:
-        with Live(Panel("Preparing to Index", title="[bold green]Indexer[/bold green]", border_style="green"),
+        with Live(Panel("Preparing to Scrape", title="[bold green]Scraper[/bold green]", border_style="green"),
                     console=console, transient=True, auto_refresh=True, vertical_overflow="visible") as live:
             with tempfile.TemporaryDirectory() as tmp_dir:
                 # print(f"Created temporary directory: {tmp_dir}")
@@ -74,7 +74,7 @@ def crawl_website(start_url):
                     current_url = to_visit.pop(0)
                     if current_url not in visited_links:
                         visited_links.add(current_url)
-                        live.update(Panel(f"Indexing: {current_url}", title="[bold green]Indexer[/bold green]", border_style="green"))
+                        live.update(Panel(f"Scraping: {current_url}", title="[bold green]Scraper[/bold green]", border_style="green"))
                         for link in get_all_links(current_url):
                             to_visit.append(link)
         # pretty print all of the subpages that were indexed and ask the user if they want to continue
@@ -113,24 +113,25 @@ def crawl_website(start_url):
                     continue
                 break
             if link.lower().strip() != 'exit':
-                if not user_input.endswith("/"): user_input += "/"
-                to_visit = [user_input]
-                urls[user_input] = set()
+                if not link.endswith("/"): link += "/"
+                to_visit = [link]
+                urls[link] = set()
             else: to_visit = []
         else:
             to_visit = []
 
     # with Live(progress, console=console, transient=True, auto_refresh=True, vertical_overflow="visible") as live2:
     data, metadata = [], []
-    for link in track(visited_links, transient=True, description="[cyan]Scraping Pages & Cleaning HTML..."):
-        loader = AsyncChromiumLoader([link])
-        # live2.update(Panel("Scraping Pages...", title="[bold green]Indexer[/bold green]", border_style="green"))
-        html = loader.load()
-        bs_transformer = BeautifulSoupTransformer()
-        # live2.update(Panel("Cleaning HTML...", title="[bold green]Indexer[/bold green]", border_style="green"))
-        docs_transformed = bs_transformer.transform_documents(html)
-        data.extend([x.page_content for x in docs_transformed])
-        metadata.extend([dict({"data": x.page_content}, **x.metadata) for x in docs_transformed])
+    with Live(Panel("Preparing to Clean", title="[bold green]Cleaner[/bold green]", border_style="green"),
+                    console=console, transient=True, auto_refresh=True, vertical_overflow="visible") as live:
+        for link in visited_links:
+            loader = AsyncChromiumLoader([link])
+            live.update(Panel(f"Cleaning: {link}", title="[bold green]Cleaner[/bold green]", border_style="green"))
+            html = loader.load()
+            bs_transformer = BeautifulSoupTransformer()
+            docs_transformed = bs_transformer.transform_documents(html)
+            data.extend([x.page_content for x in docs_transformed])
+            metadata.extend([dict({"data": x.page_content}, **x.metadata) for x in docs_transformed])
     return data, metadata
 
 def extract_file_or_url(file_or_url):

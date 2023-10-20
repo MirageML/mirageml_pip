@@ -21,10 +21,6 @@ def search(live, user_input, sources): # ,local_sources, remote_sources=None):
     local = list_qdrant_db()
     remote = list_remote_qdrant_db()
 
-    if "local" == sources:
-        sources.remove("local")
-        sources.append(add_local_source())
-
     local_sources = [source for source in sources if source in local]
     remote_sources = [source for source in sources if source in remote]
 
@@ -68,6 +64,10 @@ def rag_chat(file_or_url, sources):
         from .utils.web_source import extract_file_or_url
         file_url_source, file_or_url_data = extract_file_or_url(file_or_url)
 
+    if "local" in sources:
+        sources.remove("local")
+        sources.append(add_local_source())
+
     while True:
         try:
             user_input = Prompt.ask(f"Ask a question over these sources ({', '.join(sources)})", default="exit", show_default=False)
@@ -98,19 +98,19 @@ def rag_chat(file_or_url, sources):
 
             # Fetch the AI's response
             ai_response = ""
-            live.update(Panel("Found relevant sources! Answering question...", title="[bold blue]Assistant[/bold blue]", border_style="blue"))
+            live.update(Panel("Found relevant sources! Answering question...", title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
             response = llm_call(chat_history, model=config["model"], stream=True, local=config["local_mode"])
 
             if config["local_mode"]:
                 for chunk in response:
                     ai_response += chunk
-                    live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
+                    live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
             else:
                 for chunk in response.iter_content(1024):
                     if chunk:
                         decoded_chunk = chunk.decode('utf-8')
                         ai_response += decoded_chunk
-                        live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
+                        live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
             chat_history.append({"role": "system", "content": ai_response})
 
         while True:
@@ -137,12 +137,12 @@ def rag_chat(file_or_url, sources):
                 if config["local_mode"]:
                     for chunk in response:
                         ai_response += chunk
-                        live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
+                        live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
                 else:
                     for chunk in response.iter_content(1024):
                         if chunk:
                             decoded_chunk = chunk.decode('utf-8')
                             ai_response += decoded_chunk
-                            live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", border_style="blue"))
+                            live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
 
             chat_history.append({"role": "system", "content": ai_response})
