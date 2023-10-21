@@ -60,7 +60,8 @@ def main(ctx: typer.Context):
 @app.command(name="help", hidden=True)
 def custom_help():
     # Your custom help message
-    typer.echo("Your Custom Help Message Here")
+    import os
+    os.system("mml --help")
 
 
 @app.command(name="login")
@@ -71,7 +72,7 @@ def login_command():
 
 
 def generate_help_text():
-    from .commands import help_list_sources
+    from .constants import help_list_sources
     return help_list_sources()
 
 @app.command()
@@ -143,10 +144,7 @@ def add_source_command():
     name = parsed_url.netloc.split('.')[0]
     if name == "docs": name = parsed_url.netloc.split('.')[1]
     name = input(f"Name for the source [default: {name}]: ") or name
-    remote = input("Store the source remotely? (y/n): ")
-    remote = remote.lower().startswith("y")
-
-    add_source(name, link, remote)
+    add_source(name, link)
 
 
 # Delete Commands

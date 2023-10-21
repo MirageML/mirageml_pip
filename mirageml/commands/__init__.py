@@ -10,7 +10,7 @@ from .chat import normal_chat
 from .rag import rag_chat
 
 from .list_plugins import list_plugins
-from .list_sources import list_sources, help_list_sources
+from .list_sources import list_sources
 
 from .add_plugin import add_plugin
 from .add_source import add_source

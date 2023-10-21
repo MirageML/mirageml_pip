@@ -11,10 +11,11 @@ from qdrant_client import QdrantClient
 from qdrant_client.http.models import PointStruct, VectorParams, Distance
 
 import keyring
+from ..list_sources import set_sources
 from ...constants import get_headers, SERVICE_ID, VECTORDB_SEARCH_ENDPOINT, VECTORDB_LIST_ENDPOINT, VECTORDB_CREATE_ENDPOINT, VECTORDB_DELETE_ENDPOINT
 
 from ..config import load_config
-from .brain import get_embedding
+
 
 import typer
 from rich.progress import Progress
@@ -55,9 +56,12 @@ def create_remote_qdrant_db(data, metadata, collection_name="test"):
                 live.update(Panel(f"Indexing: {chunk.decode()}", title="[bold green]Indexer[/bold green]", border_style="green"))
 
     typer.secho(f"Created Source: {collection_name}", fg=typer.colors.GREEN, bold=True)
+    set_sources()
     return True
 
 def create_qdrant_db(data, metadata, collection_name="test", remote=False):
+    from .brain import get_embedding
+
     if remote: return create_remote_qdrant_db(data, metadata, collection_name=collection_name)
     config = load_config()
     qdrant_client = get_qdrant_db()
@@ -111,8 +115,8 @@ def create_qdrant_db(data, metadata, collection_name="test", remote=False):
 
     typer.secho(f"Created Source: {collection_name}", fg=typer.colors.GREEN, bold=True)
 
+    set_sources()
     return qdrant_client
-
 
 def list_remote_qdrant_db():
     json_data = {
@@ -140,9 +144,12 @@ def remote_qdrant_search(source_name, user_input):
     }
     response = requests.post(VECTORDB_SEARCH_ENDPOINT, json=json_data, headers=get_headers())
     response.raise_for_status()  # Raise an exception if the request failed
+    set_sources()
     return response.json()
 
 def qdrant_search(source_name, user_input):
+    from .brain import get_embedding
+
     config = load_config()
     qdrant_client = get_qdrant_db()
 
@@ -165,9 +172,11 @@ def delete_remote_qdrant_db(collection_name="test"):
     }
     response = requests.post(VECTORDB_DELETE_ENDPOINT, json=json_data, headers=get_headers())
     response.raise_for_status()  # Raise an exception if the request failed
+    set_sources()
     return response.json()
 
 def delete_qdrant_db(collection_name="test", remote=False):
     if remote: return delete_remote_qdrant_db(collection_name=collection_name)
     qdrant_client = get_qdrant_db()
     qdrant_client.delete_collection(collection_name=collection_name)
+    set_sources()

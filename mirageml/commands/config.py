@@ -12,6 +12,12 @@ def load_config():
     if os.path.exists(config_path):
         with open(config_path, 'r') as f:
             return json.load(f)
+    else:
+        from .list_sources import set_sources
+        set_sources()
+        if os.path.exists(config_path):
+            with open(config_path, 'r') as f:
+                return json.load(f)
     return {
         "local_mode": False,
         "model": "gpt-4"
@@ -45,3 +51,9 @@ def set_config():
 
     typer.secho("MirageML Config updated!", fg=typer.colors.BRIGHT_GREEN)
     show_config()
+
+def set_var_config(json_data):
+    config = load_config()
+    for key, value in json_data.items():
+        config[key] = value
+    save_config(config)
