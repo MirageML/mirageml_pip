@@ -178,7 +178,7 @@ def crawl_website(start_url):
             live.update(Panel(f"Cleaning: {link}", title="[bold green]Cleaner[/bold green]", border_style="green"))
             html = loader.load()
             bs_transformer = BeautifulSoupTransformer()
-            docs_transformed = bs_transformer.transform_documents(html)
+            docs_transformed = bs_transformer.transform_documents(html, tags_to_extract=["p", "li", "div", "a", "code"])
             data.extend([x.page_content for x in docs_transformed])
             metadata.extend([dict({"data": x.page_content}, **x.metadata) for x in docs_transformed])
     return data, metadata
@@ -201,7 +201,7 @@ def extract_file_or_url(file_or_url):
             loader = AsyncChromiumLoader([file_or_url])
             html = loader.load()
             bs_transformer = BeautifulSoupTransformer()
-            docs_transformed = bs_transformer.transform_documents(html)
+            docs_transformed = bs_transformer.transform_documents(html, tags_to_extract=["p", "li", "div", "a", "code"])
             source, file_or_url_data = docs_transformed[0].metadata["source"], docs_transformed[0].page_content
             typer.secho(f"Loaded webpage: {file_or_url}", fg=typer.colors.BRIGHT_GREEN, bold=True)
         except Exception as e:
