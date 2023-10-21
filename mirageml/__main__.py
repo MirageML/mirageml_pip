@@ -17,6 +17,7 @@ app = typer.Typer(
     See the website at https://mirageml.com/ for documentation and more information
     about running code on MirageML.
     """,
+    # pretty_exceptions_short=False, pretty_exceptions_enable=False # Needed for debugging
 )
 
 config_app = typer.Typer(name="config", help="Manage the config", no_args_is_help=True)

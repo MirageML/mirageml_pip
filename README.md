@@ -1,52 +1,14 @@
-# My Pip Package
+# MirageML Python Library
 
-This is a basic Python pip package with two commands: `hello` and `help`.
-
-## Test locally
-```
-pip3 install .
-```
-
-## Build the package
-```
-export TWINE_USERNAME=__token__
-export TWINE_PASSWORD=<token from PyPI>
-
-# Make sure to change the version
-rm -rf build/ dist/ mirageml.egg-info
-python3 setup.py sdist bdist_wheel 
-twine upload --repository testpypi dist/* # For Testing
-twine upload dist/*                       # For Production
-```
+The MirageML Python Library provides a convenient interface to run AI in the terminal using your files or web documentation as context.
 
 ## Installation
 
-To install the package, run the following command:
+This requires Python 3.9 or later. Install the package with:
 
 ```
-pip3 install -U --index-url https://test.pypi.org/simple/ mirageml
-pip3 install -U mirageml
+pip install -U mirageml
 ```
 
-## Usage
-
-Before using <mirageml>, please set the following environment variables:
-
-- OPENAI_API_KEY: Used for <using ChatGPT and quering embeddings>. 
-
-
-### Hello Command
-
-To use the `hello` command, run the following command:
-
-```
-mirageml hello [name]
-```
-
-Prints "Hello World"
-
-## Dependencies
-
-```
-chardet
-```
+## Support
+Send an email to [support@mirageml.com](mailto:support@mirageml.com) for support.

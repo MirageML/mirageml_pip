@@ -19,6 +19,8 @@ from rich.table import Table
 from rich.tree import Tree
 from rich.progress import track
 
+from .custom_inputs import input_or_timeout
+
 import logging
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.CRITICAL)
@@ -145,8 +147,8 @@ def crawl_website(start_url):
                 print(path)
             print()
 
-
-        user_input = input("Do you want to index another URL? Enter a URL or leave empty (default: no): ")
+        # Will timeout if user doesn't respond within 10 seconds
+        user_input = input_or_timeout("Do you want to index another URL? Enter a URL or leave empty (timeout: 10s) (default: no): ", default="no")
         user_input = user_input.strip()
         if user_input and not user_input.lower().startswith('n'):
             if user_input.lower().startswith('https://'):

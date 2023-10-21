@@ -10,7 +10,7 @@ from rich.prompt import Prompt
 from .config import load_config
 from .add_source import add_local_source
 from .utils.brain import llm_call
-from .utils.multiline import multiline_input
+from .utils.custom_inputs import multiline_input
 from .utils.codeblocks import extract_code_from_markdown, add_indices_to_code_blocks, copy_code_to_clipboard
 from .utils.vectordb import list_qdrant_db, list_remote_qdrant_db, qdrant_search, remote_qdrant_search
 from .utils.prompt_templates import RAG_TEMPLATE
@@ -108,7 +108,7 @@ def rag_chat(file_or_url, sources):
                     ai_response += chunk
                     live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
             else:
-                for chunk in response.iter_content(1024):
+                for chunk in response.iter_content(chunk_size=512):
                     if chunk:
                         decoded_chunk = chunk.decode('utf-8')
                         ai_response += decoded_chunk
@@ -151,7 +151,7 @@ def rag_chat(file_or_url, sources):
                         ai_response += chunk
                         live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
                 else:
-                    for chunk in response.iter_content():
+                    for chunk in response.iter_content(chunk_size=512):
                         if chunk:
                             decoded_chunk = chunk.decode('utf-8')
                             ai_response += decoded_chunk
