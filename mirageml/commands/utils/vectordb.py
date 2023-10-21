@@ -175,8 +175,7 @@ def delete_remote_qdrant_db(collection_name="test"):
     set_sources()
     return response.json()
 
-def delete_qdrant_db(collection_name="test", remote=False):
-    if remote: return delete_remote_qdrant_db(collection_name=collection_name)
+def delete_qdrant_db(collection_name="test"):
     qdrant_client = get_qdrant_db()
     qdrant_client.delete_collection(collection_name=collection_name)
     set_sources()

@@ -149,14 +149,10 @@ def add_source_command():
 
 # Delete Commands
 @delete_app.command(name="source")
-def delete_source_command():
+def delete_source_command(name: str = typer.Argument(default="", help="Name of the source to delete")):
     """Delete a source"""
     from .commands import delete_source
-    from rich.prompt import Prompt
-    name = Prompt.ask("Name of the source")
-    remote = Prompt.ask("Is the source remote? (y/n)", default="n", show_default=True)
-    remote = remote.lower().startswith("y")
-    delete_source(name, remote)
+    delete_source(name)
 
 
 # Sync Commands

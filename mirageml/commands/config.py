@@ -12,12 +12,6 @@ def load_config():
     if os.path.exists(config_path):
         with open(config_path, 'r') as f:
             return json.load(f)
-    else:
-        from .list_sources import set_sources
-        set_sources()
-        if os.path.exists(config_path):
-            with open(config_path, 'r') as f:
-                return json.load(f)
     return {
         "local_mode": False,
         "model": "gpt-4"

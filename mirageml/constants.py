@@ -60,6 +60,7 @@ def help_list_sources():
     invoked_alias = sys.argv[0].split('/')[-1]  # Extract only the alias name
 
     config_path = os.path.expanduser("~/.mirageml.json")
+    config = {}
     if os.path.exists(config_path):
         with open(config_path, 'r') as f:
             config = json.load(f)

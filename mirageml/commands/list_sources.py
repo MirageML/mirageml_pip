@@ -16,18 +16,14 @@ def list_sources():
 
     if len(sources) != 0:
         typer.secho("Local Sources:", fg=typer.colors.BRIGHT_GREEN, bold=True)
-        sources[0] = f"* {sources[0]}"
-        print("\n* ".join(sources + ["local (this will index the files in your current directory)"]))
+        print("* " + "\n* ".join(sources + ["local (this will index the files in your current directory)"]))
     remote_sources = list_remote_qdrant_db()
     print("------------------")
     if len(remote_sources) != 0:
         typer.secho("Remote Sources:", fg=typer.colors.BRIGHT_GREEN, bold=True)
-        remote_sources[0] = f"* {remote_sources[0]}"
-        print("\n* ".join(remote_sources))
+        print("* " + "\n* ".join(remote_sources))
 
     set_var_config({
         "local": sources,
         "remote": remote_sources
     })
-
-
