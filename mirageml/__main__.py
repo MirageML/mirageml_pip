@@ -1,3 +1,4 @@
+import sys
 import time
 import typer
 from typing import List
@@ -9,7 +10,7 @@ app = typer.Typer(
     help="""
     MirageML CLI
 
-    **You can use 'mml' to call the package.**
+    **You can use 'mirage' or 'mml' to call the package.**
 
 
 
@@ -33,7 +34,6 @@ app.add_typer(delete_app, rich_help_panel="Manage Resources")
 
 @app.callback()
 def main(ctx: typer.Context):
-    import sys
     import keyring
     from .constants import SERVICE_ID, ANALYTICS_WRITE_KEY, fetch_new_access_token
     import segment.analytics as analytics
@@ -77,10 +77,10 @@ def generate_help_text():
 
 @app.command()
 def chat(
-        file_or_url: str = typer.Option(None, "--file-or-url", "-f", help="Path to a file or URL to use as context. \n\n\n**mml chat -f {filepath_or_url}**"),
+        file_or_url: str = typer.Option(None, "--file-or-url", "-f", help="Path to a file or URL to use as context. \n\n\n**"+sys.argv[0].split('/')[-1]+" chat -f {filepath_or_url}**"),
         sources: List[str] = typer.Option([], "--sources", "-s", help=generate_help_text())
     ):
-    """Chat with Mirage ML"""
+    """Chat with MirageML"""
     typer.secho("Starting chat. Type 'exit' to end the chat.", fg=typer.colors.BRIGHT_GREEN, bold=True)
     if sources:
         from .commands import rag_chat

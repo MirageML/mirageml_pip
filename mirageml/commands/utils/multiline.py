@@ -17,7 +17,7 @@ def _(event):
 
 def multiline_input(message):
     import typer
-    typer.secho(f'{message} (Use META+Enter for newline):', fg=typer.colors.BRIGHT_GREEN, bold=True)
+    typer.secho(f'{message} (Use Option+Enter for newline):', fg=typer.colors.BRIGHT_GREEN, bold=True)
     user_input = prompt("> ", multiline=True, key_bindings=kb)
     return user_input
 

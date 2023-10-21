@@ -55,7 +55,10 @@ def get_headers():
 
 def help_list_sources():
     import os
+    import sys
     import json
+    invoked_alias = sys.argv[0].split('/')[-1]  # Extract only the alias name
+
     config_path = os.path.expanduser("~/.mirageml.json")
     if os.path.exists(config_path):
         with open(config_path, 'r') as f:
@@ -65,11 +68,11 @@ def help_list_sources():
     remote_sources = config.get("remote", [])
     all_sources = list(set(local_sources + remote_sources))
     if len(all_sources) == 0:
-        final_string = "Specify sources to use as context:\n\n\n**mml chat -s {source1} -s {source2}**\n\n\n\n"
+        final_string = "Specify sources to use as context:\n\n\n**"+ invoked_alias +" chat -s {source1} -s {source2}**\n\n\n\n"
     elif len(all_sources) == 1:
-        final_string = f"Specify sources to use as context:\n\n\nEx: **mml chat -s {all_sources[0]}**\n\n\n\n"
+        final_string = f"Specify sources to use as context:\n\n\nEx: **{invoked_alias} chat -s {all_sources[0]}**\n\n\n\n"
     else:
-        final_string = f"Specify sources to use as context:\n\n\nEx: **mml chat -s {all_sources[0]} -s {all_sources[1]}**\n\n\n\n"
+        final_string = f"Specify sources to use as context:\n\n\nEx: **{invoked_alias} chat -s {all_sources[0]} -s {all_sources[1]}**\n\n\n\n"
 
     local_sources.append("local (this will index the files in your current directory)")
     if len(local_sources) != 0:
