@@ -14,6 +14,7 @@ from rich.progress import Progress
 from ...constants import (
     SERVICE_ID,
     VECTORDB_CREATE_ENDPOINT,
+    VECTORDB_UPSERT_ENDPOINT,
     VECTORDB_DELETE_ENDPOINT,
     VECTORDB_LIST_ENDPOINT,
     VECTORDB_SEARCH_ENDPOINT,
@@ -40,12 +41,7 @@ def exists_qdrant_db(collection_name="test"):
 
 
 def create_remote_qdrant_db(data, metadata, collection_name="test"):
-    json_data = {
-        "user_id": keyring.get_password(SERVICE_ID, "user_id"),
-        "data": data,
-        "metadata": metadata,
-        "collection_name": collection_name,
-    }
+    user_id = keyring.get_password(SERVICE_ID, "user_id")
 
     from rich.console import Console
     from rich.live import Live
@@ -63,17 +59,25 @@ def create_remote_qdrant_db(data, metadata, collection_name="test"):
         auto_refresh=True,
         vertical_overflow="visible",
     ) as live:
-        response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
-        if response.status_code == 200:
-            for chunk in response.iter_lines():
-                # process line here
-                live.update(
-                    Panel(
-                        f"Indexing: {chunk.decode()}",
-                        title="[bold green]Indexer[/bold green]",
-                        border_style="green",
+        for i, curr_data in enumerate(data):
+            json_data = {
+                "user_id": user_id,
+                "collection_name": collection_name,
+                "data": [curr_data],
+                "metadata": [metadata[i]],
+            }
+            if i == 0: response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
+            else: response = requests.post(VECTORDB_UPSERT_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
+            if response.status_code == 200:
+                for chunk in response.iter_lines():
+                    # process line here
+                    live.update(
+                        Panel(
+                            f"Indexing: {chunk.decode()}",
+                            title="[bold green]Indexer[/bold green]",
+                            border_style="green",
+                        )
                     )
-                )
 
     typer.secho(f"Created Source: {collection_name}", fg=typer.colors.GREEN, bold=True)
     set_sources()
