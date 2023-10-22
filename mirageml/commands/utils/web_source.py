@@ -13,7 +13,7 @@ from rich.console import Console
 from rich.live import Live
 from rich.panel import Panel
 
-from .custom_inputs import input_or_timeout
+from custom_inputs import input_or_timeout
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.CRITICAL)
@@ -75,7 +75,7 @@ def crawl_with_playwright(live, start_url):
     return visited_links
 
 
-def get_all_links(live, url):
+def get_all_links(base_url, url, live=None):
     response = requests.get(
         url,
         headers={
@@ -89,8 +89,9 @@ def get_all_links(live, url):
             absolute_link = urllib.parse.urljoin(url, link.get("href"))
             parsed_link = urlparse(absolute_link)
             cleaned_link = urlunparse((parsed_link.scheme, parsed_link.netloc, parsed_link.path, "", "", ""))
-            if cleaned_link.startswith(url):  # Only yield child URLs
-                live.update(
+            if cleaned_link.startswith(base_url):  # Only yield child URLs
+                if live:
+                    live.update(
                     Panel(
                         f"Scraping: {cleaned_link}",
                         title="[bold green]Scraper[/bold green]",
@@ -125,6 +126,7 @@ def crawl_website(start_url):
     urls = {start_url: set()}
     visited_links = set()
     to_visit = [start_url]
+    base_url = start_url
 
     # Check if playwright is installed
     if not check_playwright_chromium():
@@ -148,7 +150,7 @@ def crawl_website(start_url):
                     current_url = to_visit.pop(0)
                     if current_url not in visited_links:
                         visited_links.add(current_url)
-                        for link in get_all_links(live, current_url):
+                        for link in get_all_links(base_url, current_url, live):
                             to_visit.append(link)
         # pretty print all of the subpages that were indexed and ask the user if they want to continue
         typer.secho("Subpaths Per URL:", fg=typer.colors.GREEN, bold=True)
@@ -196,6 +198,7 @@ def crawl_website(start_url):
                     link += "/"
                 to_visit = [link]
                 urls[link] = set()
+                base_url = link
             else:
                 while True:
                     link = input("Link for the source (exit to skip): ")
@@ -283,5 +286,5 @@ if __name__ == "__main__":
     import time
 
     start_time = time.time()
-    crawl_website("https://segment.com/docs/")
+    crawl_website("https://www.nysenate.gov/legislation/laws/BNK")
     print(f"Time taken: {time.time() - start_time}")
