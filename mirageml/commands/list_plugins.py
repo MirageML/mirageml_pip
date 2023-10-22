@@ -2,7 +2,7 @@ import keyring
 import requests
 import typer
 
-from mirageml.constants import SERVICE_ID, SUPABASE_URL, SUPABASE_KEY
+from mirageml.constants import SERVICE_ID, SUPABASE_KEY, SUPABASE_URL
 
 plugin_mapping = {
     "google_token": "gdrive",
@@ -19,9 +19,7 @@ def list_plugins():
         "Authorization": f"Bearer {access_token}",
         "Content-Type": "application/json",
     }
-    response = requests.post(
-        f"{SUPABASE_URL}/rest/v1/rpc/user_plugins", json=params, headers=headers
-    )
+    response = requests.post(f"{SUPABASE_URL}/rest/v1/rpc/user_plugins", json=params, headers=headers)
     response_data = response.json()[0]
     connected_plugin_string = "Connected plugins: "
     for key in response_data:

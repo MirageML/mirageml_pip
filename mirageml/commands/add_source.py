@@ -1,8 +1,9 @@
 import os
+
+from .config import load_config
+from .utils.local_source import crawl_files
 from .utils.vectordb import create_qdrant_db
 from .utils.web_source import crawl_website
-from .utils.local_source import crawl_files
-from .config import load_config
 
 
 def add_web_source(name, link, remote=False):

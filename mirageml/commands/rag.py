@@ -1,20 +1,20 @@
 import typer
 from rich.box import HORIZONTALS
-from rich.markdown import Markdown
 from rich.console import Console
 from rich.live import Live
+from rich.markdown import Markdown
 from rich.panel import Panel
 
 from .config import load_config
 from .utils.brain import llm_call
 from .utils.custom_inputs import multiline_input
+from .utils.prompt_templates import RAG_TEMPLATE
 from .utils.vectordb import (
     list_qdrant_db,
     list_remote_qdrant_db,
     qdrant_search,
     remote_qdrant_search,
 )
-from .utils.prompt_templates import RAG_TEMPLATE
 
 console = Console()
 config = load_config()
@@ -71,9 +71,7 @@ def rank_hits(hits):
 
 
 def create_context(sorted_hits):
-    return "\n\n".join(
-        [str(x["payload"]["source"]) + ": " + x["payload"]["data"] for x in sorted_hits]
-    )
+    return "\n\n".join([str(x["payload"]["source"]) + ": " + x["payload"]["data"] for x in sorted_hits])
 
 
 def search_and_rank(live, user_input, sources):
@@ -84,13 +82,9 @@ def search_and_rank(live, user_input, sources):
 
 def rag_chat(sources, file_and_url_context, file_and_url_sources):
     try:
-        user_input = multiline_input(
-            f"Ask a question over these sources ({', '.join(sources)})"
-        )
+        user_input = multiline_input(f"Ask a question over these sources ({', '.join(sources)})")
         if user_input.lower().strip() == "exit":
-            typer.secho(
-                "Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True
-            )
+            typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
             return
 
         # Live display while searching for relevant sources
@@ -122,9 +116,7 @@ def rag_chat(sources, file_and_url_context, file_and_url_sources):
                 },
                 {
                     "role": "user",
-                    "content": RAG_TEMPLATE.format(
-                        context=context, question=user_input, sources=sources_used
-                    ),
+                    "content": RAG_TEMPLATE.format(context=context, question=user_input, sources=sources_used),
                 },
             ]
 

@@ -1,28 +1,26 @@
+import json
 import os
 import re
-import json
 import uuid
-import requests
-import tiktoken
-from qdrant_client import QdrantClient
-from qdrant_client.http.models import PointStruct, VectorParams, Distance
 
 import keyring
-from ..list_sources import set_sources
+import requests
+import tiktoken
+import typer
+from qdrant_client import QdrantClient
+from qdrant_client.http.models import Distance, PointStruct, VectorParams
+from rich.progress import Progress
+
 from ...constants import (
-    get_headers,
     SERVICE_ID,
-    VECTORDB_SEARCH_ENDPOINT,
-    VECTORDB_LIST_ENDPOINT,
     VECTORDB_CREATE_ENDPOINT,
     VECTORDB_DELETE_ENDPOINT,
+    VECTORDB_LIST_ENDPOINT,
+    VECTORDB_SEARCH_ENDPOINT,
+    get_headers,
 )
-
 from ..config import load_config
-
-
-import typer
-from rich.progress import Progress
+from ..list_sources import set_sources
 
 PACKAGE_DIR = os.path.dirname(__file__)
 
@@ -38,9 +36,7 @@ def get_qdrant_db():
 
 def exists_qdrant_db(collection_name="test"):
     qdrant_client = get_qdrant_db()
-    return collection_name in [
-        x.name for x in qdrant_client.get_collections().collections
-    ]
+    return collection_name in [x.name for x in qdrant_client.get_collections().collections]
 
 
 def create_remote_qdrant_db(data, metadata, collection_name="test"):
@@ -67,9 +63,7 @@ def create_remote_qdrant_db(data, metadata, collection_name="test"):
         auto_refresh=True,
         vertical_overflow="visible",
     ) as live:
-        response = requests.post(
-            VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True
-        )
+        response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
         if response.status_code == 200:
             for chunk in response.iter_content(chunk_size=None):
                 # process line here
@@ -156,9 +150,7 @@ def create_qdrant_db(data, metadata, collection_name="test", remote=False):
 
             qdrant_client.upsert(
                 collection_name=collection_name,
-                points=[
-                    PointStruct(vector=vector, payload=f_metadata, id=uuid.uuid4().hex)
-                ],
+                points=[PointStruct(vector=vector, payload=f_metadata, id=uuid.uuid4().hex)],
             )
 
     typer.secho(f"Created Source: {collection_name}", fg=typer.colors.GREEN, bold=True)
@@ -171,9 +163,7 @@ def list_remote_qdrant_db():
     json_data = {
         "user_id": keyring.get_password(SERVICE_ID, "user_id"),
     }
-    response = requests.post(
-        VECTORDB_LIST_ENDPOINT, json=json_data, headers=get_headers()
-    )
+    response = requests.post(VECTORDB_LIST_ENDPOINT, json=json_data, headers=get_headers())
     response.raise_for_status()  # Raise an exception if the request failed
     return response.json()
 
@@ -195,9 +185,7 @@ def remote_qdrant_search(source_name, user_input):
         "collection_name": source_name,
         "search_query": user_input,
     }
-    response = requests.post(
-        VECTORDB_SEARCH_ENDPOINT, json=json_data, headers=get_headers()
-    )
+    response = requests.post(VECTORDB_SEARCH_ENDPOINT, json=json_data, headers=get_headers())
     response.raise_for_status()  # Raise an exception if the request failed
     set_sources()
     return response.json()
@@ -223,9 +211,7 @@ def delete_remote_qdrant_db(collection_name="test"):
         "user_id": keyring.get_password(SERVICE_ID, "user_id"),
         "collection_name": collection_name,
     }
-    response = requests.post(
-        VECTORDB_DELETE_ENDPOINT, json=json_data, headers=get_headers()
-    )
+    response = requests.post(VECTORDB_DELETE_ENDPOINT, json=json_data, headers=get_headers())
     response.raise_for_status()  # Raise an exception if the request failed
     set_sources()
     return response.json()
