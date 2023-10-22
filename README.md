@@ -12,7 +12,7 @@ pip install -U mirageml
 
 ## Commands
 ```
-mirage [OPTIONS] COMMAND [ARGS]... 
+mirage [OPTIONS] COMMAND [ARGS]
 ```
 ```
 ╭─ Options ─────────────────────────────────────────────────────────────────────────────────╮
