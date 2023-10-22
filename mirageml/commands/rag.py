@@ -59,24 +59,14 @@ def search_and_rank(live, user_input, sources):
     return sorted_hits
 
 
-## MAIN FUNCTION
-def rag_chat(file_or_url, sources):
-    # Beginning of the chat sequence
-    if file_or_url:
-        from .utils.web_source import extract_file_or_url
-        file_url_source, file_or_url_data = extract_file_or_url(file_or_url)
+def rag_chat(sources, file_and_url_context, file_and_url_sources):
+    try:
+        if file_and_url_context:
+            context += file_and_url_context
+            sources.append(file_and_url_sources)
 
-    if "local" in sources:
-        sources.remove("local")
-        sources.append(add_local_source())
-
-    while True:
-        try:
-            user_input = multiline_input(f"Ask a question over these sources ({', '.join(sources)})")
-            if user_input.lower().strip() == 'exit':
-                typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
-                return
-        except KeyboardInterrupt:
+        user_input = multiline_input(f"Ask a question over these sources ({', '.join(sources)})")
+        if user_input.lower().strip() == 'exit':
             typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
             return
 
@@ -86,16 +76,13 @@ def rag_chat(file_or_url, sources):
                     console=console, screen=False, auto_refresh=True, vertical_overflow="visible") as live:
 
             sorted_hits = search_and_rank(live, user_input, sources)
+            sources_used = [hit["payload"]["source"] for hit in sorted_hits]
             context = create_context(sorted_hits)
-
-            if file_or_url:
-                context += "\n\n" + file_url_source + ": " + file_or_url_data
-                sources.append(file_url_source)
 
             # Chat history that will be sent to the AI model
             chat_history = [
                 {"role": "system", "content": "You are a helpful assistant that responds to questions concisely with the given context in the following format:\n{answer}\n\nSources:\n{sources}"},
-                {"role": "user", "content": RAG_TEMPLATE.format(context=context, question=user_input, sources=sources)}
+                {"role": "user", "content": RAG_TEMPLATE.format(context=context, question=user_input, sources=sources_used)}
             ]
 
             # Fetch the AI's response
@@ -114,49 +101,8 @@ def rag_chat(file_or_url, sources):
                         ai_response += decoded_chunk
                         live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
             chat_history.append({"role": "assistant", "content": ai_response})
+        return chat_history
 
-        while True:
-            # Loop for follow-up questions
-            try:
-                code_blocks = extract_code_from_markdown(ai_response)
-                if code_blocks:
-                    selected_indices = multiline_input("Enter the numbers of the code blocks you want to copy, separated by commas (e.g. '1,3,4') or ask a follow-up. Type reset to search again")
-                    try:
-                        selected_indices = list(map(int, selected_indices.split(',')))
-                        copy_code_to_clipboard(code_blocks, selected_indices)
-                        ai_response = ""
-                        continue
-                    except ValueError: user_input = selected_indices
-                else:
-                    user_input = multiline_input("Ask a follow-up. Type reset to search again")
-                if user_input.lower().strip() == 'exit':
-                    typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
-                    return
-                elif user_input.lower().strip() == 'reset':
-                    break
-            except KeyboardInterrupt:
-                typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
-                return
-
-            chat_history.append({"role": "user", "content": user_input})
-
-            with Live(Panel("Assistant is typing...", title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"),
-                    console=console, transient=True, auto_refresh=True, refresh_per_second=8) as live:
-
-                response = llm_call(chat_history, model=config["model"], stream=True, local=config["local_mode"])
-
-                ai_response = ""
-                if config["local_mode"]:
-                    for chunk in response:
-                        ai_response += chunk
-                        live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
-                else:
-                    for chunk in response.iter_content(chunk_size=512):
-                        if chunk:
-                            decoded_chunk = chunk.decode('utf-8')
-                            ai_response += decoded_chunk
-                            live.update(Panel(Markdown(ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
-
-            chat_history.append({"role": "assistant", "content": ai_response})
-            indexed_ai_response = add_indices_to_code_blocks(ai_response)
-            console.print(Panel(Markdown(indexed_ai_response), title="[bold blue]Assistant[/bold blue]", box=HORIZONTALS, border_style="blue"))
+    except KeyboardInterrupt:
+        typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
+        return

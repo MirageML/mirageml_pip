@@ -16,12 +16,13 @@ def add_web_source(name, link, remote=False):
     data, metadata = crawl_website(link)
     create_qdrant_db(data, metadata, collection_name=name, remote=remote)
 
-def add_local_source(name=None, path=None):
+def add_local_source(path=None, name=None):
     config = load_config()
+    if path == "local": path = "."
     remote = False if config["local_mode"] else True
     print("Indexing Local Files...")
     # Crawl the files under the current directory
-    data, metadata = crawl_files()
+    data, metadata = crawl_files(path)
     # collection_name should be absolute path
     collection_name = os.path.abspath('.').replace('/', '_') if name is None else name
     collection_name = collection_name.replace(' ', '_')
