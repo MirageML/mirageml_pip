@@ -86,60 +86,76 @@ def rag_chat(sources, file_and_url_context, file_and_url_sources):
         if user_input.lower().strip() == "exit":
             typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
             return
+    except KeyboardInterrupt:
+        typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
+        return
 
-        # Live display while searching for relevant sources
-        with Live(
+    # Live display while searching for relevant sources
+    with Live(
+        Panel(
+            "Searching through the relevant sources...",
+            title="[bold blue]Assistant[/bold blue]",
+            border_style="blue",
+            box=HORIZONTALS,
+        ),
+        console=console,
+        screen=False,
+        auto_refresh=True,
+        vertical_overflow="visible",
+    ) as live:
+        sorted_hits = search_and_rank(live, user_input, sources)
+        sources_used = [hit["payload"]["source"] for hit in sorted_hits]
+        context = create_context(sorted_hits)
+
+        if file_and_url_context:
+            context += file_and_url_context
+            sources.append(file_and_url_sources)
+
+        # Chat history that will be sent to the AI model
+        chat_history = [
+            {
+                "role": "system",
+                "content": "You are a helpful assistant that responds to questions concisely with the given context in the following format:\n{answer}\n\nSources:\n{sources}",
+            },
+            {
+                "role": "user",
+                "content": RAG_TEMPLATE.format(context=context, question=user_input, sources=sources_used),
+            },
+        ]
+
+        # Fetch the AI's response
+        ai_response = ""
+        live.update(
             Panel(
-                "Searching through the relevant sources...",
+                "Found relevant sources! Answering question...",
                 title="[bold blue]Assistant[/bold blue]",
-                border_style="blue",
                 box=HORIZONTALS,
-            ),
-            console=console,
-            screen=False,
-            auto_refresh=True,
-            vertical_overflow="visible",
-        ) as live:
-            sorted_hits = search_and_rank(live, user_input, sources)
-            sources_used = [hit["payload"]["source"] for hit in sorted_hits]
-            context = create_context(sorted_hits)
+                border_style="blue",
+            )
+        )
+        response = llm_call(
+            chat_history,
+            model=config["model"],
+            stream=True,
+            local=config["local_mode"],
+        )
 
-            if file_and_url_context:
-                context += file_and_url_context
-                sources.append(file_and_url_sources)
-
-            # Chat history that will be sent to the AI model
-            chat_history = [
-                {
-                    "role": "system",
-                    "content": "You are a helpful assistant that responds to questions concisely with the given context in the following format:\n{answer}\n\nSources:\n{sources}",
-                },
-                {
-                    "role": "user",
-                    "content": RAG_TEMPLATE.format(context=context, question=user_input, sources=sources_used),
-                },
-            ]
-
-            # Fetch the AI's response
-            ai_response = ""
-            live.update(
-                Panel(
-                    "Found relevant sources! Answering question...",
-                    title="[bold blue]Assistant[/bold blue]",
-                    box=HORIZONTALS,
-                    border_style="blue",
+        if config["local_mode"]:
+            for chunk in response:
+                ai_response += chunk
+                live.update(
+                    Panel(
+                        Markdown(ai_response),
+                        title="[bold blue]Assistant[/bold blue]",
+                        box=HORIZONTALS,
+                        border_style="blue",
+                    )
                 )
-            )
-            response = llm_call(
-                chat_history,
-                model=config["model"],
-                stream=True,
-                local=config["local_mode"],
-            )
-
-            if config["local_mode"]:
-                for chunk in response:
-                    ai_response += chunk
+        else:
+            for chunk in response.iter_content(chunk_size=512):
+                if chunk:
+                    decoded_chunk = chunk.decode("utf-8")
+                    ai_response += decoded_chunk
                     live.update(
                         Panel(
                             Markdown(ai_response),
@@ -148,22 +164,5 @@ def rag_chat(sources, file_and_url_context, file_and_url_sources):
                             border_style="blue",
                         )
                     )
-            else:
-                for chunk in response.iter_content(chunk_size=512):
-                    if chunk:
-                        decoded_chunk = chunk.decode("utf-8")
-                        ai_response += decoded_chunk
-                        live.update(
-                            Panel(
-                                Markdown(ai_response),
-                                title="[bold blue]Assistant[/bold blue]",
-                                box=HORIZONTALS,
-                                border_style="blue",
-                            )
-                        )
-            chat_history.append({"role": "assistant", "content": ai_response})
-        return chat_history
-
-    except KeyboardInterrupt:
-        typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
-        return
+        chat_history.append({"role": "assistant", "content": ai_response})
+    return chat_history
