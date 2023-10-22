@@ -6,34 +6,62 @@
 # separate terms of service, privacy policy, and support
 # documentation.
 
-name: Upload Python Package
+name: Upload Python Package to PyPI
 
-on:
-  release:
-    types: [published]
+on: push
 
-permissions:
-  contents: read
 
 jobs:
+  update-version:
+    name: Update version
+    if: github.actor != 'modal-pr-review-automation[bot]' && github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+
+
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
+
+
   deploy:
 
     runs-on: ubuntu-latest
 
     steps:
-    - uses: actions/checkout@v3
-    - name: Set up Python
-      uses: actions/setup-python@v3
-      with:
-        python-version: '3.x'
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install build
-    - name: Build package
-      run: python -m build
-    - name: Publish package
-      uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
-      with:
-        user: __token__
-        password: ${{ secrets.PYPI_API_TOKEN }}
+      - name: Generate token for Github PR Bot
+          id: generate_token
+          uses: tibdex/github-app-token@v1
+          with:
+            app_id: ${{ secrets.GH_PRBOT_APP_ID }}
+            private_key: ${{ secrets.GH_PRBOT_APP_PRIVATE_KEY }}
+
+      - uses: actions/checkout@v3
+        with:
+          token: ${{ steps.generate_token.outputs.token }}
+
+      - name: Set up Python
+        uses: ./.github/actions/setup-cached-python
+        with:
+          version: "3.9"
+
+      - name: Bump the version number
+        run: inv update-build-number $GITHUB_RUN_NUMBER
+
+      - uses: EndBug/add-and-commit@v9
+        with:
+          add: modal_version/_version_generated.py
+          message: "[auto-commit] [skip ci] Bump the build number"
+          pull: "--rebase --autostash"
+          default_author: github_actions
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install build
+      - name: Build package
+        run: python -m build
+      - name: Publish package
+        uses: pypa/gh-action-pypi-publish@27b31702a0e7fc50959f5ad993c78deac1bdfc29
+        with:
+          user: __token__
+          password: ${{ secrets.PYPI_API_TOKEN }}

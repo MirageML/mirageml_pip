@@ -160,9 +160,12 @@ cython_debug/
 #.idea/
 
 # Pip Package Build files
-build/ 
-dist/ 
+build/
+dist/
 mirageml.egg-info/
 .lock
 meta.json
 mirageml/commands/utils/collection/*
+
+# Lint files
+.ruff_cache
