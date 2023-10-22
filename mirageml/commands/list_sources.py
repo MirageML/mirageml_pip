@@ -1,12 +1,12 @@
 import typer
 
+
 def set_sources():
     from .utils.vectordb import list_qdrant_db, list_remote_qdrant_db
     from .config import set_var_config
-    set_var_config({
-        "local": list_qdrant_db(),
-        "remote": list_remote_qdrant_db()
-    })
+
+    set_var_config({"local": list_qdrant_db(), "remote": list_remote_qdrant_db()})
+
 
 def list_sources():
     from .utils.vectordb import list_qdrant_db, list_remote_qdrant_db
@@ -23,7 +23,4 @@ def list_sources():
         typer.secho("Remote Sources:", fg=typer.colors.BRIGHT_GREEN, bold=True)
         print("* " + "\n* ".join(remote_sources))
 
-    set_var_config({
-        "local": sources,
-        "remote": remote_sources
-    })
+    set_var_config({"local": sources, "remote": remote_sources})

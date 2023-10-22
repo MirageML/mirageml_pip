@@ -1,17 +1,22 @@
 import os
 import sys
 import requests
-import keyring
 
 from io import StringIO
-from ...constants import get_headers, SERVICE_ID, VECTORDB_EMBED_ENDPOINT, LLM_GPT_ENDPOINT
+from ...constants import (
+    get_headers,
+    VECTORDB_EMBED_ENDPOINT,
+    LLM_GPT_ENDPOINT,
+)
 
 PACKAGE_DIR = os.path.dirname(__file__)
-os.environ['TRANSFORMERS_CACHE'] = os.path.join(PACKAGE_DIR, 'models')
+os.environ["TRANSFORMERS_CACHE"] = os.path.join(PACKAGE_DIR, "models")
+
 
 def local_get_embedding(text_list, embedding_model_id="BAAI/bge-small-en-v1.5"):
     from sentence_transformers import SentenceTransformer
-    model_dir = os.path.join(PACKAGE_DIR, 'models', embedding_model_id)
+
+    model_dir = os.path.join(PACKAGE_DIR, "models", embedding_model_id)
     if not os.path.exists(model_dir):
         os.makedirs(model_dir, exist_ok=True)
         print("Downloading model to:", model_dir)
@@ -21,10 +26,7 @@ def local_get_embedding(text_list, embedding_model_id="BAAI/bge-small-en-v1.5"):
     original_stdout, original_stderr = sys.stdout, sys.stderr
     sys.stdout, sys.stderr = StringIO(), StringIO()
 
-    model = SentenceTransformer(
-        embedding_model_id,
-        cache_folder=model_dir
-        )
+    model = SentenceTransformer(embedding_model_id, cache_folder=model_dir)
     embeddings = model.encode(text_list, normalize_embeddings=False)
 
     # Restore stdout/stderr
@@ -34,9 +36,13 @@ def local_get_embedding(text_list, embedding_model_id="BAAI/bge-small-en-v1.5"):
     embeddings = embeddings.tolist()
     return embeddings
 
-def local_llm_call(messages, llm_model_id="TheBloke/Llama-2-7b-Chat-GGUF", stream=False):
+
+def local_llm_call(
+    messages, llm_model_id="TheBloke/Llama-2-7b-Chat-GGUF", stream=False
+):
     from ctransformers import AutoModelForCausalLM
-    model_dir = os.path.join(PACKAGE_DIR, 'models', llm_model_id)
+
+    model_dir = os.path.join(PACKAGE_DIR, "models", llm_model_id)
     if not os.path.exists(model_dir):
         os.makedirs(model_dir, exist_ok=True)
         print("Downloading model to:", model_dir)
@@ -56,20 +62,26 @@ def local_llm_call(messages, llm_model_id="TheBloke/Llama-2-7b-Chat-GGUF", strea
     sys.stdout, sys.stderr = original_stdout, original_stderr
     formatted_messages = "\n".join([x["content"] for x in messages])
 
-    if stream: return llm(formatted_messages, stream=True)
-    else: return llm(formatted_messages)
+    if stream:
+        return llm(formatted_messages, stream=True)
+    else:
+        return llm(formatted_messages)
+
 
 def get_embedding(text_list, model="BAAI/bge-small-en-v1.5", local=False):
-    if local: return local_get_embedding(text_list, embedding_model_id=model)
-    response = requests.post(VECTORDB_EMBED_ENDPOINT, json={'data': text_list}, headers=get_headers())
+    if local:
+        return local_get_embedding(text_list, embedding_model_id=model)
+    response = requests.post(
+        VECTORDB_EMBED_ENDPOINT, json={"data": text_list}, headers=get_headers()
+    )
     response.raise_for_status()  # Raise an exception if the request failed
-    return response.json()['embedding']
+    return response.json()["embedding"]
+
 
 def llm_call(messages, model="gpt-3.5-turbo", stream=False, local=False):
-    if local: return local_llm_call(messages, stream=stream)
-    json_data = {
-        "model": model,
-        "messages": messages,
-        "stream": stream
-    }
-    return requests.post(LLM_GPT_ENDPOINT, json=json_data, headers=get_headers(), stream=stream)
+    if local:
+        return local_llm_call(messages, stream=stream)
+    json_data = {"model": model, "messages": messages, "stream": stream}
+    return requests.post(
+        LLM_GPT_ENDPOINT, json=json_data, headers=get_headers(), stream=stream
+    )

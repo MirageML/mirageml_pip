@@ -41,16 +41,20 @@ def main(ctx: typer.Context):
 
     analytics.write_key = ANALYTICS_WRITE_KEY
 
-    user_id = keyring.get_password(SERVICE_ID, 'user_id')
-    expires_at = keyring.get_password(SERVICE_ID, 'expires_at')
+    user_id = keyring.get_password(SERVICE_ID, "user_id")
+    expires_at = keyring.get_password(SERVICE_ID, "expires_at")
     if not user_id and ctx.invoked_subcommand != "login":
         typer.echo("Please login first. Run `mirageml login`")
         raise typer.Exit()
-    elif expires_at and float(expires_at) < time.time() and ctx.invoked_subcommand != "login":
+    elif (
+        expires_at
+        and float(expires_at) < time.time()
+        and ctx.invoked_subcommand != "login"
+    ):
         try:
             fetch_new_access_token()
             analytics.identify(user_id)
-        except:
+        except Exception:
             typer.echo("Please login again. Run `mirageml login`")
             raise typer.Exit()
 
@@ -62,6 +66,7 @@ def main(ctx: typer.Context):
 def custom_help():
     # Your custom help message
     import os
+
     os.system("mml --help")
 
 
@@ -69,22 +74,44 @@ def custom_help():
 def login_command():
     """Login to Mirage ML"""
     from .commands import login
+
     login()
 
 
 def generate_help_text():
     from .constants import help_list_sources
+
     return help_list_sources()
+
 
 @app.command(name="chat")
 def chat_command(
-        filepaths: List[str] = typer.Option(None, "--files", "-f", help="Path to files/directories to use as context. \n\n\n**"+sys.argv[0].split('/')[-1]+" chat -f {filepath}**"),
-        urls: List[str] = typer.Option(None, "--urls", "-u", help="URLs to use as context. \n\n\n**"+sys.argv[0].split('/')[-1]+" chat -u {url}**"),
-        sources: List[str] = typer.Option([], "--sources", "-s", help=generate_help_text())
-    ):
+    filepaths: List[str] = typer.Option(
+        None,
+        "--files",
+        "-f",
+        help="Path to files/directories to use as context. \n\n\n**"
+        + sys.argv[0].split("/")[-1]
+        + " chat -f {filepath}**",
+    ),
+    urls: List[str] = typer.Option(
+        None,
+        "--urls",
+        "-u",
+        help="URLs to use as context. \n\n\n**"
+        + sys.argv[0].split("/")[-1]
+        + " chat -u {url}**",
+    ),
+    sources: List[str] = typer.Option([], "--sources", "-s", help=generate_help_text()),
+):
     """Chat with MirageML"""
-    typer.secho("Starting chat. Type 'exit' to end the chat.", fg=typer.colors.BRIGHT_GREEN, bold=True)
+    typer.secho(
+        "Starting chat. Type 'exit' to end the chat.",
+        fg=typer.colors.BRIGHT_GREEN,
+        bold=True,
+    )
     from .commands import chat
+
     chat(files=filepaths, urls=urls, sources=sources)
 
 
@@ -92,6 +119,7 @@ def chat_command(
 def show_config_command():
     """Show the current config"""
     from .commands import show_config
+
     show_config()
 
 
@@ -101,6 +129,7 @@ def set_config_command():
     Set the config file for MirageML
     """
     from .commands import set_config
+
     set_config()
 
 
@@ -109,6 +138,7 @@ def set_config_command():
 def list_plugins_command():
     """List connected plugins"""
     from .commands import list_plugins
+
     list_plugins()
 
 
@@ -116,6 +146,7 @@ def list_plugins_command():
 def list_sources_command():
     """List created sources"""
     from .commands import list_sources
+
     list_sources()
 
 
@@ -124,6 +155,7 @@ def list_sources_command():
 def add_plugin_command(name: str):
     """Add a plugin by name"""
     from .commands import add_plugin
+
     add_plugin({"plugin": name})
 
 
@@ -131,6 +163,7 @@ def add_plugin_command(name: str):
 def add_source_command():
     """Add a new source"""
     from .commands import add_source
+
     while True:
         link = input("Link for the source: ")
         if not link.startswith("https://"):
@@ -138,18 +171,23 @@ def add_source_command():
             continue
         break
     from urllib.parse import urlparse
+
     parsed_url = urlparse(link)
-    name = parsed_url.netloc.split('.')[0]
-    if name == "docs": name = parsed_url.netloc.split('.')[1]
+    name = parsed_url.netloc.split(".")[0]
+    if name == "docs":
+        name = parsed_url.netloc.split(".")[1]
     name = input(f"Name for the source [default: {name}]: ") or name
     add_source(name, link)
 
 
 # Delete Commands
 @delete_app.command(name="source")
-def delete_source_command(name: str = typer.Argument(default="", help="Name of the source to delete")):
+def delete_source_command(
+    name: str = typer.Argument(default="", help="Name of the source to delete")
+):
     """Delete a source"""
     from .commands import delete_source
+
     delete_source(name)
 
 
@@ -158,6 +196,7 @@ def delete_source_command(name: str = typer.Argument(default="", help="Name of t
 def sync_plugin_command(name: str):
     """Sync a plugin"""
     from .commands import sync_plugin
+
     sync_plugin({"plugin": name})
 
 
