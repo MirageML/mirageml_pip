@@ -1,5 +1,5 @@
 # Copyright Mirage ML Inc 2023
-"""Specifies the `mimrageml.__version__` number for the client package."""
+"""Specifies the `mirageml.__version__` number for the client package."""
 
 from ._version_generated import build_number
 
