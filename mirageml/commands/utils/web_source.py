@@ -7,12 +7,13 @@ from urllib.parse import urlparse, urlunparse
 import requests
 import typer
 from bs4 import BeautifulSoup
-from custom_inputs import input_or_timeout
 from langchain.document_loaders import AsyncChromiumLoader
 from langchain.document_transformers import BeautifulSoupTransformer
 from rich.console import Console
 from rich.live import Live
 from rich.panel import Panel
+
+from .custom_inputs import input_or_timeout
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.CRITICAL)
