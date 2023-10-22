@@ -12,14 +12,15 @@ pip install -U mirageml
 
 ## Commands
 ```
-Usage: mirage [OPTIONS] COMMAND [ARGS]... 
-
+mirage [OPTIONS] COMMAND [ARGS]... 
+```
+```
 ╭─ Options ─────────────────────────────────────────────────────────────────────────────────╮
 │ --help          Show this message and exit.                                               │
 ╰───────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Commands ────────────────────────────────────────────────────────────────────────────────╮
 │ chat   Chat with MirageML                                                                 │
-│ login  Login to Mirage ML                                                                 │
+│ login  Login to MirageML                                                                  │
 ╰───────────────────────────────────────────────────────────────────────────────────────────╯
 ╭─ Manage Source ───────────────────────────────────────────────────────────────────────────╮
 │ add     Add a new source                                                                  │
@@ -34,8 +35,9 @@ Usage: mirage [OPTIONS] COMMAND [ARGS]...
 
 ## Chat Commands
 ```
-Usage: mirage chat [OPTIONS]
-
+mirage chat [OPTIONS]
+```
+```
 ╭─ Options ─────────────────────────────────────────────────────────────────────────────────╮
 │ --files    -f      TEXT  Path to files/directories to use as context.                     │
 │                                                                                           │
