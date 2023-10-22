@@ -1,2 +1,2 @@
 # Copyright Mirage ML 2023
-build_number = 7
+build_number = 8
