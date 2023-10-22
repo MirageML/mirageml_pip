@@ -14,6 +14,9 @@ SUPABASE_KEY = (
 NOTION_SYNC_ENDPOINT = " https://mirageml--notion-sync-trigger-notion-sync.modal.run"
 ANALYTICS_WRITE_KEY = "WeKYF6EZAYtVxUwlx8g3sG1JKDMMv6jY"
 
+WEB_SCRAPE_LINKS_ENDPOINT = "https://mirageml--web-scraper-recursive-links.modal.run"
+WEB_SCRAPE_EXTRACT_ENDPOINT = "https://mirageml--web-scraper-extract-from-url.modal.run"
+
 VECTORDB_EMBED_ENDPOINT = "https://mirageml--vectordb-embed-text.modal.run"
 LLM_GPT_ENDPOINT = "https://mirageml--llm-gpt.modal.run"
 

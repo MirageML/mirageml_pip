@@ -29,19 +29,23 @@ pytest
 
 Once you have made your changes and all tests pass, you can submit a pull request. Please provide a clear and concise description of your changes in the pull request description.
 
-<!-- ## Environment Variables
+Before creating a pull request, make sure to format your code using Black and ruff. You can do this with the following commands:
 
-Before using MirageML, please set the following environment variables:
-
-- OPENAI_API_KEY: Used for using ChatGPT and querying embeddings. -->
+```
+black .
+ruff . --fix
+```
 
 ## Dependencies
 
-Here is a list of dependencies for MirageML:
+Use `requirements.dev.txt` to install all dependencies for development. You can do this with the following command:
 
 ```
-For a complete list of dependencies, please refer to the [setup.cfg](https://github.com/MirageML/mirageml_pip/blob/main/setup.cfg) file.
+pip3 install -r requirements.dev.txt
 ```
+
+For a complete list of dependencies, please refer to the [setup.cfg](https://github.com/MirageML/mirageml_pip/blob/main/setup.cfg) file.
+
 
 Please make sure to update this list if you add or remove any dependencies in your pull request.
 

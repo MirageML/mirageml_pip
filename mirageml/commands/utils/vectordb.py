@@ -65,7 +65,7 @@ def create_remote_qdrant_db(data, metadata, collection_name="test"):
     ) as live:
         response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
         if response.status_code == 200:
-            for chunk in response.iter_content(chunk_size=None):
+            for chunk in response.iter_lines():
                 # process line here
                 live.update(
                     Panel(

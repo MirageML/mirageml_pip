@@ -26,30 +26,9 @@ def crawl_files(start_dir="."):
     return data, metadata
 
 
-def extract_from_file(filepath, live=None):
-    from rich.panel import Panel
-
-    if not filepath.startswith("http"):
-        try:
-            # Read the file content
-            with open(filepath, "r", encoding="utf-8") as file:
-                file_content = file.read()
-                source, file_data = filepath, file_content
-                if live:
-                    live.update(
-                        Panel(
-                            f"Loaded file: {filepath}",
-                            title="[bold blue]Assistant[/bold blue]",
-                            border_style="blue",
-                        )
-                    )
-            return source, file_data
-        except Exception:
-            if live:
-                live.update(
-                    Panel(
-                        f"Unable to read file: {filepath}",
-                        title="[bold blue]Assistant[/bold blue]",
-                        border_style="blue",
-                    )
-                )
+def extract_from_file(filepath):
+    # Read the file content
+    with open(filepath, "r", encoding="utf-8") as file:
+        file_content = file.read()
+        source, file_data = filepath, file_content
+    return source, file_data

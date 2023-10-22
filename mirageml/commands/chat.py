@@ -56,9 +56,12 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
                         border_style="blue",
                     )
                 )
-                source, file_data = extract_from_file(file, live)
-                file_and_url_sources.append(source)
-                file_and_url_context += "\n\n" + source + ": " + file_data
+                try:
+                    source, file_data = extract_from_file(file)
+                    file_and_url_sources.append(source)
+                    file_and_url_context += "\n\n" + source + ": " + file_data
+                except Exception:
+                    print(f"Unable to read file: {file}")
 
         for url in urls:
             from .utils.web_source import extract_from_url
@@ -70,9 +73,12 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
                     border_style="blue",
                 )
             )
-            source, url_data = extract_from_url(url, live)
-            file_and_url_sources.append(source)
-            file_and_url_context += "\n\n" + source + ": " + url_data
+            try:
+                source, url_data = extract_from_url(url, live)
+                file_and_url_sources.append(source)
+                file_and_url_context += "\n\n" + source + ": " + url_data
+            except Exception:
+                print(f"Unable to read url make sure that the url starts with http: {url}")
 
     for dir_path in local_sources:
         from .add_source import add_local_source
