@@ -9,17 +9,29 @@ def set_sources():
 
 
 def list_sources():
+    import sys
+
     from .config import set_var_config
     from .utils.vectordb import list_qdrant_db, list_remote_qdrant_db
 
     sources = list_qdrant_db()
+    remote_sources = list_remote_qdrant_db()
+
+    if len(sources) == 0 and len(remote_sources) == 0:
+        typer.secho(
+            f"No sources found. Please add a source using {sys.argv[0].split('/')[-1]} add source",
+            fg=typer.colors.RED,
+            bold=True,
+        )
+        return
 
     if len(sources) != 0:
         typer.secho("Local Sources:", fg=typer.colors.BRIGHT_GREEN, bold=True)
         print("* " + "\n* ".join(sources))
-    remote_sources = list_remote_qdrant_db()
-    print("------------------")
+
     if len(remote_sources) != 0:
+        if len(sources) != 0:
+            print("------------------")
         typer.secho("Remote Sources:", fg=typer.colors.BRIGHT_GREEN, bold=True)
         print("* " + "\n* ".join(remote_sources))
 
