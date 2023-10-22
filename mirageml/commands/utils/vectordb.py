@@ -14,10 +14,10 @@ from rich.progress import Progress
 from ...constants import (
     SERVICE_ID,
     VECTORDB_CREATE_ENDPOINT,
-    VECTORDB_UPSERT_ENDPOINT,
     VECTORDB_DELETE_ENDPOINT,
     VECTORDB_LIST_ENDPOINT,
     VECTORDB_SEARCH_ENDPOINT,
+    VECTORDB_UPSERT_ENDPOINT,
     get_headers,
 )
 from ..config import load_config
@@ -66,8 +66,10 @@ def create_remote_qdrant_db(data, metadata, collection_name="test"):
                 "data": [curr_data],
                 "metadata": [metadata[i]],
             }
-            if i == 0: response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
-            else: response = requests.post(VECTORDB_UPSERT_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
+            if i == 0:
+                response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
+            else:
+                response = requests.post(VECTORDB_UPSERT_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
             if response.status_code == 200:
                 for chunk in response.iter_lines():
                     # process line here
