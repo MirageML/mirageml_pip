@@ -1,31 +1,31 @@
 import http.server
-import threading
 import platform
 import subprocess
 import sys
-import keyring
-import jwt
+import threading
 import urllib.parse
+
+import jwt
+import keyring
 import requests
-import typer
 import segment.analytics as analytics
+import typer
+
 from mirageml.constants import (
-    SERVICE_ID,
-    PORT,
     ANALYTICS_WRITE_KEY,
-    supabase,
+    NOTION_SYNC_ENDPOINT,
+    PORT,
+    SERVICE_ID,
     SUPABASE_KEY,
     SUPABASE_URL,
-    NOTION_SYNC_ENDPOINT,
+    supabase,
 )
 
 analytics.write_key = ANALYTICS_WRITE_KEY
 
 
 class LoginManager:
-    def __init__(
-        self, handler="mirage_auth_handler", provider="google", provider_options={}
-    ):
+    def __init__(self, handler="mirage_auth_handler", provider="google", provider_options={}):
         self._server = None
         self._thread = None
         self._handler = handler
@@ -47,9 +47,7 @@ class LoginManager:
             return NotionHandler
 
     def _start_local_server(self):
-        self._server = http.server.HTTPServer(
-            ("localhost", PORT), self.select_handler()
-        )
+        self._server = http.server.HTTPServer(("localhost", PORT), self.select_handler())
         self._server.serve_forever()
 
     def open_browser(self):
@@ -87,9 +85,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
     def update_keyring(self, info):
         access_token = info["access_token"]
-        decoded = jwt.decode(
-            access_token, algorithms=["HS256"], options={"verify_signature": False}
-        )
+        decoded = jwt.decode(access_token, algorithms=["HS256"], options={"verify_signature": False})
         keyring.set_password(SERVICE_ID, "access_token", info["access_token"])
         keyring.set_password(SERVICE_ID, "refresh_token", info["refresh_token"])
         keyring.set_password(SERVICE_ID, "expires_at", info["expires_at"])
@@ -190,9 +186,7 @@ class NotionHandler(Handler):
         access_token, user_id = self.update_keyring(info)
         provider_token = info["provider_token"]
         if provider_token:
-            keyring.set_password(
-                SERVICE_ID, "notion_provider_token", info["provider_token"]
-            )
+            keyring.set_password(SERVICE_ID, "notion_provider_token", info["provider_token"])
             params = {
                 "user_id": user_id,
                 "provider_token": provider_token,
@@ -211,9 +205,7 @@ class NotionHandler(Handler):
             headers = {
                 "Authorization": f"Bearer {access_token}",
             }
-            sync_response = requests.post(
-                NOTION_SYNC_ENDPOINT, json={}, headers=headers
-            )
+            sync_response = requests.post(NOTION_SYNC_ENDPOINT, json={}, headers=headers)
             sync_response_data = sync_response.json()
             if "error" in sync_response_data:
                 typer.secho(

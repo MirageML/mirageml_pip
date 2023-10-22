@@ -1,6 +1,6 @@
 from prompt_toolkit import prompt
-from prompt_toolkit.keys import Keys
 from prompt_toolkit.key_binding import KeyBindings
+from prompt_toolkit.keys import Keys
 
 # Create custom key bindings
 kb = KeyBindings()

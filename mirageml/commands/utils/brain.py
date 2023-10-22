@@ -1,12 +1,13 @@
 import os
 import sys
+from io import StringIO
+
 import requests
 
-from io import StringIO
 from ...constants import (
-    get_headers,
-    VECTORDB_EMBED_ENDPOINT,
     LLM_GPT_ENDPOINT,
+    VECTORDB_EMBED_ENDPOINT,
+    get_headers,
 )
 
 PACKAGE_DIR = os.path.dirname(__file__)
@@ -37,9 +38,7 @@ def local_get_embedding(text_list, embedding_model_id="BAAI/bge-small-en-v1.5"):
     return embeddings
 
 
-def local_llm_call(
-    messages, llm_model_id="TheBloke/Llama-2-7b-Chat-GGUF", stream=False
-):
+def local_llm_call(messages, llm_model_id="TheBloke/Llama-2-7b-Chat-GGUF", stream=False):
     from ctransformers import AutoModelForCausalLM
 
     model_dir = os.path.join(PACKAGE_DIR, "models", llm_model_id)
@@ -71,9 +70,7 @@ def local_llm_call(
 def get_embedding(text_list, model="BAAI/bge-small-en-v1.5", local=False):
     if local:
         return local_get_embedding(text_list, embedding_model_id=model)
-    response = requests.post(
-        VECTORDB_EMBED_ENDPOINT, json={"data": text_list}, headers=get_headers()
-    )
+    response = requests.post(VECTORDB_EMBED_ENDPOINT, json={"data": text_list}, headers=get_headers())
     response.raise_for_status()  # Raise an exception if the request failed
     return response.json()["embedding"]
 
@@ -82,6 +79,4 @@ def llm_call(messages, model="gpt-3.5-turbo", stream=False, local=False):
     if local:
         return local_llm_call(messages, stream=stream)
     json_data = {"model": model, "messages": messages, "stream": stream}
-    return requests.post(
-        LLM_GPT_ENDPOINT, json=json_data, headers=get_headers(), stream=stream
-    )
+    return requests.post(LLM_GPT_ENDPOINT, json=json_data, headers=get_headers(), stream=stream)

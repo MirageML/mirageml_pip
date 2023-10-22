@@ -2,15 +2,15 @@ import typer
 
 
 def set_sources():
-    from .utils.vectordb import list_qdrant_db, list_remote_qdrant_db
     from .config import set_var_config
+    from .utils.vectordb import list_qdrant_db, list_remote_qdrant_db
 
     set_var_config({"local": list_qdrant_db(), "remote": list_remote_qdrant_db()})
 
 
 def list_sources():
-    from .utils.vectordb import list_qdrant_db, list_remote_qdrant_db
     from .config import set_var_config
+    from .utils.vectordb import list_qdrant_db, list_remote_qdrant_db
 
     sources = list_qdrant_db()
 

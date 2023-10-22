@@ -39,8 +39,9 @@ def fetch_new_access_token():
 
 def get_headers():
     import time
-    import typer
+
     import keyring
+    import typer
 
     expires_at = keyring.get_password(SERVICE_ID, "expires_at")
     access_token = keyring.get_password(SERVICE_ID, "access_token")
@@ -62,9 +63,9 @@ def get_headers():
 
 
 def help_list_sources():
+    import json
     import os
     import sys
-    import json
 
     invoked_alias = sys.argv[0].split("/")[-1]  # Extract only the alias name
 
@@ -79,13 +80,11 @@ def help_list_sources():
     all_sources = list(set(local_sources + remote_sources))
     if len(all_sources) == 0:
         final_string = (
-            f"Specify sources to use as context:\n\n\nEx: "
-            f"**{invoked_alias} chat -s {{source1}}**\n\n\n\n"
+            f"Specify sources to use as context:\n\n\nEx: " f"**{invoked_alias} chat -s {{source1}}**\n\n\n\n"
         )
     elif len(all_sources) == 1:
         final_string = (
-            f"Specify sources to use as context:\n\n\nEx: "
-            f"**{invoked_alias} chat -s {all_sources[0]}**\n\n\n\n"
+            f"Specify sources to use as context:\n\n\nEx: " f"**{invoked_alias} chat -s {all_sources[0]}**\n\n\n\n"
         )
     else:
         final_string = (

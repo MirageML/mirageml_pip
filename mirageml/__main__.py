@@ -1,7 +1,8 @@
 import sys
 import time
-import typer
 from typing import List
+
+import typer
 
 app = typer.Typer(
     no_args_is_help=True,
@@ -36,8 +37,9 @@ app.add_typer(delete_app, rich_help_panel="Manage Resources")
 @app.callback()
 def main(ctx: typer.Context):
     import keyring
-    from .constants import SERVICE_ID, ANALYTICS_WRITE_KEY, fetch_new_access_token
     import segment.analytics as analytics
+
+    from .constants import ANALYTICS_WRITE_KEY, SERVICE_ID, fetch_new_access_token
 
     analytics.write_key = ANALYTICS_WRITE_KEY
 
@@ -46,11 +48,7 @@ def main(ctx: typer.Context):
     if not user_id and ctx.invoked_subcommand != "login":
         typer.echo("Please login first. Run `mirageml login`")
         raise typer.Exit()
-    elif (
-        expires_at
-        and float(expires_at) < time.time()
-        and ctx.invoked_subcommand != "login"
-    ):
+    elif expires_at and float(expires_at) < time.time() and ctx.invoked_subcommand != "login":
         try:
             fetch_new_access_token()
             analytics.identify(user_id)
@@ -98,9 +96,7 @@ def chat_command(
         None,
         "--urls",
         "-u",
-        help="URLs to use as context. \n\n\n**"
-        + sys.argv[0].split("/")[-1]
-        + " chat -u {url}**",
+        help="URLs to use as context. \n\n\n**" + sys.argv[0].split("/")[-1] + " chat -u {url}**",
     ),
     sources: List[str] = typer.Option([], "--sources", "-s", help=generate_help_text()),
 ):
@@ -182,9 +178,7 @@ def add_source_command():
 
 # Delete Commands
 @delete_app.command(name="source")
-def delete_source_command(
-    name: str = typer.Argument(default="", help="Name of the source to delete")
-):
+def delete_source_command(name: str = typer.Argument(default="", help="Name of the source to delete")):
     """Delete a source"""
     from .commands import delete_source
 

@@ -1,20 +1,21 @@
 import os
+
 import typer
 from rich.box import HORIZONTALS
-from rich.markdown import Markdown
 from rich.console import Console
 from rich.live import Live
+from rich.markdown import Markdown
 from rich.panel import Panel
 
 from .config import load_config
 from .rag import rag_chat
+from .utils.brain import llm_call
 from .utils.codeblocks import (
-    extract_code_from_markdown,
     add_indices_to_code_blocks,
     copy_code_to_clipboard,
+    extract_code_from_markdown,
 )
 from .utils.custom_inputs import multiline_input
-from .utils.brain import llm_call
 from .utils.prompt_templates import CHAT_TEMPLATE
 
 console = Console()
@@ -107,21 +108,15 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
                     elif len(chat_history) == 1:
                         user_input = multiline_input("Chat with Mirage")
                     else:
-                        user_input = multiline_input(
-                            "Ask a follow-up. Type reset to search again"
-                        )
+                        user_input = multiline_input("Ask a follow-up. Type reset to search again")
                 if user_input.lower().strip() == "exit":
-                    typer.secho(
-                        "Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True
-                    )
+                    typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
                     return
                 elif user_input.lower().strip() == "reset":
                     break
 
                 if file_and_url_context and len(chat_history) == 1:
-                    user_input = CHAT_TEMPLATE.format(
-                        context=file_and_url_context, question=user_input
-                    )
+                    user_input = CHAT_TEMPLATE.format(context=file_and_url_context, question=user_input)
 
                 chat_history.append({"role": "user", "content": user_input})
 
@@ -182,7 +177,5 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
                 )
 
             except KeyboardInterrupt:
-                typer.secho(
-                    "Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True
-                )
+                typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
                 return

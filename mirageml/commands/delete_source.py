@@ -3,6 +3,7 @@ from .utils.vectordb import delete_qdrant_db, delete_remote_qdrant_db
 
 def delete_source(name: str):
     import typer
+
     from .config import load_config
 
     config = load_config()

@@ -1,7 +1,7 @@
 import typer
 
-from mirageml.constants import REDIRECT_URI
 from mirageml.classes import LoginManager
+from mirageml.constants import REDIRECT_URI
 
 
 def add_gdrive():

@@ -1,20 +1,19 @@
-import requests
-from bs4 import BeautifulSoup
+import logging
+import subprocess
+import tempfile
 import urllib.parse
 from urllib.parse import urlparse, urlunparse
-import tempfile
-import subprocess
+
+import requests
+import typer
+from bs4 import BeautifulSoup
 from langchain.document_loaders import AsyncChromiumLoader
 from langchain.document_transformers import BeautifulSoupTransformer
-
-import typer
 from rich.console import Console
 from rich.live import Live
 from rich.panel import Panel
 
 from .custom_inputs import input_or_timeout
-
-import logging
 
 logger = logging.getLogger(__name__)
 logger.setLevel(logging.CRITICAL)
@@ -47,9 +46,7 @@ def crawl_with_playwright(live, start_url):
         )
         for link in links:
             parsed_link = urlparse(link)
-            cleaned_link = urlunparse(
-                (parsed_link.scheme, parsed_link.netloc, parsed_link.path, "", "", "")
-            )
+            cleaned_link = urlunparse((parsed_link.scheme, parsed_link.netloc, parsed_link.path, "", "", ""))
             yield cleaned_link
 
     with sync_playwright() as p:
@@ -91,9 +88,7 @@ def get_all_links(live, url):
         for link in soup.find_all("a"):
             absolute_link = urllib.parse.urljoin(url, link.get("href"))
             parsed_link = urlparse(absolute_link)
-            cleaned_link = urlunparse(
-                (parsed_link.scheme, parsed_link.netloc, parsed_link.path, "", "", "")
-            )
+            cleaned_link = urlunparse((parsed_link.scheme, parsed_link.netloc, parsed_link.path, "", "", ""))
             if cleaned_link.startswith(url):  # Only yield child URLs
                 live.update(
                     Panel(
@@ -181,9 +176,7 @@ def crawl_website(start_url):
         for domain, paths in urls.items():
             typer.secho(f"{domain}:", fg=typer.colors.BRIGHT_GREEN, bold=True)
             if len(paths) == 0:
-                print(
-                    "No subpaths found, you may have to manually add the url when prompted."
-                )
+                print("No subpaths found, you may have to manually add the url when prompted.")
                 print()
                 continue
             for path in sorted(paths):
@@ -245,13 +238,9 @@ def crawl_website(start_url):
             )
             html = loader.load()
             bs_transformer = BeautifulSoupTransformer()
-            docs_transformed = bs_transformer.transform_documents(
-                html, tags_to_extract=["p", "li", "div", "a", "code"]
-            )
+            docs_transformed = bs_transformer.transform_documents(html, tags_to_extract=["p", "li", "div", "a", "code"])
             data.extend([x.page_content for x in docs_transformed])
-            metadata.extend(
-                [dict({"data": x.page_content}, **x.metadata) for x in docs_transformed]
-            )
+            metadata.extend([dict({"data": x.page_content}, **x.metadata) for x in docs_transformed])
     return data, metadata
 
 
@@ -265,9 +254,7 @@ def extract_from_url(url, live=None):
         loader = AsyncChromiumLoader([url])
         html = loader.load()
         bs_transformer = BeautifulSoupTransformer()
-        docs_transformed = bs_transformer.transform_documents(
-            html, tags_to_extract=["p", "li", "div", "a", "code"]
-        )
+        docs_transformed = bs_transformer.transform_documents(html, tags_to_extract=["p", "li", "div", "a", "code"])
         source, url_data = (
             docs_transformed[0].metadata["source"],
             docs_transformed[0].page_content,
