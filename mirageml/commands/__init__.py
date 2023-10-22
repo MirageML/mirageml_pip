@@ -6,8 +6,7 @@ It initializes the module and imports the necessary modules.
 from .login import login
 from .config import set_config, show_config
 
-from .chat import normal_chat
-from .rag import rag_chat
+from .chat import chat
 
 from .list_plugins import list_plugins
 from .list_sources import list_sources

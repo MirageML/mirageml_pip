@@ -76,19 +76,16 @@ def generate_help_text():
     from .constants import help_list_sources
     return help_list_sources()
 
-@app.command()
-def chat(
-        file_or_url: str = typer.Option(None, "--file-or-url", "-f", help="Path to a file or URL to use as context. \n\n\n**"+sys.argv[0].split('/')[-1]+" chat -f {filepath_or_url}**"),
+@app.command(name="chat")
+def chat_command(
+        filepaths: List[str] = typer.Option(None, "--files", "-f", help="Path to files/directories to use as context. \n\n\n**"+sys.argv[0].split('/')[-1]+" chat -f {filepath}**"),
+        urls: List[str] = typer.Option(None, "--urls", "-u", help="URLs to use as context. \n\n\n**"+sys.argv[0].split('/')[-1]+" chat -u {url}**"),
         sources: List[str] = typer.Option([], "--sources", "-s", help=generate_help_text())
     ):
     """Chat with MirageML"""
     typer.secho("Starting chat. Type 'exit' to end the chat.", fg=typer.colors.BRIGHT_GREEN, bold=True)
-    if sources:
-        from .commands import rag_chat
-        rag_chat(file_or_url, sources)
-    else:
-        from .commands import normal_chat
-        normal_chat(file_or_url=file_or_url)
+    from .commands import chat
+    chat(files=filepaths, urls=urls, sources=sources)
 
 
 @config_app.command(name="show")

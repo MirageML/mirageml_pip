@@ -16,7 +16,7 @@ def list_sources():
 
     if len(sources) != 0:
         typer.secho("Local Sources:", fg=typer.colors.BRIGHT_GREEN, bold=True)
-        print("* " + "\n* ".join(sources + ["local (this will index the files in your current directory)"]))
+        print("* " + "\n* ".join(sources))
     remote_sources = list_remote_qdrant_db()
     print("------------------")
     if len(remote_sources) != 0:

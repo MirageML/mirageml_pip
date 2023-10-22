@@ -185,31 +185,20 @@ def crawl_website(start_url):
             metadata.extend([dict({"data": x.page_content}, **x.metadata) for x in docs_transformed])
     return data, metadata
 
-def extract_file_or_url(file_or_url):
-    if not file_or_url.startswith("http"):
-        try:
-            # Read the file content
-            with open(file_or_url, 'r', encoding='utf-8') as file:
-                file_content = file.read()
-                source, file_or_url_data = file_or_url, file_or_url + ": " + file_content
-                typer.secho(f"Loaded file: {file_or_url}", fg=typer.colors.BRIGHT_GREEN, bold=True)
-        except Exception as e:
-            typer.secho(f"Unable to read file: {file_or_url}", fg=typer.colors.BRIGHT_RED, bold=True)
-    else:
-        try:
-            if not check_playwright_chromium(): return
-            from langchain.document_loaders import AsyncChromiumLoader
-            from langchain.document_transformers import BeautifulSoupTransformer
-            loader = AsyncChromiumLoader([file_or_url])
-            html = loader.load()
-            bs_transformer = BeautifulSoupTransformer()
-            docs_transformed = bs_transformer.transform_documents(html, tags_to_extract=["p", "li", "div", "a", "code"])
-            source, file_or_url_data = docs_transformed[0].metadata["source"], docs_transformed[0].page_content
-            typer.secho(f"Loaded webpage: {file_or_url}", fg=typer.colors.BRIGHT_GREEN, bold=True)
-        except Exception as e:
-            typer.secho(f"Unable to read url make sure that the url starts with http: {file_or_url}", fg=typer.colors.BRIGHT_RED, bold=True)
-
-    return source, file_or_url_data
+def extract_from_url(url, live=None):
+    try:
+        if not check_playwright_chromium(): return
+        from langchain.document_loaders import AsyncChromiumLoader
+        from langchain.document_transformers import BeautifulSoupTransformer
+        loader = AsyncChromiumLoader([url])
+        html = loader.load()
+        bs_transformer = BeautifulSoupTransformer()
+        docs_transformed = bs_transformer.transform_documents(html, tags_to_extract=["p", "li", "div", "a", "code"])
+        source, url_data = docs_transformed[0].metadata["source"], docs_transformed[0].page_content
+        if live: live.update(Panel(f"Loaded webpage: {url}", title="[bold blue]Assistant[/bold blue]", border_style="blue"))
+        return source, url_data
+    except Exception as e:
+        if live: live.update(Panel(f"Unable to read url make sure that the url starts with http: {url}", title="[bold blue]Assistant[/bold blue]", border_style="blue"))
 
 
 if __name__ == "__main__":
