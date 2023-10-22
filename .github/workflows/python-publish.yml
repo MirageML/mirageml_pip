@@ -10,7 +10,7 @@ name: Upload Python Package to PyPI
 
 on:
   release:
-    types: [created]
+    types: [published]
 
 jobs:
   deploy:
