@@ -8,4 +8,4 @@ major_number = 0
 minor_number = 1
 
 # TODO set the patch number (the 3rd field) to the job run number in GitHub
-__version__ = f"{major_number}.{minor_number}.0"
+__version__ = f"{major_number}.{minor_number}.1"

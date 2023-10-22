@@ -3,6 +3,7 @@ import typer
 from mirageml.constants import REDIRECT_URI
 from mirageml.classes import LoginManager
 
+
 def add_gdrive():
     m = LoginManager(
         handler="google_auth_handler",
@@ -13,11 +14,12 @@ def add_gdrive():
             "query_params": {
                 "access_type": "offline",
                 "prompt": "consent",
-            }
-        }
+            },
+        },
     )
     m.start_web_server()
     m.open_browser()
+
 
 def add_notion():
     m = LoginManager(
@@ -25,10 +27,11 @@ def add_notion():
         provider="notion",
         provider_options={
             "redirect_to": REDIRECT_URI,
-        }
+        },
     )
     m.start_web_server()
     m.open_browser()
+
 
 def add_plugin(args):
     plugin_name = args["plugin"]
@@ -37,4 +40,8 @@ def add_plugin(args):
     # elif plugin_name == "gdrive":
     #     add_gdrive()
     else:
-        typer.secho("Only notion plugin is supported for now.", fg=typer.colors.BRIGHT_RED, bold=True)
+        typer.secho(
+            "Only notion plugin is supported for now.",
+            fg=typer.colors.BRIGHT_RED,
+            bold=True,
+        )
