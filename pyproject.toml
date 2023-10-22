@@ -17,9 +17,6 @@ line-length = 120
 [tool.ruff.isort]
 combine-as-imports = true
 known-first-party = [
-    "modal",
-    "modal_base_images",
-    "modal_proto",
-    "modal_utils",
-    "modal_version",
+    "mirageml",
+    "mirageml_version",
 ]
