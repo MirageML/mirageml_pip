@@ -61,10 +61,6 @@ def search_and_rank(live, user_input, sources):
 
 def rag_chat(sources, file_and_url_context, file_and_url_sources):
     try:
-        if file_and_url_context:
-            context += file_and_url_context
-            sources.append(file_and_url_sources)
-
         user_input = multiline_input(f"Ask a question over these sources ({', '.join(sources)})")
         if user_input.lower().strip() == 'exit':
             typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
@@ -78,6 +74,10 @@ def rag_chat(sources, file_and_url_context, file_and_url_sources):
             sorted_hits = search_and_rank(live, user_input, sources)
             sources_used = [hit["payload"]["source"] for hit in sorted_hits]
             context = create_context(sorted_hits)
+
+            if file_and_url_context:
+                context += file_and_url_context
+                sources.append(file_and_url_sources)
 
             # Chat history that will be sent to the AI model
             chat_history = [
