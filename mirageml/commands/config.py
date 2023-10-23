@@ -29,11 +29,13 @@ def set_config():
     config = load_config()
 
     valid = {
-        "local_mode": (("True", "False"), json.loads),
+        "local_mode": (("True (not recommended without GPU)", "False"), json.loads),
         "model": (("gpt-3.5-turbo", "gpt-4"), str),
     }
 
     for key, value in config.items():
+        if key not in valid:
+            continue
         curvalue = value
         while True:
             question = f"Enter the value for '{key}' [{', '.join(valid[key][0])}] (current value: {curvalue}): "
