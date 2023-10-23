@@ -91,17 +91,22 @@ def chat_command(
         "-f",
         help="Path to files/directories to use as context. \n\n\n**"
         + sys.argv[0].split("/")[-1]
-        + " chat -f {filepath}**",
+        + " chat -f {filepath} -f {directory}**",
     ),
     urls: List[str] = typer.Option(
         None,
         "--urls",
         "-u",
-        help="URLs to use as context. \n\n\n**" + sys.argv[0].split("/")[-1] + " chat -u {url}**",
+        help="URLs to use as context. \n\n\n**" + sys.argv[0].split("/")[-1] + " chat -u {url1} -u {url2}**",
     ),
     sources: List[str] = typer.Option([], "--sources", "-s", help=generate_help_text()),
 ):
     """Chat with MirageML"""
+    for url in urls:
+        if not url.startswith("https://"):
+            typer.echo("Every url must start with https://")
+            raise typer.Exit()
+
     typer.secho(
         "Starting chat. Type 'exit' to end the chat.",
         fg=typer.colors.BRIGHT_GREEN,

@@ -11,6 +11,60 @@ from .custom_inputs import input_or_timeout
 
 console = Console()
 
+def validate_all_scraped(visited_links, urls):
+    # pretty print all of the subpages that were indexed and ask the user if they want to continue
+    typer.secho("Subpaths Per URL:", fg=typer.colors.GREEN, bold=True)
+    print()
+
+    # Process each link and add to tree
+    for url in visited_links:
+        # Find the key in urls that the visited link is under
+        url_key = next((key for key in urls.keys() if key in url), None)
+
+        if url_key:
+            try:
+                url = url.replace(url_key, "").split("/")[0]
+                if url:
+                    urls[url_key].add(url)
+            except Exception:
+                continue
+
+    # Print the results
+    for domain, paths in urls.items():
+        typer.secho(f"{domain}:", fg=typer.colors.BRIGHT_GREEN, bold=True)
+        if len(paths) == 0:
+            print("No subpaths found, you may have to manually add the url when prompted.\n")
+            continue
+        for path in sorted(paths):
+            print(path)
+        print()
+
+    # Will timeout if user doesn't respond within 10 seconds
+    user_input = input_or_timeout(
+        "Do you want to index another URL? Enter a URL or leave empty (timeout: 10s) (default: no): ",
+        default="no",
+        timeout=10,
+    )
+    user_input = user_input.strip()
+    if user_input and not user_input.lower().startswith("n"):
+        link = (
+            user_input
+            if user_input.lower().startswith("https://")
+            else input("Link for the source (exit to skip): ")
+        )
+
+        while not link.lower().startswith("https://") and link.lower().strip() != "exit":
+            link = input("Please enter a valid link starting with https:// or type 'exit' to skip: ")
+
+        to_visit = [link + "/" if not link.endswith("/") else link] if link.lower().strip() != "exit" else []
+        if to_visit:
+            urls[to_visit[0]] = set()
+            start_url = to_visit[0]
+    else:
+        to_visit = []
+        start_url = ""
+    return start_url, to_visit, urls
+
 
 def crawl_website(start_url):
     if not start_url.endswith("/"):
@@ -48,55 +102,9 @@ def crawl_website(start_url):
                         )
                     visited_links.add(link.strip())
 
-        # pretty print all of the subpages that were indexed and ask the user if they want to continue
-        typer.secho("Subpaths Per URL:", fg=typer.colors.GREEN, bold=True)
-        print()
-
-        # Process each link and add to tree
-        for url in visited_links:
-            # Find the key in urls that the visited link is under
-            url_key = next((key for key in urls.keys() if key in url), None)
-
-            if url_key:
-                try:
-                    url = url.replace(url_key, "").split("/")[0]
-                    if url:
-                        urls[url_key].add(url)
-                except Exception:
-                    continue
-
-        # Print the results
-        for domain, paths in urls.items():
-            typer.secho(f"{domain}:", fg=typer.colors.BRIGHT_GREEN, bold=True)
-            if len(paths) == 0:
-                print("No subpaths found, you may have to manually add the url when prompted.\n")
-                continue
-            for path in sorted(paths):
-                print(path)
-            print()
-
-        # Will timeout if user doesn't respond within 10 seconds
-        user_input = input_or_timeout(
-            "Do you want to index another URL? Enter a URL or leave empty (timeout: 10s) (default: no): ",
-            default="no",
-            timeout=10,
-        )
-        user_input = user_input.strip()
-        if user_input and not user_input.lower().startswith("n"):
-            link = (
-                user_input
-                if user_input.lower().startswith("https://")
-                else input("Link for the source (exit to skip): ")
-            )
-
-            while not link.lower().startswith("https://") and link.lower().strip() != "exit":
-                link = input("Please enter a valid link starting with https:// or type 'exit' to skip: ")
-
-            to_visit = [link + "/" if not link.endswith("/") else link] if link.lower().strip() != "exit" else []
-            if to_visit:
-                urls[to_visit[0]] = set()
-        else:
-            to_visit = []
+        # Skip for now, assume that the scraper can find all paths
+        # start_url, to_visit, urls = validate_all_scraped(visited_links, urls)
+        start_url, to_visit, urls = "", [], {}
 
     data, metadata = [], []
     with Live(

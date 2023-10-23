@@ -17,6 +17,7 @@ from .utils.codeblocks import (
 )
 from .utils.custom_inputs import multiline_input
 from .utils.prompt_templates import CHAT_TEMPLATE
+from .list_sources import get_sources
 
 console = Console()
 config = load_config()
@@ -24,72 +25,30 @@ config = load_config()
 
 def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
     # Beginning of the chat sequence
-    file_and_url_sources, file_and_url_context = [], ""
-    local_sources = []
+    local_sources, remote_sources = get_sources()
+    all_sources = list(set(local_sources + remote_sources))
+    for source in sources:
+        if source not in all_sources:
+            typer.secho(f"Source: {source} does not exist. Please add it with `mirageml add source`", fg=typer.colors.RED, bold=True)
+            sources.remove(source)
 
-    with Live(
-        Panel(
-            "Getting ready...",
-            title="[bold blue]Assistant[/bold blue]",
-            border_style="blue",
-        ),
-        console=console,
-        transient=True,
-        auto_refresh=True,
-        refresh_per_second=8,
-    ) as live:
-        if "local" in sources:
-            local_sources = ["local"]
-            sources.remove("local")
+    if "local" in sources:
+        local_sources = ["local"]
+        sources.remove("local")
 
-        for file in files:
-            from .utils.local_source import extract_from_file
-
-            # Check if filepath is a directory and is valid
-            if os.path.exists(file) and os.path.isdir(file):
-                local_sources.append(file)
-            else:
-                live.update(
-                    Panel(
-                        "Extracting files...",
-                        title="[bold blue]Assistant[/bold blue]",
-                        border_style="blue",
-                    )
-                )
-                try:
-                    source, file_data = extract_from_file(file)
-                    file_and_url_sources.append(source)
-                    file_and_url_context += "\n\n" + source + ": " + file_data
-                except Exception:
-                    print(f"Unable to read file: {file}")
-
-        for url in urls:
-            from .utils.web_source import extract_from_url
-
-            live.update(
-                Panel(
-                    "Scraping URLs...",
-                    title="[bold blue]Assistant[/bold blue]",
-                    border_style="blue",
-                )
-            )
-            try:
-                source, url_data = extract_from_url(url, live)
-                file_and_url_sources.append(source)
-                file_and_url_context += "\n\n" + source + ": " + url_data
-            except Exception:
-                print(f"Unable to read url make sure that the url starts with http: {url}")
-
-    for dir_path in local_sources:
+    for file in files:
         from .add_source import add_local_source
+        sources.append(add_local_source(file))
 
-        sources.append(add_local_source(dir_path))
+    for url in urls:
+        from .add_source import add_web_source
+        sources.append(add_web_source(url))
 
     while True:
         chat_history = [{"role": "system", "content": "You are a helpful assistant."}]
         ai_response = ""
         if sources:
-            chat_history = rag_chat(sources, file_and_url_context, file_and_url_sources)
+            chat_history = rag_chat(sources)
 
         while True:
             # Loop for follow-up questions
@@ -107,11 +66,7 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
                     except ValueError:
                         user_input = selected_indices
                 else:
-                    if len(chat_history) == 1 and len(file_and_url_sources):
-                        user_input = multiline_input(
-                            f"Ask a question over these sources ({', '.join(file_and_url_sources)})"
-                        )
-                    elif len(chat_history) == 1:
+                    if len(chat_history) == 1:
                         user_input = multiline_input("Chat with Mirage")
                     else:
                         user_input = multiline_input("Ask a follow-up. Type reset to search again")
@@ -120,9 +75,6 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
                     return
                 elif user_input.lower().strip() == "reset":
                     break
-
-                if file_and_url_context and len(chat_history) == 1:
-                    user_input = CHAT_TEMPLATE.format(context=file_and_url_context, question=user_input)
 
                 chat_history.append({"role": "user", "content": user_input})
 
