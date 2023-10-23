@@ -58,5 +58,20 @@ mirage chat [OPTIONS]
 ╰───────────────────────────────────────────────────────────────────────────────────────────╯
 ```
 
+## Contributing
+If you want to contribute to MirageML, follow these steps:
+
+1. Fork the repository: Click on the 'Fork' button at the top right corner of the repository page on GitHub.
+2. Clone the forked repository to your local machine. `git clone https://github.com/<user_name>/mirageml_pip.git`
+3. Create a new branch for your changes: `git checkout -b <user_name>/your-branch-name`
+4. Review the [CONTRIBUTING.md](CONTRIBUTING.md) file for details on installing pip pacakages, testing, and linting.
+4. Make your changes in this branch.
+5. Commit your changes: `git commit -m "Your commit message"`
+6. Push your changes to your forked repository: `git push origin your-branch-name`
+7. Create a Pull Request: Go to your forked repository on GitHub and click on 'New Pull Request'.
+
+Please provide a clear and concise description of your changes in the pull request description.
+
+
 ## Support
 Send an email to [support@mirageml.com](mailto:support@mirageml.com) for support.
