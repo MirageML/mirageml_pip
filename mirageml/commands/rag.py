@@ -7,6 +7,7 @@ from rich.panel import Panel
 
 from .config import load_config
 from .utils.brain import llm_call
+from .utils.codeblocks import add_indices_to_code_blocks
 from .utils.custom_inputs import multiline_input
 from .utils.prompt_templates import RAG_TEMPLATE
 from .utils.vectordb import (
@@ -99,9 +100,9 @@ def rag_chat(sources):
             box=HORIZONTALS,
         ),
         console=console,
-        screen=False,
+        transient=True,
         auto_refresh=True,
-        vertical_overflow="visible",
+        refresh_per_second=8,
     ) as live:
         sorted_hits = search_and_rank(live, user_input, sources)
         sources_used = list(set([hit["payload"]["source"] for hit in sorted_hits]))
@@ -161,4 +162,13 @@ def rag_chat(sources):
                         )
                     )
         chat_history.append({"role": "assistant", "content": ai_response})
-    return chat_history
+        indexed_ai_response = add_indices_to_code_blocks(ai_response)
+        console.print(
+            Panel(
+                Markdown(indexed_ai_response),
+                title="[bold blue]Assistant[/bold blue]",
+                box=HORIZONTALS,
+                border_style="blue",
+            )
+        )
+    return chat_history, ai_response

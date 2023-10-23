@@ -51,7 +51,7 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
         chat_history = [{"role": "system", "content": "You are a helpful assistant."}]
         ai_response = ""
         if sources:
-            chat_history = rag_chat(sources)
+            chat_history, ai_response = rag_chat(sources)
 
         while True:
             # Loop for follow-up questions
