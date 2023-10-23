@@ -15,6 +15,7 @@ from .utils.vectordb import (
     qdrant_search,
     remote_qdrant_search,
 )
+from .utils.codeblocks import add_indices_to_code_blocks
 
 console = Console()
 config = load_config()
@@ -99,9 +100,9 @@ def rag_chat(sources):
             box=HORIZONTALS,
         ),
         console=console,
-        screen=False,
+        transient=True,
         auto_refresh=True,
-        vertical_overflow="visible",
+        refresh_per_second=8,
     ) as live:
         sorted_hits = search_and_rank(live, user_input, sources)
         sources_used = list(set([hit["payload"]["source"] for hit in sorted_hits]))
@@ -161,4 +162,13 @@ def rag_chat(sources):
                         )
                     )
         chat_history.append({"role": "assistant", "content": ai_response})
-    return chat_history
+        indexed_ai_response = add_indices_to_code_blocks(ai_response)
+        console.print(
+                Panel(
+                    Markdown(indexed_ai_response),
+                    title="[bold blue]Assistant[/bold blue]",
+                    box=HORIZONTALS,
+                    border_style="blue",
+                )
+            )
+    return chat_history, ai_response

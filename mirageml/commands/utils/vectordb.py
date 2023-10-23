@@ -7,6 +7,8 @@ import keyring
 import requests
 import tiktoken
 import typer
+from concurrent.futures import ThreadPoolExecutor
+
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, PointStruct, VectorParams
 from rich.console import Console
@@ -54,6 +56,34 @@ def create_remote_qdrant_db(collection_name, link=None, path=None):
     if path:
         data, metadata = crawl_files(path)
 
+    def make_request(args):
+        i, curr_data, metadata_value, live = args
+        json_data = {
+            "user_id": user_id,
+            "collection_name": collection_name,
+            "data": [curr_data],
+            "metadata": [metadata_value],
+        }
+        if i == 0:
+            response = requests.post(
+                VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True
+            )
+        else:
+            response = requests.post(
+                VECTORDB_UPSERT_ENDPOINT, json=json_data, headers=get_headers(), stream=True
+            )
+
+        if response.status_code == 200:
+            for chunk in response.iter_lines():
+                # process line here
+                live.update(
+                    Panel(
+                        f"Indexing: {chunk.decode()}",
+                        title="[bold green]Indexer[/bold green]",
+                        border_style="green",
+                    )
+                )
+
     console = Console()
     with Live(
         Panel(
@@ -67,31 +97,9 @@ def create_remote_qdrant_db(collection_name, link=None, path=None):
         vertical_overflow="visible",
     ) as live:
         if data:
-            for i, curr_data in enumerate(data):
-                json_data = {
-                    "user_id": user_id,
-                    "collection_name": collection_name,
-                    "data": [curr_data],
-                    "metadata": [metadata[i]],
-                }
-                if i == 0:
-                    response = requests.post(
-                        VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True
-                    )
-                else:
-                    response = requests.post(
-                        VECTORDB_UPSERT_ENDPOINT, json=json_data, headers=get_headers(), stream=True
-                    )
-                if response.status_code == 200:
-                    for chunk in response.iter_lines():
-                        # process line here
-                        live.update(
-                            Panel(
-                                f"Indexing: {chunk.decode()}",
-                                title="[bold green]Indexer[/bold green]",
-                                border_style="green",
-                            )
-                        )
+            with ThreadPoolExecutor(max_workers=10) as executor:
+                args_list = [(i, curr_data, metadata[i], live) for i, curr_data in enumerate(data)]
+                list(executor.map(make_request, args_list))
         else:
             json_data = {
                 "user_id": user_id,
