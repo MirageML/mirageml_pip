@@ -156,22 +156,22 @@ def add_plugin_command(name: str):
 
 
 @add_app.command(name="source")
-def add_source_command():
+def add_source_command(link: str = typer.Argument(default="", help="Link to the source")):
     """Add a new source"""
-    while True:
-        link = input("Link for the source: ")
-        if not link.startswith("https://"):
-            typer.echo("Please enter a valid link starting with https://")
-            continue
-        break
-
-    from urllib.parse import urlparse
-
     from .commands import add_source
+
+    if not link:
+        while True:
+            link = input("Link for the source: ")
+            if not link.startswith("https://"):
+                typer.echo("Please enter a valid link starting with https://")
+                continue
+            break
+    from urllib.parse import urlparse
 
     parsed_url = urlparse(link)
     name = parsed_url.netloc.split(".")[0]
-    if name == "docs":
+    if name in ["docs", "www", "en", "platform", "blog"]:
         name = parsed_url.netloc.split(".")[1]
     name = input(f"Name for the source [default: {name}]: ") or name
     add_source(name, link)

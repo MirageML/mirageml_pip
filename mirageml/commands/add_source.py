@@ -34,7 +34,15 @@ def add_local_source(path=None, name=None):
 
 
 def add_source(name, link):
+    if name.startswith("http"):
+        name = name.split("/")[-1]
+
     name = name.replace(" ", "_")
+    name = name.replace("/", "_")
+    if name.startswith("_") or name.startswith("/"):
+        name = name[1:]
+
+
     if link:
         add_web_source(name, link)
     else:
