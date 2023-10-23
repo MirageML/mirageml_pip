@@ -1,21 +1,32 @@
 import os
 
 from .config import load_config
-from .utils.local_source import crawl_files
 from .utils.vectordb import create_qdrant_db
-from .utils.web_source import crawl_website
 
 
-def add_web_source(name, link, remote=False):
+def fix_name(name):
+    if name.startswith("http"):
+        name = "_".join(name.split("/")[1:])
+
+    name = name.replace(" ", "_")
+    name = name.replace("/", "_")
+    if name.startswith("_") or name.startswith("/"):
+        name = name[1:]
+    return name
+
+
+def add_web_source(link, name=None, remote=False):
     config = load_config()
     remote = False if config["local_mode"] else True
     print(f"Indexing {link}...")
-    # if exists_qdrant_db(collection_name=name):
-    #     print(f"Collection already exists, please delete with `mirageml delete source {name}` first.")
-    #     return
 
-    data, metadata = crawl_website(link)
-    create_qdrant_db(data, metadata, collection_name=name, remote=remote)
+    if not name:
+        name = fix_name(link)
+    else:
+        name = fix_name(name)
+
+    create_qdrant_db(collection_name=name, link=link, remote=remote)
+    return name
 
 
 def add_local_source(path=None, name=None):
@@ -24,18 +35,18 @@ def add_local_source(path=None, name=None):
         path = "."
     remote = False if config["local_mode"] else True
     print("Indexing Local Files...")
-    # Crawl the files under the current directory
-    data, metadata = crawl_files(path)
+
     # collection_name should be absolute path
-    collection_name = os.path.abspath(".").replace("/", "_") if name is None else name
-    collection_name = collection_name.replace(" ", "_")
-    create_qdrant_db(data, metadata, collection_name=collection_name, remote=remote)
+    collection_name = os.path.abspath(path) if name is None else name
+    collection_name = fix_name(collection_name)
+    create_qdrant_db(collection_name=collection_name, path=path, remote=remote)
     return collection_name
 
 
 def add_source(name, link):
-    name = name.replace(" ", "_")
+    name = fix_name(name)
+
     if link:
-        add_web_source(name, link)
+        add_web_source(link, name)
     else:
         add_local_source()

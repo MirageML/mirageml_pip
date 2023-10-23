@@ -91,17 +91,22 @@ def chat_command(
         "-f",
         help="Path to files/directories to use as context. \n\n\n**"
         + sys.argv[0].split("/")[-1]
-        + " chat -f {filepath}**",
+        + " chat -f {filepath} -f {directory}**",
     ),
     urls: List[str] = typer.Option(
         None,
         "--urls",
         "-u",
-        help="URLs to use as context. \n\n\n**" + sys.argv[0].split("/")[-1] + " chat -u {url}**",
+        help="URLs to use as context. \n\n\n**" + sys.argv[0].split("/")[-1] + " chat -u {url1} -u {url2}**",
     ),
     sources: List[str] = typer.Option([], "--sources", "-s", help=generate_help_text()),
 ):
     """Chat with MirageML"""
+    for url in urls:
+        if not url.startswith("https://"):
+            typer.echo("Every url must start with https://")
+            raise typer.Exit()
+
     typer.secho(
         "Starting chat. Type 'exit' to end the chat.",
         fg=typer.colors.BRIGHT_GREEN,
@@ -157,22 +162,22 @@ def add_plugin_command(name: str):
 
 
 @add_app.command(name="source")
-def add_source_command():
+def add_source_command(link: str = typer.Argument(default="", help="Link to the source")):
     """Add a new source"""
-    while True:
-        link = input("Link for the source: ")
-        if not link.startswith("https://"):
-            typer.echo("Please enter a valid link starting with https://")
-            continue
-        break
-
-    from urllib.parse import urlparse
-
     from .commands import add_source
+
+    if not link:
+        while True:
+            link = input("Link for the source: ")
+            if not link.startswith("https://"):
+                typer.echo("Please enter a valid link starting with https://")
+                continue
+            break
+    from urllib.parse import urlparse
 
     parsed_url = urlparse(link)
     name = parsed_url.netloc.split(".")[0]
-    if name == "docs":
+    if name in ["docs", "www", "en", "platform", "blog"]:
         name = parsed_url.netloc.split(".")[1]
     name = input(f"Name for the source [default: {name}]: ") or name
     add_source(name, link)

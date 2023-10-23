@@ -9,6 +9,9 @@ import tiktoken
 import typer
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, PointStruct, VectorParams
+from rich.console import Console
+from rich.live import Live
+from rich.panel import Panel
 from rich.progress import Progress
 
 from ...constants import (
@@ -22,6 +25,9 @@ from ...constants import (
 )
 from ..config import load_config
 from ..list_sources import set_sources
+from .brain import get_embedding
+from .local_source import crawl_files
+from .web_source import crawl_website
 
 PACKAGE_DIR = os.path.dirname(__file__)
 
@@ -40,12 +46,13 @@ def exists_qdrant_db(collection_name="test"):
     return collection_name in [x.name for x in qdrant_client.get_collections().collections]
 
 
-def create_remote_qdrant_db(data, metadata, collection_name="test"):
+def create_remote_qdrant_db(collection_name, link=None, path=None):
     user_id = keyring.get_password(SERVICE_ID, "user_id")
 
-    from rich.console import Console
-    from rich.live import Live
-    from rich.panel import Panel
+    if link:
+        data, metadata = None, None
+    if path:
+        data, metadata = crawl_files(path)
 
     console = Console()
     with Live(
@@ -59,46 +66,71 @@ def create_remote_qdrant_db(data, metadata, collection_name="test"):
         auto_refresh=True,
         vertical_overflow="visible",
     ) as live:
-        for i, curr_data in enumerate(data):
+        if data:
+            for i, curr_data in enumerate(data):
+                json_data = {
+                    "user_id": user_id,
+                    "collection_name": collection_name,
+                    "data": [curr_data],
+                    "metadata": [metadata[i]],
+                }
+                if i == 0:
+                    response = requests.post(
+                        VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True
+                    )
+                else:
+                    response = requests.post(
+                        VECTORDB_UPSERT_ENDPOINT, json=json_data, headers=get_headers(), stream=True
+                    )
+                if response.status_code == 200:
+                    for chunk in response.iter_lines():
+                        # process line here
+                        live.update(
+                            Panel(
+                                f"Indexing: {chunk.decode()}",
+                                title="[bold green]Indexer[/bold green]",
+                                border_style="green",
+                            )
+                        )
+        else:
             json_data = {
                 "user_id": user_id,
                 "collection_name": collection_name,
-                "data": [curr_data],
-                "metadata": [metadata[i]],
+                "url": link,
             }
-            if i == 0:
-                response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
-            else:
-                response = requests.post(VECTORDB_UPSERT_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
+            response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
             if response.status_code == 200:
                 for chunk in response.iter_lines():
                     # process line here
-                    live.update(
-                        Panel(
-                            f"Indexing: {chunk.decode()}",
-                            title="[bold green]Indexer[/bold green]",
-                            border_style="green",
+                    link = chunk.decode("utf-8").strip()
+                    if link:
+                        live.update(
+                            Panel(
+                                f"Indexing: {link}",
+                                title="[bold green]Indexer[/bold green]",
+                                border_style="green",
+                            )
                         )
-                    )
 
     typer.secho(f"Created Source: {collection_name}", fg=typer.colors.GREEN, bold=True)
     set_sources()
     return True
 
 
-def create_qdrant_db(data, metadata, collection_name="test", remote=False):
-    from .brain import get_embedding
-
+def create_qdrant_db(collection_name="test", link=None, path=None, remote=False):
     if remote:
-        return create_remote_qdrant_db(data, metadata, collection_name=collection_name)
+        return create_remote_qdrant_db(collection_name=collection_name, link=link, path=path)
+
+    data, metadata = [], []
+    if link:
+        data, metadata = crawl_website(link)
+    elif path:
+        data, metadata = crawl_files(path)
+
     config = load_config()
     qdrant_client = get_qdrant_db()
 
     final_data, final_metadata = [], []
-
-    from rich.console import Console
-    from rich.live import Live
-    from rich.panel import Panel
 
     console = Console()
     with Live(
