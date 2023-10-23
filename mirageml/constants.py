@@ -23,6 +23,7 @@ LLM_GPT_ENDPOINT = "https://mirageml--llm-gpt.modal.run"
 VECTORDB_SEARCH_ENDPOINT = "https://mirageml--vectordb-search-db.modal.run"
 VECTORDB_LIST_ENDPOINT = "https://mirageml--vectordb-list-db.modal.run"
 VECTORDB_CREATE_ENDPOINT = "https://mirageml--vectordb-create-db.modal.run"
+VECTORDB_UPSERT_ENDPOINT = "https://mirageml--vectordb-upsert-db.modal.run"
 VECTORDB_DELETE_ENDPOINT = "https://mirageml--vectordb-delete-db.modal.run"
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
