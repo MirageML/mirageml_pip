@@ -9,7 +9,6 @@ import tiktoken
 import typer
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, PointStruct, VectorParams
-
 from rich.console import Console
 from rich.live import Live
 from rich.panel import Panel
@@ -24,12 +23,11 @@ from ...constants import (
     VECTORDB_UPSERT_ENDPOINT,
     get_headers,
 )
-
-from .brain import get_embedding
-from .web_source import crawl_website
-from .local_source import crawl_files
 from ..config import load_config
 from ..list_sources import set_sources
+from .brain import get_embedding
+from .local_source import crawl_files
+from .web_source import crawl_website
 
 PACKAGE_DIR = os.path.dirname(__file__)
 
@@ -77,9 +75,13 @@ def create_remote_qdrant_db(collection_name, link=None, path=None):
                     "metadata": [metadata[i]],
                 }
                 if i == 0:
-                    response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
+                    response = requests.post(
+                        VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True
+                    )
                 else:
-                    response = requests.post(VECTORDB_UPSERT_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
+                    response = requests.post(
+                        VECTORDB_UPSERT_ENDPOINT, json=json_data, headers=get_headers(), stream=True
+                    )
                 if response.status_code == 200:
                     for chunk in response.iter_lines():
                         # process line here

@@ -1,5 +1,3 @@
-import os
-
 import typer
 from rich.box import HORIZONTALS
 from rich.console import Console
@@ -8,6 +6,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 
 from .config import load_config
+from .list_sources import get_sources
 from .rag import rag_chat
 from .utils.brain import llm_call
 from .utils.codeblocks import (
@@ -16,8 +15,6 @@ from .utils.codeblocks import (
     extract_code_from_markdown,
 )
 from .utils.custom_inputs import multiline_input
-from .utils.prompt_templates import CHAT_TEMPLATE
-from .list_sources import get_sources
 
 console = Console()
 config = load_config()
@@ -29,7 +26,11 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
     all_sources = list(set(local_sources + remote_sources))
     for source in sources:
         if source not in all_sources:
-            typer.secho(f"Source: {source} does not exist. Please add it with `mirageml add source`", fg=typer.colors.RED, bold=True)
+            typer.secho(
+                f"Source: {source} does not exist. Please add it with `mirageml add source`",
+                fg=typer.colors.RED,
+                bold=True,
+            )
             sources.remove(source)
 
     if "local" in sources:
@@ -38,10 +39,12 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
 
     for file in files:
         from .add_source import add_local_source
+
         sources.append(add_local_source(file))
 
     for url in urls:
         from .add_source import add_web_source
+
         sources.append(add_web_source(url))
 
     while True:

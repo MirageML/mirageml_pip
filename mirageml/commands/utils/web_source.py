@@ -11,6 +11,7 @@ from .custom_inputs import input_or_timeout
 
 console = Console()
 
+
 def validate_all_scraped(visited_links, urls):
     # pretty print all of the subpages that were indexed and ask the user if they want to continue
     typer.secho("Subpaths Per URL:", fg=typer.colors.GREEN, bold=True)
@@ -48,9 +49,7 @@ def validate_all_scraped(visited_links, urls):
     user_input = user_input.strip()
     if user_input and not user_input.lower().startswith("n"):
         link = (
-            user_input
-            if user_input.lower().startswith("https://")
-            else input("Link for the source (exit to skip): ")
+            user_input if user_input.lower().startswith("https://") else input("Link for the source (exit to skip): ")
         )
 
         while not link.lower().startswith("https://") and link.lower().strip() != "exit":
@@ -104,7 +103,7 @@ def crawl_website(start_url):
 
         # Skip for now, assume that the scraper can find all paths
         # start_url, to_visit, urls = validate_all_scraped(visited_links, urls)
-        start_url, to_visit, urls = "", [], {}
+        start_url, to_visit, urls = "", [], urls
 
     data, metadata = [], []
     with Live(
