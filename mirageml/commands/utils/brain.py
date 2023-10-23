@@ -17,6 +17,8 @@ os.environ["TRANSFORMERS_CACHE"] = os.path.join(PACKAGE_DIR, "models")
 def local_get_embedding(text_list, embedding_model_id="BAAI/bge-small-en-v1.5"):
     from sentence_transformers import SentenceTransformer
 
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
+
     model_dir = os.path.join(PACKAGE_DIR, "models", embedding_model_id)
     if not os.path.exists(model_dir):
         os.makedirs(model_dir, exist_ok=True)
@@ -40,6 +42,8 @@ def local_get_embedding(text_list, embedding_model_id="BAAI/bge-small-en-v1.5"):
 
 def local_llm_call(messages, llm_model_id="TheBloke/Llama-2-7b-Chat-GGUF", stream=False):
     from ctransformers import AutoModelForCausalLM
+
+    os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
     model_dir = os.path.join(PACKAGE_DIR, "models", llm_model_id)
     if not os.path.exists(model_dir):
