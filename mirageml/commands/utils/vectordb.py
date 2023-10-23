@@ -102,15 +102,14 @@ def create_remote_qdrant_db(collection_name, link=None, path=None):
             if response.status_code == 200:
                 for chunk in response.iter_lines():
                     # process line here
-                    link = chunk.decode("utf-8").strip()
-                    if link:
-                        live.update(
-                            Panel(
-                                f"Indexing: {link}",
-                                title="[bold green]Indexer[/bold green]",
-                                border_style="green",
-                            )
+                    link = chunk.decode("utf-8")
+                    live.update(
+                        Panel(
+                            f"Indexing: {link}",
+                            title="[bold green]Indexer[/bold green]",
+                            border_style="green",
                         )
+                    )
 
     typer.secho(f"Created Source: {collection_name}", fg=typer.colors.GREEN, bold=True)
     set_sources()

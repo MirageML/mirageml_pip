@@ -66,7 +66,7 @@ def search(live, user_input, sources):  # ,local_sources, remote_sources=None):
 
 def rank_hits(hits):
     # Rank the hits based on their relevance
-    sorted_hits = sorted(hits, key=lambda x: x["score"], reverse=True)[:5]
+    sorted_hits = sorted(hits, key=lambda x: x["score"], reverse=True)[:10]
     return sorted_hits
 
 
@@ -104,14 +104,14 @@ def rag_chat(sources):
         vertical_overflow="visible",
     ) as live:
         sorted_hits = search_and_rank(live, user_input, sources)
-        sources_used = [hit["payload"]["source"] for hit in sorted_hits]
+        sources_used = list(set([hit["payload"]["source"] for hit in sorted_hits]))
         context = create_context(sorted_hits)
 
         # Chat history that will be sent to the AI model
         chat_history = [
             {
                 "role": "system",
-                "content": "You are a helpful assistant that responds to questions concisely with the given context in the following format:\n{answer}\n\nSources:\n{sources}",
+                "content": "You are a helpful assistant. When responding to questions, provide answers concisely using the following format:\n{answer}\n\nSources:\n{sources}",
             },
             {
                 "role": "user",

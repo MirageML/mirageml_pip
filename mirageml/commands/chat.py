@@ -79,31 +79,48 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
                 elif user_input.lower().strip() == "reset":
                     break
 
-                chat_history.append({"role": "user", "content": user_input})
+            except KeyboardInterrupt:
+                typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
+                return
 
-                with Live(
-                    Panel(
-                        "Assistant is thinking...",
-                        title="[bold blue]Assistant[/bold blue]",
-                        box=HORIZONTALS,
-                        border_style="blue",
-                    ),
-                    console=console,
-                    transient=True,
-                    auto_refresh=True,
-                    refresh_per_second=8,
-                ) as live:
-                    response = llm_call(
-                        chat_history,
-                        model=config["model"],
-                        stream=True,
-                        local=config["local_mode"],
-                    )
+            chat_history.append({"role": "user", "content": user_input})
 
-                    ai_response = ""
-                    if config["local_mode"]:
-                        for chunk in response:
-                            ai_response += chunk
+            with Live(
+                Panel(
+                    "Assistant is thinking...",
+                    title="[bold blue]Assistant[/bold blue]",
+                    box=HORIZONTALS,
+                    border_style="blue",
+                ),
+                console=console,
+                transient=True,
+                auto_refresh=True,
+                refresh_per_second=8,
+            ) as live:
+                response = llm_call(
+                    chat_history,
+                    model=config["model"],
+                    stream=True,
+                    local=config["local_mode"],
+                )
+
+                ai_response = ""
+                if config["local_mode"]:
+                    for chunk in response:
+                        ai_response += chunk
+                        live.update(
+                            Panel(
+                                Markdown(ai_response),
+                                title="[bold blue]Assistant[/bold blue]",
+                                box=HORIZONTALS,
+                                border_style="blue",
+                            )
+                        )
+                else:
+                    for chunk in response.iter_content(chunk_size=512):
+                        if chunk:
+                            decoded_chunk = chunk.decode("utf-8")
+                            ai_response += decoded_chunk
                             live.update(
                                 Panel(
                                     Markdown(ai_response),
@@ -112,31 +129,14 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
                                     border_style="blue",
                                 )
                             )
-                    else:
-                        for chunk in response.iter_content(chunk_size=512):
-                            if chunk:
-                                decoded_chunk = chunk.decode("utf-8")
-                                ai_response += decoded_chunk
-                                live.update(
-                                    Panel(
-                                        Markdown(ai_response),
-                                        title="[bold blue]Assistant[/bold blue]",
-                                        box=HORIZONTALS,
-                                        border_style="blue",
-                                    )
-                                )
 
-                chat_history.append({"role": "assistant", "content": ai_response})
-                indexed_ai_response = add_indices_to_code_blocks(ai_response)
-                console.print(
-                    Panel(
-                        Markdown(indexed_ai_response),
-                        title="[bold blue]Assistant[/bold blue]",
-                        box=HORIZONTALS,
-                        border_style="blue",
-                    )
+            chat_history.append({"role": "assistant", "content": ai_response})
+            indexed_ai_response = add_indices_to_code_blocks(ai_response)
+            console.print(
+                Panel(
+                    Markdown(indexed_ai_response),
+                    title="[bold blue]Assistant[/bold blue]",
+                    box=HORIZONTALS,
+                    border_style="blue",
                 )
-
-            except KeyboardInterrupt:
-                typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
-                return
+            )

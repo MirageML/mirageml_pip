@@ -184,12 +184,12 @@ def add_source_command(link: str = typer.Argument(default="", help="Link to the 
 
 
 # Delete Commands
-@delete_app.command(name="source")
-def delete_source_command(name: str = typer.Argument(default="", help="Name of the source to delete")):
+@delete_app.command(name="source", no_args_is_help=True)
+def delete_source_command(names: List[str] = typer.Argument(help="Names of the sources to delete")):
     """Delete a source"""
     from .commands import delete_source
 
-    delete_source(name)
+    delete_source(names)
 
 
 # Sync Commands
