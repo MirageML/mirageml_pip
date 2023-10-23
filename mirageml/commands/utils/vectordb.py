@@ -52,8 +52,8 @@ def create_remote_qdrant_db(collection_name, link=None, path=None):
     user_id = keyring.get_password(SERVICE_ID, "user_id")
 
     if link:
-        data, metadata = crawl_website(link)
-    elif path:
+        data, metadata = None, None
+    if path:
         data, metadata = crawl_files(path)
 
     console = Console()
@@ -90,25 +90,25 @@ def create_remote_qdrant_db(collection_name, link=None, path=None):
                                 border_style="green",
                             )
                         )
-            else:
-                json_data = {
-                    "user_id": user_id,
-                    "collection_name": collection_name,
-                    "url": link,
-                }
-                response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
-                if response.status_code == 200:
-                    for chunk in response.iter_lines():
-                        # process line here
+        else:
+            json_data = {
+                "user_id": user_id,
+                "collection_name": collection_name,
+                "url": link,
+            }
+            response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
+            if response.status_code == 200:
+                for chunk in response.iter_lines():
+                    # process line here
+                    link = chunk.decode("utf-8").strip()
+                    if link:
                         live.update(
                             Panel(
-                                f"Indexing: {chunk.decode()}",
+                                f"Indexing: {link}",
                                 title="[bold green]Indexer[/bold green]",
                                 border_style="green",
                             )
                         )
-                pass
-                # TODO (aman): add code to just send a link
 
     typer.secho(f"Created Source: {collection_name}", fg=typer.colors.GREEN, bold=True)
     set_sources()
