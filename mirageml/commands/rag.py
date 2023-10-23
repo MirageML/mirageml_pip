@@ -7,6 +7,7 @@ from rich.panel import Panel
 
 from .config import load_config
 from .utils.brain import llm_call
+from .utils.codeblocks import add_indices_to_code_blocks
 from .utils.custom_inputs import multiline_input
 from .utils.prompt_templates import RAG_TEMPLATE
 from .utils.vectordb import (
@@ -15,7 +16,6 @@ from .utils.vectordb import (
     qdrant_search,
     remote_qdrant_search,
 )
-from .utils.codeblocks import add_indices_to_code_blocks
 
 console = Console()
 config = load_config()
@@ -164,11 +164,11 @@ def rag_chat(sources):
         chat_history.append({"role": "assistant", "content": ai_response})
         indexed_ai_response = add_indices_to_code_blocks(ai_response)
         console.print(
-                Panel(
-                    Markdown(indexed_ai_response),
-                    title="[bold blue]Assistant[/bold blue]",
-                    box=HORIZONTALS,
-                    border_style="blue",
-                )
+            Panel(
+                Markdown(indexed_ai_response),
+                title="[bold blue]Assistant[/bold blue]",
+                box=HORIZONTALS,
+                border_style="blue",
             )
+        )
     return chat_history, ai_response

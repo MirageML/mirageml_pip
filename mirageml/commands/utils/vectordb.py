@@ -2,13 +2,12 @@ import json
 import os
 import re
 import uuid
+from concurrent.futures import ThreadPoolExecutor
 
 import keyring
 import requests
 import tiktoken
 import typer
-from concurrent.futures import ThreadPoolExecutor
-
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, PointStruct, VectorParams
 from rich.console import Console
@@ -65,13 +64,9 @@ def create_remote_qdrant_db(collection_name, link=None, path=None):
             "metadata": [metadata_value],
         }
         if i == 0:
-            response = requests.post(
-                VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True
-            )
+            response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
         else:
-            response = requests.post(
-                VECTORDB_UPSERT_ENDPOINT, json=json_data, headers=get_headers(), stream=True
-            )
+            response = requests.post(VECTORDB_UPSERT_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
 
         if response.status_code == 200:
             for chunk in response.iter_lines():
