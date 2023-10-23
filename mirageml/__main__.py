@@ -56,8 +56,9 @@ def main(ctx: typer.Context):
             typer.echo("Please login again. Run `mirageml login`")
             raise typer.Exit()
 
-    full_command = " ".join(sys.argv[1:])
-    analytics.track(user_id, "command", {"command": full_command})
+    if user_id:
+        full_command = " ".join(sys.argv[1:])
+        analytics.track(user_id, "command", {"command": full_command})
 
 
 @app.command(name="help", hidden=True)
