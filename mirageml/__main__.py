@@ -107,11 +107,18 @@ def chat_command(
             typer.echo("Every url must start with https://")
             raise typer.Exit()
 
-    typer.secho(
-        "Starting chat. Type 'exit' to end the chat.",
-        fg=typer.colors.BRIGHT_GREEN,
-        bold=True,
-    )
+    if sources:
+        typer.secho(
+            "Indexing new sources...",
+            fg=typer.colors.BRIGHT_GREEN,
+            bold=True,
+        )
+    else:
+        typer.secho(
+            "Starting chat. Type 'exit' to end the chat.",
+            fg=typer.colors.BRIGHT_GREEN,
+            bold=True,
+        )
     from .commands import chat
 
     chat(files=filepaths, urls=urls, sources=sources)
