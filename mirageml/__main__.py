@@ -193,7 +193,7 @@ def add_source_command(link: str = typer.Argument(default="", help="Link to the 
 
 
 @add_app.command(name="sources", hidden=True)
-def add_sources_command(link: str):
+def add_sources_command(link: str = typer.Argument(default="")):
     typer.secho("Did you mean 'add source'?", fg=typer.colors.YELLOW)
     return
 
