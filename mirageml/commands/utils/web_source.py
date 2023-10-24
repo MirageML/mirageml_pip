@@ -159,8 +159,10 @@ def extract_from_url(url, live=None):
         json_data["source"],
         json_data["data"],
     )
+    data = [url_data]
+    metadata = [{"data": url_data, "source": source}]
 
-    return source, url_data
+    return data, metadata
 
 
 if __name__ == "__main__":

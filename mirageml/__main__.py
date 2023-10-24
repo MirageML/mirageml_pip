@@ -77,10 +77,10 @@ def login_command():
     login()
 
 
-def generate_help_text():
+def generate_chat_help_text():
     from .constants import help_list_sources
 
-    return help_list_sources()
+    return help_list_sources("chat -s")
 
 
 @app.command(name="chat")
@@ -99,7 +99,7 @@ def chat_command(
         "-u",
         help="URLs to use as context. \n\n\n**" + sys.argv[0].split("/")[-1] + " chat -u {url1} -u {url2}**",
     ),
-    sources: List[str] = typer.Option([], "--sources", "-s", help=generate_help_text()),
+    sources: List[str] = typer.Option([], "--sources", "-s", help=generate_chat_help_text()),
 ):
     """Chat with MirageML"""
     for url in urls:
@@ -166,11 +166,12 @@ def add_source_command(link: str = typer.Argument(default="", help="Link to the 
     """Add a new source"""
     from .commands import add_source
 
-    if not link:
+    if not link.startswith("https://"):
+        if link: typer.secho("Please enter a valid link starting with https://", fg=typer.colors.RED, bold=True)
         while True:
             link = input("Link for the source: ")
             if not link.startswith("https://"):
-                typer.echo("Please enter a valid link starting with https://")
+                typer.secho("Please enter a valid link starting with https://", fg=typer.colors.RED, bold=True)
                 continue
             break
     from urllib.parse import urlparse
@@ -183,10 +184,15 @@ def add_source_command(link: str = typer.Argument(default="", help="Link to the 
     add_source(name, link)
 
 
+def generate_delete_help_text():
+    from .constants import help_list_sources
+
+    return help_list_sources("delete source")
+
 # Delete Commands
 @delete_app.command(name="source", no_args_is_help=True)
-def delete_source_command(names: List[str] = typer.Argument(help="Names of the sources to delete")):
-    """Delete a source"""
+def delete_source_command(names: List[str] = typer.Argument(help=generate_delete_help_text())):
+    """Delete sources"""
     from .commands import delete_source
 
     delete_source(names)

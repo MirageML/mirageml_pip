@@ -21,7 +21,7 @@ console = Console()
 config = load_config()
 
 
-def search(live, user_input, sources):  # ,local_sources, remote_sources=None):
+def search(live, user_input, sources, transient_sources=None):
     hits = []
     local = list_qdrant_db()
     remote = list_remote_qdrant_db()
@@ -62,6 +62,17 @@ def search(live, user_input, sources):  # ,local_sources, remote_sources=None):
         )
         hits.extend(remote_qdrant_search(source_name, user_input))
 
+    for data, metadata in transient_sources:
+        live.update(
+            Panel(
+                "Searching through file and url sources...",
+                title="[bold blue]Assistant[/bold blue]",
+                border_style="blue",
+            )
+        )
+        source_name = "transient"
+        hits.extend(remote_qdrant_search(source_name, user_input, data, metadata))
+
     return hits
 
 
@@ -75,15 +86,16 @@ def create_context(sorted_hits):
     return "\n\n".join([str(x["payload"]["source"]) + ": " + x["payload"]["data"] for x in sorted_hits])
 
 
-def search_and_rank(live, user_input, sources):
-    hits = search(live, user_input, sources)
+def search_and_rank(live, user_input, sources, transient_sources):
+    hits = search(live, user_input, sources, transient_sources)
     sorted_hits = rank_hits(hits)
     return sorted_hits
 
 
-def rag_chat(sources):
+def rag_chat(sources, transient_sources):
     try:
-        user_input = multiline_input(f"Ask a question over these sources ({', '.join(sources)})")
+        all_sources = sources + [x[1][0]["source"] for x in transient_sources]
+        user_input = multiline_input(f"Ask a question over these sources ({', '.join(all_sources)})")
         if user_input.lower().strip() == "exit":
             typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
             return
@@ -104,7 +116,7 @@ def rag_chat(sources):
         auto_refresh=True,
         refresh_per_second=8,
     ) as live:
-        sorted_hits = search_and_rank(live, user_input, sources)
+        sorted_hits = search_and_rank(live, user_input, sources, transient_sources)
         sources_used = list(set([hit["payload"]["source"] for hit in sorted_hits]))
         context = create_context(sorted_hits)
 
