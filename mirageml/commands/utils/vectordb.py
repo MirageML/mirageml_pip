@@ -219,11 +219,13 @@ def list_qdrant_db():
     return collection_names
 
 
-def remote_qdrant_search(source_name, user_input):
+def remote_qdrant_search(source_name, user_input, data=None, metadata=None):
     json_data = {
         "user_id": keyring.get_password(SERVICE_ID, "user_id"),
         "collection_name": source_name,
         "search_query": user_input,
+        "data": data,
+        "metadata": metadata,
     }
     response = requests.post(VECTORDB_SEARCH_ENDPOINT, json=json_data, headers=get_headers())
     response.raise_for_status()  # Raise an exception if the request failed

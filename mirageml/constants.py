@@ -66,7 +66,7 @@ def get_headers():
     return headers
 
 
-def help_list_sources():
+def help_list_sources(command_prompt):
     import json
     import os
     import sys
@@ -84,17 +84,18 @@ def help_list_sources():
     all_sources = list(set(local_sources + remote_sources))
     if len(all_sources) == 0:
         final_string = (
-            f"Specify sources to use as context:\n\n\nEx: " f"**{invoked_alias} chat -s {{source1}}**\n\n\n\n"
+            f"Specify sources to delete:\n\n\nEx: " f"**{invoked_alias} {command_prompt} {{source1}}**\n\n\n\n"
         )
     elif len(all_sources) == 1:
         final_string = (
-            f"Specify sources to use as context:\n\n\nEx: " f"**{invoked_alias} chat -s {all_sources[0]}**\n\n\n\n"
+            f"Specify sources to delete:\n\n\nEx: " f"**{invoked_alias} {command_prompt} {all_sources[0]}**\n\n\n\n"
         )
     else:
+        command_flag = "-s " if command_prompt.split()[0] == "chat" else ""
         final_string = (
-            f"Specify sources to use as context:\n\n\nEx: "
-            f"**{invoked_alias} chat -s {all_sources[0]} "
-            f"-s {all_sources[1]}**\n\n\n\n"
+            f"Specify sources to delete:\n\n\nEx: "
+            f"**{invoked_alias} {command_prompt} {all_sources[0]} "
+            f"{command_flag}{all_sources[1]}**\n\n\n\n"
         )
 
     if len(all_sources) != 0:

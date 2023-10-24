@@ -22,6 +22,12 @@ config = load_config()
 
 def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
     # Beginning of the chat sequence
+    index_local = False
+    if "local" in sources:
+        index_local = True
+        sources.remove("local")
+
+    transient_sources = []
     local_sources, remote_sources = get_sources()
     all_sources = list(set(local_sources + remote_sources))
     for source in sources:
@@ -33,25 +39,29 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
             )
             sources.remove(source)
 
-    if "local" in sources:
-        local_sources = ["local"]
-        sources.remove("local")
-
-    for file in files:
+    if index_local:
         from .add_source import add_local_source
 
-        sources.append(add_local_source(file))
+        sources.append(add_local_source("local"))
+
+    for file in files:
+        from .utils.local_source import crawl_files
+
+        data, metadata = crawl_files(file)
+        transient_sources.append((data, metadata))
 
     for url in urls:
-        from .add_source import add_web_source
+        from .utils.web_source import extract_from_url
 
-        sources.append(add_web_source(url))
+        data, metadata = extract_from_url(url)
+
+        transient_sources.append((data, metadata))
 
     while True:
         chat_history = [{"role": "system", "content": "You are a helpful assistant."}]
         ai_response = ""
-        if sources:
-            chat_history, ai_response = rag_chat(sources)
+        if sources or transient_sources:
+            chat_history, ai_response = rag_chat(sources, transient_sources)
 
         while True:
             # Loop for follow-up questions
