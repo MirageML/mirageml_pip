@@ -22,6 +22,8 @@ config = load_config()
 
 
 def search(live, user_input, sources, transient_sources=None):
+    from concurrent.futures import ThreadPoolExecutor
+
     hits = []
     local = list_qdrant_db()
     remote = list_remote_qdrant_db()
@@ -60,7 +62,10 @@ def search(live, user_input, sources, transient_sources=None):
                 border_style="blue",
             )
         )
-        hits.extend(remote_qdrant_search(source_name, user_input))
+        with ThreadPoolExecutor() as executor:
+            futures = [executor.submit(remote_qdrant_search, source_name, user_input) for _ in range(len(remote_sources))]
+            for future in futures:
+                hits.extend(future.result())
 
     for data, metadata in transient_sources:
         live.update(
@@ -71,7 +76,10 @@ def search(live, user_input, sources, transient_sources=None):
             )
         )
         source_name = "transient"
-        hits.extend(remote_qdrant_search(source_name, user_input, data, metadata))
+        with ThreadPoolExecutor() as executor:
+            futures = [executor.submit(remote_qdrant_search, source_name, user_input, data, metadata) for _ in range(len(data))]
+            for future in futures:
+                hits.extend(future.result())
 
     return hits
 
@@ -109,7 +117,6 @@ def rag_chat(sources, transient_sources):
             "Searching through the relevant sources...",
             title="[bold blue]Assistant[/bold blue]",
             border_style="blue",
-            box=HORIZONTALS,
         ),
         console=console,
         transient=True,

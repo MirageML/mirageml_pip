@@ -44,18 +44,27 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
 
         sources.append(add_local_source("local"))
 
-    for file in files:
+    if files or urls:
         from .utils.local_source import crawl_files
-
-        data, metadata = crawl_files(file)
-        transient_sources.append((data, metadata))
-
-    for url in urls:
         from .utils.web_source import extract_from_url
 
-        data, metadata = extract_from_url(url)
-
-        transient_sources.append((data, metadata))
+        with Live(Panel(
+                        "Scraping Files and Urls",
+                        title="[bold green]Assistant[/bold green]",
+                        border_style="green",
+                    ),
+                    console=console,
+                    transient=True) as live:
+            for source, extractor in zip(files+urls, [crawl_files]*len(files) + [extract_from_url]*len(urls)):
+                live.update(
+                    Panel(
+                        f"Extracting data from {source}",
+                        title="[bold green]Assistant[/bold green]",
+                        border_style="green",
+                    )
+                )
+                data, metadata = extractor(source)
+                transient_sources.append((data, metadata))
 
     while True:
         chat_history = [{"role": "system", "content": "You are a helpful assistant."}]
