@@ -6,9 +6,9 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 
 from .config import load_config
-from .utils.llm import llm_call
 from .utils.codeblocks import add_indices_to_code_blocks
 from .utils.custom_inputs import multiline_input
+from .utils.llm import llm_call
 from .utils.prompt_templates import RAG_TEMPLATE
 from .utils.vectordb import (
     list_local_qdrant_db,
@@ -86,7 +86,8 @@ def search(live, user_input, sources, transient_sources=None):
                 ]
             else:
                 futures = [
-                    executor.submit(remote_qdrant_search, source_name, user_input, data, metadata) for _ in range(len(data))
+                    executor.submit(remote_qdrant_search, source_name, user_input, data, metadata)
+                    for _ in range(len(data))
                 ]
 
             for future in futures:

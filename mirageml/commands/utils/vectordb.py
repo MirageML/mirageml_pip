@@ -1,8 +1,8 @@
 import json
 import os
-import re
 import uuid
 from concurrent.futures import ThreadPoolExecutor
+
 import keyring
 import requests
 import typer
@@ -23,7 +23,7 @@ from ...constants import (
     get_headers,
 )
 from ..list_sources import set_sources
-from .brain import local_get_embedding, _chunk_data
+from .brain import _chunk_data, local_get_embedding
 from .local_source import crawl_files
 from .web_source import crawl_website
 
@@ -237,8 +237,7 @@ def transient_qdrant_search(user_input, data, metadata):
     search_vector = local_get_embedding([user_input])[0]
 
     qdrant_client.recreate_collection(
-        collection_name=collection_name,
-        vectors_config=VectorParams(size=768, distance=Distance.COSINE)
+        collection_name=collection_name, vectors_config=VectorParams(size=768, distance=Distance.COSINE)
     )
 
     final_data, final_metadata, vectors = [], [], []
@@ -250,7 +249,10 @@ def transient_qdrant_search(user_input, data, metadata):
 
     qdrant_client.upsert(
         collection_name=collection_name,
-        points=[PointStruct(vector=vector, payload=f_metadata, id=uuid.uuid4().hex) for vector, f_metadata in zip(vectors, final_metadata)]
+        points=[
+            PointStruct(vector=vector, payload=f_metadata, id=uuid.uuid4().hex)
+            for vector, f_metadata in zip(vectors, final_metadata)
+        ],
     )
 
     limit = 20

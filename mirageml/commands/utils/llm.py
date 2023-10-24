@@ -15,16 +15,15 @@ os.environ["TRANSFORMERS_CACHE"] = os.path.join(PACKAGE_DIR, "models")
 
 def _chunk_data(data, metadata):
     from langchain.text_splitter import RecursiveCharacterTextSplitter
-    text_splitter = RecursiveCharacterTextSplitter(
-        chunk_size = 2048,
-        chunk_overlap = 80
-    )
+
+    text_splitter = RecursiveCharacterTextSplitter(chunk_size=2048, chunk_overlap=80)
     docs = text_splitter.create_documents([data])
     chunks = [x.page_content for x in docs]
     meta = [{"data": curr_chunk, "source": metadata["source"]} for curr_chunk in chunks]
     vector_data = local_get_embedding(chunks)
 
     return chunks, meta, vector_data
+
 
 def local_get_embedding(text_list, embedding_model_id="BAAI/bge-base-en-v1.5"):
     from sentence_transformers import SentenceTransformer
@@ -48,7 +47,7 @@ def local_get_embedding(text_list, embedding_model_id="BAAI/bge-base-en-v1.5"):
     sys.stdout, sys.stderr = original_stdout, original_stderr
 
     # Convert the embeddings to a list
-    embeddings = embeddings.tolist() # size = 768
+    embeddings = embeddings.tolist()  # size = 768
     return embeddings
 
 
