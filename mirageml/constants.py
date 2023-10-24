@@ -4,6 +4,10 @@ SERVICE_ID = "mirageml"
 
 PORT = 9998
 REDIRECT_URI = f"http://localhost:{PORT}/callback"
+LINEAR_CLIENT_ID="80f64bdfc3e08d68d379b170d93f1390"
+LINEAR_SCOPE="read,write,issues:create,comments:create"
+LINEAR_AUTHORIZATION_URL=f"https://linear.app/oauth/authorize?client_id={LINEAR_CLIENT_ID}&scope={LINEAR_SCOPE}&redirect_uri={REDIRECT_URI}&response_type=code&prompt=consent"
+LINEAR_TOKEN_ENDPOINT=""
 SUPABASE_URL = "https://kfskvbhwrwpbruczecka.supabase.co"
 SUPABASE_KEY = (
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."

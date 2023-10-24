@@ -1,24 +1,17 @@
 import http.server
-import platform
-import subprocess
-import sys
-import threading
-import urllib.parse
-
-import jwt
-import keyring
-import requests
 import segment.analytics as analytics
-import typer
 
 from mirageml.constants import (
     ANALYTICS_WRITE_KEY,
+    LINEAR_AUTHORIZATION_URL,
+    LINEAR_TOKEN_ENDPOINT,
     NOTION_SYNC_ENDPOINT,
     PORT,
     SERVICE_ID,
     SUPABASE_KEY,
     SUPABASE_URL,
     supabase,
+    get_headers
 )
 
 analytics.write_key = ANALYTICS_WRITE_KEY
@@ -33,6 +26,7 @@ class LoginManager:
         self._provider_options = provider_options
 
     def start_web_server(self):
+        import threading
         """Kick off a thread for the local webserver."""
         th = threading.Thread(target=self._start_local_server)
         th.start()
@@ -45,22 +39,35 @@ class LoginManager:
             return GoogleHandler
         elif self._handler == "notion_auth_handler":
             return NotionHandler
+        elif self._handler == "linear_auth_handler":
+            return LinearHandler
 
     def _start_local_server(self):
         self._server = http.server.HTTPServer(("localhost", PORT), self.select_handler())
         self._server.serve_forever()
 
     def open_browser(self):
+        import subprocess
+        import platform
         """Opens the browser to the login page."""
         # Waits for the server to start.
         while self._server is None:
-            oauth_response = supabase.auth.sign_in_with_oauth(
-                {
-                    "provider": self._provider,
-                    "options": self._provider_options,
-                }
-            )
-            url = oauth_response.url
+            if self._provider == "linear":
+                import random
+                import string
+                import keyring
+                N = random.randint(10, 20)
+                state = ''.join(random.choices(string.ascii_uppercase + string.digits, k=N))
+                keyring.set_password(SERVICE_ID, "linear_state", state)
+                url = f"{LINEAR_AUTHORIZATION_URL}&state={state}"
+            else:
+                oauth_response = supabase.auth.sign_in_with_oauth(
+                    {
+                        "provider": self._provider,
+                        "options": self._provider_options,
+                    }
+                )
+                url = oauth_response.url
             system = platform.system()
             if system == "Darwin":
                 cmd = ["open", url]
@@ -84,6 +91,8 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # return super().log_message(format, *args)
 
     def update_keyring(self, info):
+        import jwt
+        import keyring
         access_token = info["access_token"]
         decoded = jwt.decode(access_token, algorithms=["HS256"], options={"verify_signature": False})
         keyring.set_password(SERVICE_ID, "access_token", info["access_token"])
@@ -106,22 +115,23 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # Serve an HTML page with JavaScript to send the fragment to the server
         self.wfile.write(
             b"""
-    <html>
-        <body>
-            <script>
-                // Send the fragment to the server
-                fetch('/capture_fragment?' + location.hash.substr(1))
-                .then(() => {
-                    document.body.innerHTML = 'All set, feel free to close this tab';
-                    window.close();
-                });
-            </script>
-        </body>
-    </html>
-    """
+                <html>
+                    <body>
+                        <script>
+                            // Send the fragment to the server
+                            fetch('/capture_fragment?' + location.hash.substr(1))
+                            .then(() => {
+                                document.body.innerHTML = 'All set, feel free to close this tab';
+                                window.close();
+                            });
+                        </script>
+                    </body>
+                </html>
+            """
         )
 
     def capture_fragment_handler(self):
+        import sys
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
@@ -141,6 +151,9 @@ class Handler(http.server.SimpleHTTPRequestHandler):
 
 class GoogleHandler(Handler):
     def capture_fragment_handler(self):
+        import sys
+        import requests
+        import urllib.parse
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
@@ -176,6 +189,10 @@ class GoogleHandler(Handler):
 
 class NotionHandler(Handler):
     def capture_fragment_handler(self):
+        import sys
+        import requests
+        import keyring
+        import typer
         self.send_response(200)
         self.send_header("Content-type", "text/html")
         self.end_headers()
@@ -220,6 +237,61 @@ class NotionHandler(Handler):
                     bold=True,
                 )
         sys.exit(0)
+
+    def do_GET(self):
+        if self.path.startswith("/callback"):
+            self.callback_handler()
+        elif self.path.startswith("/capture_fragment"):
+            self.capture_fragment_handler()
+
+class LinearHandler(Handler):
+    def capture_fragment_handler(self):
+        import sys
+        import keyring
+        import typer
+        import requests
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        self.wfile.write(b"All set, feel free to close this tab")
+        # parse the fragment for the access token and refresh token
+        fragment = self.path.split("?")[1]
+        info = dict(kv.split("=") for kv in fragment.split("&"))
+        state = info["state"]
+        if state != keyring.get_password(SERVICE_ID, "linear_state"):
+            typer.secho(f"Error: state mismatch. Expected {keyring.get_password(SERVICE_ID, 'linear_state')}, got {state}")
+        # To Do: use code to get access token
+        code = info["code"]
+        params = {
+            "user_id": keyring.get_password(SERVICE_ID, "user_id"),
+            "code": code,
+        }
+        # requests.post(LINEAR_TOKEN_ENDPOINT, json=params, headers=get_headers())
+        # store access_token, expiration in keyring
+        typer.secho("Added Linear plugin successfully", fg=typer.colors.BRIGHT_GREEN, bold=True)
+        sys.exit(0)
+
+    def callback_handler(self):
+        self.send_response(200)
+        self.send_header("Content-type", "text/html")
+        self.end_headers()
+        # Serve an HTML page with JavaScript to send the fragment to the server
+        self.wfile.write(
+            b"""
+                <html>
+                    <body>
+                        <script>
+                            // Send the fragment to the server
+                            fetch('/capture_fragment' + location.search)
+                            .then(() => {
+                                document.body.innerHTML = 'All set, feel free to close this tab';
+                                window.close();
+                            });
+                        </script>
+                    </body>
+                </html>
+            """
+        )
 
     def do_GET(self):
         if self.path.startswith("/callback"):

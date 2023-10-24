@@ -32,11 +32,24 @@ def add_notion():
     m.start_web_server()
     m.open_browser()
 
+def add_linear():
+    m = LoginManager(
+        handler="linear_auth_handler",
+        provider="linear",
+        provider_options={
+            "redirect_to": REDIRECT_URI,
+        },
+    )
+    m.start_web_server()
+    m.open_browser()
+
 
 def add_plugin(args):
     plugin_name = args["plugin"]
     if plugin_name == "notion":
         add_notion()
+    elif plugin_name == "linear":
+        add_linear()
     # elif plugin_name == "gdrive":
     #     add_gdrive()
     else:
