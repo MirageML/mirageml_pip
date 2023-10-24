@@ -48,14 +48,16 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
         from .utils.local_source import crawl_files
         from .utils.web_source import extract_from_url
 
-        with Live(Panel(
-                        "Scraping Files and Urls",
-                        title="[bold green]Assistant[/bold green]",
-                        border_style="green",
-                    ),
-                    console=console,
-                    transient=True) as live:
-            for source, extractor in zip(files+urls, [crawl_files]*len(files) + [extract_from_url]*len(urls)):
+        with Live(
+            Panel(
+                "Scraping Files and Urls",
+                title="[bold green]Assistant[/bold green]",
+                border_style="green",
+            ),
+            console=console,
+            transient=True,
+        ) as live:
+            for source, extractor in zip(files + urls, [crawl_files] * len(files) + [extract_from_url] * len(urls)):
                 live.update(
                     Panel(
                         f"Extracting data from {source}",

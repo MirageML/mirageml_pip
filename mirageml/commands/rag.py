@@ -63,7 +63,9 @@ def search(live, user_input, sources, transient_sources=None):
             )
         )
         with ThreadPoolExecutor() as executor:
-            futures = [executor.submit(remote_qdrant_search, source_name, user_input) for _ in range(len(remote_sources))]
+            futures = [
+                executor.submit(remote_qdrant_search, source_name, user_input) for _ in range(len(remote_sources))
+            ]
             for future in futures:
                 hits.extend(future.result())
 
@@ -77,7 +79,9 @@ def search(live, user_input, sources, transient_sources=None):
         )
         source_name = "transient"
         with ThreadPoolExecutor() as executor:
-            futures = [executor.submit(remote_qdrant_search, source_name, user_input, data, metadata) for _ in range(len(data))]
+            futures = [
+                executor.submit(remote_qdrant_search, source_name, user_input, data, metadata) for _ in range(len(data))
+            ]
             for future in futures:
                 hits.extend(future.result())
 
