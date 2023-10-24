@@ -55,7 +55,8 @@ def search(live, user_input, sources, transient_sources=None):
             )
             return
 
-    for source_name in remote_sources:
+    with ThreadPoolExecutor() as executor:
+        futures = [executor.submit(remote_qdrant_search, source_name, user_input) for source_name in remote_sources]
         live.update(
             Panel(
                 "Searching through remote sources...",
@@ -63,30 +64,34 @@ def search(live, user_input, sources, transient_sources=None):
                 border_style="blue",
             )
         )
-        with ThreadPoolExecutor() as executor:
-            futures = [
-                executor.submit(remote_qdrant_search, source_name, user_input) for _ in range(len(remote_sources))
-            ]
-            for future in futures:
-                hits.extend(future.result())
 
-    for data, metadata in transient_sources:
+        for future in futures:
+            hits.extend(future.result())
+
+    if transient_sources:
         live.update(
             Panel(
-                "Searching through file and url sources...",
+                "Searching through files and urls...",
                 title="[bold blue]Assistant[/bold blue]",
                 border_style="blue",
             )
         )
-        source_name = "transient"
         if config["local_mode"]:
-            for i in range(len(data)):
-                hits.extend(transient_qdrant_search(user_input, data[i], metadata[i]))
+            for data, metadata in transient_sources:
+                hits.extend(transient_qdrant_search(user_input, data, metadata))
+                live.update(
+                    Panel(
+                        "Searching through files and urls...",
+                        title="[bold blue]Assistant[/bold blue]",
+                        border_style="blue",
+                    )
+                )
         else:
+            source_name = "transient"
             with ThreadPoolExecutor() as executor:
                 futures = [
-                    executor.submit(remote_qdrant_search, source_name, user_input, data[i], metadata[i])
-                    for i in range(len(data))
+                    executor.submit(remote_qdrant_search, source_name, user_input, data, metadata)
+                    for data, metadata in transient_sources
                 ]
 
                 for future in futures:
