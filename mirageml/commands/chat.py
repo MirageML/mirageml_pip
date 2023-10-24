@@ -8,13 +8,13 @@ from rich.panel import Panel
 from .config import load_config
 from .list_sources import get_sources
 from .rag import rag_chat
-from .utils.brain import llm_call
 from .utils.codeblocks import (
     add_indices_to_code_blocks,
     copy_code_to_clipboard,
     extract_code_from_markdown,
 )
 from .utils.custom_inputs import multiline_input
+from .utils.llm import llm_call
 
 console = Console()
 config = load_config()
