@@ -41,6 +41,7 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
 
     if index_local:
         from .add_source import add_local_source
+
         sources.append(add_local_source("local"))
 
     for file in files:
@@ -51,6 +52,7 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
 
     for url in urls:
         from .utils.web_source import extract_from_url
+
         data, metadata = extract_from_url(url)
 
         transient_sources.append((data, metadata))

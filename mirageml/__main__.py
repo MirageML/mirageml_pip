@@ -167,7 +167,8 @@ def add_source_command(link: str = typer.Argument(default="", help="Link to the 
     from .commands import add_source
 
     if not link.startswith("https://"):
-        if link: typer.secho("Please enter a valid link starting with https://", fg=typer.colors.RED, bold=True)
+        if link:
+            typer.secho("Please enter a valid link starting with https://", fg=typer.colors.RED, bold=True)
         while True:
             link = input("Link for the source: ")
             if not link.startswith("https://"):
@@ -188,6 +189,7 @@ def generate_delete_help_text():
     from .constants import help_list_sources
 
     return help_list_sources("delete source")
+
 
 # Delete Commands
 @delete_app.command(name="source", no_args_is_help=True)
