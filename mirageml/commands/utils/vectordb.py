@@ -3,10 +3,8 @@ import os
 import re
 import uuid
 from concurrent.futures import ThreadPoolExecutor
-
 import keyring
 import requests
-import tiktoken
 import typer
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, PointStruct, VectorParams
@@ -25,7 +23,7 @@ from ...constants import (
     get_headers,
 )
 from ..list_sources import set_sources
-from .brain import local_get_embedding
+from .brain import local_get_embedding, _chunk_data
 from .local_source import crawl_files
 from .web_source import crawl_website
 
@@ -142,20 +140,6 @@ def create_local_qdrant_db(collection_name="test", link=None, path=None):
         vertical_overflow="visible",
     ) as live:
         # For each data chunk it based on number of tokens
-        enc = tiktoken.get_encoding("cl100k_base")
-        for curr_data, curr_metadata in zip(data, metadata):
-            split_data = re.split(r"(?<=\.)\s+", curr_data)
-            i, chunks, meta = 0, [], []
-            while i < len(split_data):
-                curr_chunk = ""
-                while i < len(split_data) and len(enc.encode(str(curr_chunk))) < 1000:
-                    curr_chunk += " " + split_data[i]
-                    i += 1
-                chunks.append(curr_chunk)
-                meta.append({"data": curr_chunk, "source": curr_metadata["source"]})
-            final_data.extend(chunks)
-            final_metadata.extend(meta)
-
         live.update(
             Panel(
                 "Creating Embeddings...",
@@ -164,11 +148,16 @@ def create_local_qdrant_db(collection_name="test", link=None, path=None):
             )
         )
 
-        vectors, size = local_get_embedding(final_data)
+        final_data, final_metadata, vectors = [], [], []
+        for dat, meta in zip(data, metadata):
+            chunk_data, chunk_meta, chunk_vec = _chunk_data(dat, meta)
+            final_data.extend(chunk_data)
+            final_metadata.extend(chunk_meta)
+            vectors.extend(chunk_vec)
 
         qdrant_client.recreate_collection(
             collection_name=collection_name,
-            vectors_config=VectorParams(size=size, distance=Distance.COSINE),
+            vectors_config=VectorParams(size=768, distance=Distance.COSINE),
         )
 
         for vector, f_metadata in zip(vectors, final_metadata):
@@ -230,12 +219,46 @@ def remote_qdrant_search(source_name, user_input, data=None, metadata=None):
 def local_qdrant_search(source_name, user_input):
     qdrant_client = get_local_qdrant_db()
 
-    query_vector, _ = local_get_embedding([user_input])
+    query_vector = local_get_embedding([user_input])[0]
 
     hits = qdrant_client.search(
         limit=5,
         collection_name=source_name,
         query_vector=query_vector[0],
+    )
+    hits = [{"score": hit.score, "payload": hit.payload} for hit in hits]
+    return hits
+
+
+def transient_qdrant_search(user_input, data, metadata):
+    qdrant_client = QdrantClient(location=":memory:")
+    collection_name = str(uuid.uuid4().hex)
+
+    search_vector = local_get_embedding([user_input])[0]
+
+    qdrant_client.recreate_collection(
+        collection_name=collection_name,
+        vectors_config=VectorParams(size=768, distance=Distance.COSINE)
+    )
+
+    final_data, final_metadata, vectors = [], [], []
+    for dat, meta in zip(data, metadata):
+        chunk_data, chunk_meta, chunk_vec = _chunk_data(dat, meta)
+        final_data.extend(chunk_data)
+        final_metadata.extend(chunk_meta)
+        vectors.extend(chunk_vec)
+
+    qdrant_client.upsert(
+        collection_name=collection_name,
+        points=[PointStruct(vector=vector, payload=f_metadata, id=uuid.uuid4().hex) for vector, f_metadata in zip(vectors, final_metadata)]
+    )
+
+    limit = 20
+
+    hits = qdrant_client.search(
+        collection_name=collection_name,
+        query_vector=search_vector,
+        limit=limit,
     )
     hits = [{"score": hit.score, "payload": hit.payload} for hit in hits]
     return hits

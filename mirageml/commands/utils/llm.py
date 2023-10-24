@@ -13,7 +13,20 @@ PACKAGE_DIR = os.path.dirname(__file__)
 os.environ["TRANSFORMERS_CACHE"] = os.path.join(PACKAGE_DIR, "models")
 
 
-def local_get_embedding(text_list, embedding_model_id="BAAI/bge-small-en-v1.5"):
+def _chunk_data(data, metadata):
+    from langchain.text_splitter import RecursiveCharacterTextSplitter
+    text_splitter = RecursiveCharacterTextSplitter(
+        chunk_size = 2048,
+        chunk_overlap = 80
+    )
+    docs = text_splitter.create_documents([data])
+    chunks = [x.page_content for x in docs]
+    meta = [{"data": curr_chunk, "source": metadata["source"]} for curr_chunk in chunks]
+    vector_data = local_get_embedding(chunks)
+
+    return chunks, meta, vector_data
+
+def local_get_embedding(text_list, embedding_model_id="BAAI/bge-base-en-v1.5"):
     from sentence_transformers import SentenceTransformer
 
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
@@ -24,7 +37,7 @@ def local_get_embedding(text_list, embedding_model_id="BAAI/bge-small-en-v1.5"):
         print("Downloading model to:", model_dir)
         print("This will take a few minutes and only happen once!")
 
-    # Suppress stdout/stderr
+    # TODO: Suppress stdout/stderr
     original_stdout, original_stderr = sys.stdout, sys.stderr
     sys.stdout, sys.stderr = StringIO(), StringIO()
 
@@ -35,9 +48,8 @@ def local_get_embedding(text_list, embedding_model_id="BAAI/bge-small-en-v1.5"):
     sys.stdout, sys.stderr = original_stdout, original_stderr
 
     # Convert the embeddings to a list
-    embeddings = embeddings.tolist()
-    size = 384
-    return embeddings, size
+    embeddings = embeddings.tolist() # size = 768
+    return embeddings
 
 
 def local_llm_call(messages, llm_model_id="TheBloke/Llama-2-7b-Chat-GGUF", stream=False):

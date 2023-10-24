@@ -6,7 +6,7 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 
 from .config import load_config
-from .utils.brain import llm_call
+from .utils.llm import llm_call
 from .utils.codeblocks import add_indices_to_code_blocks
 from .utils.custom_inputs import multiline_input
 from .utils.prompt_templates import RAG_TEMPLATE
@@ -15,6 +15,7 @@ from .utils.vectordb import (
     list_remote_qdrant_db,
     local_qdrant_search,
     remote_qdrant_search,
+    transient_qdrant_search,
 )
 
 console = Console()
@@ -79,9 +80,15 @@ def search(live, user_input, sources, transient_sources=None):
         )
         source_name = "transient"
         with ThreadPoolExecutor() as executor:
-            futures = [
-                executor.submit(remote_qdrant_search, source_name, user_input, data, metadata) for _ in range(len(data))
-            ]
+            if config["local_mode"]:
+                futures = [
+                    executor.submit(transient_qdrant_search, user_input, data, metadata) for _ in range(len(data))
+                ]
+            else:
+                futures = [
+                    executor.submit(remote_qdrant_search, source_name, user_input, data, metadata) for _ in range(len(data))
+                ]
+
             for future in futures:
                 hits.extend(future.result())
 
