@@ -1,7 +1,7 @@
 import os
 
 from .config import load_config
-from .utils.vectordb import create_qdrant_db
+from .utils.vectordb import create_local_qdrant_db, create_remote_qdrant_db
 
 
 def fix_name(name):
@@ -25,7 +25,10 @@ def add_web_source(link, name=None, remote=False):
     else:
         name = fix_name(name)
 
-    create_qdrant_db(collection_name=name, link=link, remote=remote)
+    if remote:
+        create_remote_qdrant_db(collection_name=name, link=link)
+    else:
+        create_local_qdrant_db(collection_name=name, link=link, remote=remote)
     return name
 
 
@@ -39,7 +42,11 @@ def add_local_source(path=None, name=None):
     # collection_name should be absolute path
     collection_name = os.path.abspath(path) if name is None else name
     collection_name = fix_name(collection_name)
-    create_qdrant_db(collection_name=collection_name, path=path, remote=remote)
+    if remote:
+        create_remote_qdrant_db(collection_name=collection_name, path=path)
+    else:
+        create_local_qdrant_db(collection_name=collection_name, path=path, remote=remote)
+
     return collection_name
 
 

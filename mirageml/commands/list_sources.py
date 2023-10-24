@@ -2,25 +2,25 @@ import typer
 
 
 def get_sources():
-    from .utils.vectordb import list_qdrant_db, list_remote_qdrant_db
+    from .utils.vectordb import list_local_qdrant_db, list_remote_qdrant_db
 
-    return list_qdrant_db(), list_remote_qdrant_db()
+    return list_local_qdrant_db(), list_remote_qdrant_db()
 
 
 def set_sources():
     from .config import set_var_config
-    from .utils.vectordb import list_qdrant_db, list_remote_qdrant_db
+    from .utils.vectordb import list_local_qdrant_db, list_remote_qdrant_db
 
-    set_var_config({"local": list_qdrant_db(), "remote": list_remote_qdrant_db()})
+    set_var_config({"local": list_local_qdrant_db(), "remote": list_remote_qdrant_db()})
 
 
 def list_sources():
     import sys
 
     from .config import set_var_config
-    from .utils.vectordb import list_qdrant_db, list_remote_qdrant_db
+    from .utils.vectordb import list_local_qdrant_db, list_remote_qdrant_db
 
-    sources = list_qdrant_db()
+    sources = list_local_qdrant_db()
     remote_sources = list_remote_qdrant_db()
 
     if len(sources) == 0 and len(remote_sources) == 0:

@@ -1,12 +1,10 @@
 import json
 import os
-import re
 import uuid
 from concurrent.futures import ThreadPoolExecutor
 
 import keyring
 import requests
-import tiktoken
 import typer
 from qdrant_client import QdrantClient
 from qdrant_client.http.models import Distance, PointStruct, VectorParams
@@ -24,9 +22,8 @@ from ...constants import (
     VECTORDB_UPSERT_ENDPOINT,
     get_headers,
 )
-from ..config import load_config
 from ..list_sources import set_sources
-from .brain import get_embedding
+from .brain import _chunk_data, local_get_embedding
 from .local_source import crawl_files
 from .web_source import crawl_website
 
@@ -35,7 +32,7 @@ PACKAGE_DIR = os.path.dirname(__file__)
 progress = Progress()
 
 
-def get_qdrant_db():
+def get_local_qdrant_db():
     QDRANT_LOCKFILE_PATH = os.path.join(PACKAGE_DIR, ".lock")
     if os.path.exists(QDRANT_LOCKFILE_PATH):
         os.remove(QDRANT_LOCKFILE_PATH)
@@ -43,7 +40,7 @@ def get_qdrant_db():
 
 
 def exists_qdrant_db(collection_name="test"):
-    qdrant_client = get_qdrant_db()
+    qdrant_client = get_local_qdrant_db()
     return collection_name in [x.name for x in qdrant_client.get_collections().collections]
 
 
@@ -119,18 +116,14 @@ def create_remote_qdrant_db(collection_name, link=None, path=None):
     return True
 
 
-def create_qdrant_db(collection_name="test", link=None, path=None, remote=False):
-    if remote:
-        return create_remote_qdrant_db(collection_name=collection_name, link=link, path=path)
-
+def create_local_qdrant_db(collection_name="test", link=None, path=None):
     data, metadata = [], []
     if link:
         data, metadata = crawl_website(link)
     elif path:
         data, metadata = crawl_files(path)
 
-    config = load_config()
-    qdrant_client = get_qdrant_db()
+    qdrant_client = get_local_qdrant_db()
 
     final_data, final_metadata = [], []
 
@@ -147,20 +140,6 @@ def create_qdrant_db(collection_name="test", link=None, path=None, remote=False)
         vertical_overflow="visible",
     ) as live:
         # For each data chunk it based on number of tokens
-        enc = tiktoken.get_encoding("cl100k_base")
-        for curr_data, curr_metadata in zip(data, metadata):
-            split_data = re.split(r"(?<=\.)\s+", curr_data)
-            i, chunks, meta = 0, [], []
-            while i < len(split_data):
-                curr_chunk = ""
-                while i < len(split_data) and len(enc.encode(str(curr_chunk))) < 1000:
-                    curr_chunk += " " + split_data[i]
-                    i += 1
-                chunks.append(curr_chunk)
-                meta.append({"data": curr_chunk, "source": curr_metadata["source"]})
-            final_data.extend(chunks)
-            final_metadata.extend(meta)
-
         live.update(
             Panel(
                 "Creating Embeddings...",
@@ -169,12 +148,16 @@ def create_qdrant_db(collection_name="test", link=None, path=None, remote=False)
             )
         )
 
-        vectors = get_embedding(final_data, local=config["local_mode"])
-        size = 384 if config["local_mode"] else 1536
+        final_data, final_metadata, vectors = [], [], []
+        for dat, meta in zip(data, metadata):
+            chunk_data, chunk_meta, chunk_vec = _chunk_data(dat, meta)
+            final_data.extend(chunk_data)
+            final_metadata.extend(chunk_meta)
+            vectors.extend(chunk_vec)
 
         qdrant_client.recreate_collection(
             collection_name=collection_name,
-            vectors_config=VectorParams(size=size, distance=Distance.COSINE),
+            vectors_config=VectorParams(size=768, distance=Distance.COSINE),
         )
 
         for vector, f_metadata in zip(vectors, final_metadata):
@@ -208,7 +191,7 @@ def list_remote_qdrant_db():
     return response.json()
 
 
-def list_qdrant_db():
+def list_local_qdrant_db():
     QDRANT_JSON_PATH = os.path.join(PACKAGE_DIR, "meta.json")
     if os.path.exists(QDRANT_JSON_PATH):
         with open(QDRANT_JSON_PATH) as json_file:
@@ -233,16 +216,51 @@ def remote_qdrant_search(source_name, user_input, data=None, metadata=None):
     return response.json()
 
 
-def qdrant_search(source_name, user_input):
-    from .brain import get_embedding
+def local_qdrant_search(source_name, user_input):
+    qdrant_client = get_local_qdrant_db()
 
-    config = load_config()
-    qdrant_client = get_qdrant_db()
+    query_vector = local_get_embedding([user_input])[0]
 
     hits = qdrant_client.search(
         limit=5,
         collection_name=source_name,
-        query_vector=get_embedding([user_input], local=config["local_mode"])[0],
+        query_vector=query_vector[0],
+    )
+    hits = [{"score": hit.score, "payload": hit.payload} for hit in hits]
+    return hits
+
+
+def transient_qdrant_search(user_input, data, metadata):
+    qdrant_client = QdrantClient(location=":memory:")
+    collection_name = str(uuid.uuid4().hex)
+
+    search_vector = local_get_embedding([user_input])[0]
+
+    qdrant_client.recreate_collection(
+        collection_name=collection_name, vectors_config=VectorParams(size=768, distance=Distance.COSINE)
+    )
+
+    final_data, final_metadata, vectors = [], [], []
+    for dat, meta in zip(data, metadata):
+        chunk_data, chunk_meta, chunk_vec = _chunk_data(dat, meta)
+        final_data.extend(chunk_data)
+        final_metadata.extend(chunk_meta)
+        vectors.extend(chunk_vec)
+
+    qdrant_client.upsert(
+        collection_name=collection_name,
+        points=[
+            PointStruct(vector=vector, payload=f_metadata, id=uuid.uuid4().hex)
+            for vector, f_metadata in zip(vectors, final_metadata)
+        ],
+    )
+
+    limit = 20
+
+    hits = qdrant_client.search(
+        collection_name=collection_name,
+        query_vector=search_vector,
+        limit=limit,
     )
     hits = [{"score": hit.score, "payload": hit.payload} for hit in hits]
     return hits
@@ -259,7 +277,7 @@ def delete_remote_qdrant_db(collection_name="test"):
     return response.json()
 
 
-def delete_qdrant_db(collection_name="test"):
-    qdrant_client = get_qdrant_db()
+def delete_local_qdrant_db(collection_name="test"):
+    qdrant_client = get_local_qdrant_db()
     qdrant_client.delete_collection(collection_name=collection_name)
     set_sources()
