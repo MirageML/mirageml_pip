@@ -24,13 +24,13 @@ app = typer.Typer(
 config_app = typer.Typer(name="config", help="Manage the config", no_args_is_help=True)
 add_app = typer.Typer(name="add", help="Add a new resource", no_args_is_help=True)
 list_app = typer.Typer(name="list", help="List resources", no_args_is_help=True)
-sync_app = typer.Typer(name="sync", help="Sync resources", no_args_is_help=True)
+# sync_app = typer.Typer(name="sync", help="Sync resources", no_args_is_help=True)
 delete_app = typer.Typer(name="delete", help="Delete resources", no_args_is_help=True)
 
 app.add_typer(config_app, rich_help_panel="Utils and Configs")
 app.add_typer(add_app, rich_help_panel="Manage Resources")
 app.add_typer(list_app, rich_help_panel="Manage Resources")
-app.add_typer(sync_app, rich_help_panel="Manage Resources")
+# app.add_typer(sync_app, rich_help_panel="Manage Resources")
 app.add_typer(delete_app, rich_help_panel="Manage Resources")
 
 
@@ -136,12 +136,12 @@ def set_config_command():
 
 
 # List Commands
-@list_app.command(name="plugins")
-def list_plugins_command():
-    """List connected plugins"""
-    from .commands import list_plugins
+# @list_app.command(name="plugins")
+# def list_plugins_command():
+#     """List connected plugins"""
+#     from .commands import list_plugins
 
-    list_plugins()
+#     list_plugins()
 
 
 @list_app.command(name="sources")
@@ -153,12 +153,12 @@ def list_sources_command():
 
 
 # Add Commands
-@add_app.command(name="plugin")
-def add_plugin_command(name: str):
-    """Add a plugin by name"""
-    from .commands import add_plugin
+# @add_app.command(name="plugin")
+# def add_plugin_command(name: str):
+#     """Add a plugin by name"""
+#     from .commands import add_plugin
 
-    add_plugin({"plugin": name})
+#     add_plugin({"plugin": name})
 
 
 @add_app.command(name="source")
@@ -201,12 +201,12 @@ def delete_source_command(names: List[str] = typer.Argument(help=generate_delete
 
 
 # Sync Commands
-@sync_app.command(name="plugin")
-def sync_plugin_command(name: str):
-    """Sync a plugin"""
-    from .commands import sync_plugin
+# @sync_app.command(name="plugin")
+# def sync_plugin_command(name: str):
+#     """Sync a plugin"""
+#     from .commands import sync_plugin
 
-    sync_plugin({"plugin": name})
+#     sync_plugin({"plugin": name})
 
 
 if __name__ == "__main__":
