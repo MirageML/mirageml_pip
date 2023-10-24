@@ -99,7 +99,7 @@ def chat_command(
         "-u",
         help="URLs to use as context. \n\n\n**" + sys.argv[0].split("/")[-1] + " chat -u {url1} -u {url2}**",
     ),
-    sources: List[str] = typer.Option([], "--sources", "-s", help=generate_chat_help_text()),
+    sources: List[str] = typer.Option(None, "--sources", "-s", help=generate_chat_help_text()),
 ):
     """Chat with MirageML"""
     for url in urls:
@@ -107,7 +107,7 @@ def chat_command(
             typer.echo("Every url must start with https://")
             raise typer.Exit()
 
-    if sources:
+    if len(sources + urls + filepaths) > 0:
         typer.secho(
             "Indexing new sources...",
             fg=typer.colors.BRIGHT_GREEN,
@@ -190,6 +190,12 @@ def add_source_command(link: str = typer.Argument(default="", help="Link to the 
         name = parsed_url.netloc.split(".")[1]
     name = input(f"Name for the source [default: {name}]: ") or name
     add_source(name, link)
+
+
+@add_app.command(name="sources", hidden=True)
+def add_sources_command(link: str):
+    typer.secho("Did you mean 'add source'?", fg=typer.colors.YELLOW)
+    return
 
 
 def generate_delete_help_text():
