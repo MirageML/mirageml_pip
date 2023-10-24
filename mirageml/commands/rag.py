@@ -79,19 +79,18 @@ def search(live, user_input, sources, transient_sources=None):
             )
         )
         source_name = "transient"
-        with ThreadPoolExecutor() as executor:
-            if config["local_mode"]:
+        if config["local_mode"]:
+            for i in range(len(data)):
+                hits.extend(transient_qdrant_search(user_input, data[i], metadata[i]))
+        else:
+            with ThreadPoolExecutor() as executor:
                 futures = [
-                    executor.submit(transient_qdrant_search, user_input, data, metadata) for _ in range(len(data))
-                ]
-            else:
-                futures = [
-                    executor.submit(remote_qdrant_search, source_name, user_input, data, metadata)
-                    for _ in range(len(data))
+                    executor.submit(remote_qdrant_search, source_name, user_input, data[i], metadata[i])
+                    for i in range(len(data))
                 ]
 
-            for future in futures:
-                hits.extend(future.result())
+                for future in futures:
+                    hits.extend(future.result())
 
     return hits
 
