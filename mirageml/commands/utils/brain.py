@@ -6,7 +6,6 @@ import requests
 
 from ...constants import (
     LLM_GPT_ENDPOINT,
-    VECTORDB_EMBED_ENDPOINT,
     get_headers,
 )
 
@@ -37,7 +36,8 @@ def local_get_embedding(text_list, embedding_model_id="BAAI/bge-small-en-v1.5"):
 
     # Convert the embeddings to a list
     embeddings = embeddings.tolist()
-    return embeddings
+    size = 384
+    return embeddings, size
 
 
 def local_llm_call(messages, llm_model_id="TheBloke/Llama-2-7b-Chat-GGUF", stream=False):
@@ -71,12 +71,8 @@ def local_llm_call(messages, llm_model_id="TheBloke/Llama-2-7b-Chat-GGUF", strea
         return llm(formatted_messages)
 
 
-def get_embedding(text_list, model="BAAI/bge-small-en-v1.5", local=False):
-    if local:
-        return local_get_embedding(text_list, embedding_model_id=model)
-    response = requests.post(VECTORDB_EMBED_ENDPOINT, json={"data": text_list}, headers=get_headers())
-    response.raise_for_status()  # Raise an exception if the request failed
-    return response.json()["embedding"]
+def get_embedding(text_list, model="BAAI/bge-small-en-v1.5"):
+    raise NotImplementedError
 
 
 def llm_call(messages, model="gpt-3.5-turbo", stream=False, local=False):

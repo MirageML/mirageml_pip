@@ -11,9 +11,9 @@ from .utils.codeblocks import add_indices_to_code_blocks
 from .utils.custom_inputs import multiline_input
 from .utils.prompt_templates import RAG_TEMPLATE
 from .utils.vectordb import (
-    list_qdrant_db,
+    list_local_qdrant_db,
     list_remote_qdrant_db,
-    qdrant_search,
+    local_qdrant_search,
     remote_qdrant_search,
 )
 
@@ -25,7 +25,7 @@ def search(live, user_input, sources, transient_sources=None):
     from concurrent.futures import ThreadPoolExecutor
 
     hits = []
-    local = list_qdrant_db()
+    local = list_local_qdrant_db()
     remote = list_remote_qdrant_db()
 
     local_sources = [source for source in sources if source in local]
@@ -41,7 +41,7 @@ def search(live, user_input, sources, transient_sources=None):
         )
         try:
             # Search for matches in each source based on user input
-            hits.extend(qdrant_search(source_name, user_input))
+            hits.extend(local_qdrant_search(source_name, user_input))
         except Exception:
             # Handle potential errors with mismatched embedding models
             error_msg_local = f"Source: {source_name} was created with OpenAI's embedding model. Please run with `local_mode=False` or reindex with `mirageml delete source {source_name}; mirageml add source {source_name}`."

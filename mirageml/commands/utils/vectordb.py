@@ -24,9 +24,8 @@ from ...constants import (
     VECTORDB_UPSERT_ENDPOINT,
     get_headers,
 )
-from ..config import load_config
 from ..list_sources import set_sources
-from .brain import get_embedding
+from .brain import local_get_embedding
 from .local_source import crawl_files
 from .web_source import crawl_website
 
@@ -35,7 +34,7 @@ PACKAGE_DIR = os.path.dirname(__file__)
 progress = Progress()
 
 
-def get_qdrant_db():
+def get_local_qdrant_db():
     QDRANT_LOCKFILE_PATH = os.path.join(PACKAGE_DIR, ".lock")
     if os.path.exists(QDRANT_LOCKFILE_PATH):
         os.remove(QDRANT_LOCKFILE_PATH)
@@ -43,7 +42,7 @@ def get_qdrant_db():
 
 
 def exists_qdrant_db(collection_name="test"):
-    qdrant_client = get_qdrant_db()
+    qdrant_client = get_local_qdrant_db()
     return collection_name in [x.name for x in qdrant_client.get_collections().collections]
 
 
@@ -119,18 +118,14 @@ def create_remote_qdrant_db(collection_name, link=None, path=None):
     return True
 
 
-def create_qdrant_db(collection_name="test", link=None, path=None, remote=False):
-    if remote:
-        return create_remote_qdrant_db(collection_name=collection_name, link=link, path=path)
-
+def create_local_qdrant_db(collection_name="test", link=None, path=None):
     data, metadata = [], []
     if link:
         data, metadata = crawl_website(link)
     elif path:
         data, metadata = crawl_files(path)
 
-    config = load_config()
-    qdrant_client = get_qdrant_db()
+    qdrant_client = get_local_qdrant_db()
 
     final_data, final_metadata = [], []
 
@@ -169,8 +164,7 @@ def create_qdrant_db(collection_name="test", link=None, path=None, remote=False)
             )
         )
 
-        vectors = get_embedding(final_data, local=config["local_mode"])
-        size = 384 if config["local_mode"] else 1536
+        vectors, size = local_get_embedding(final_data)
 
         qdrant_client.recreate_collection(
             collection_name=collection_name,
@@ -208,7 +202,7 @@ def list_remote_qdrant_db():
     return response.json()
 
 
-def list_qdrant_db():
+def list_local_qdrant_db():
     QDRANT_JSON_PATH = os.path.join(PACKAGE_DIR, "meta.json")
     if os.path.exists(QDRANT_JSON_PATH):
         with open(QDRANT_JSON_PATH) as json_file:
@@ -233,16 +227,15 @@ def remote_qdrant_search(source_name, user_input, data=None, metadata=None):
     return response.json()
 
 
-def qdrant_search(source_name, user_input):
-    from .brain import get_embedding
+def local_qdrant_search(source_name, user_input):
+    qdrant_client = get_local_qdrant_db()
 
-    config = load_config()
-    qdrant_client = get_qdrant_db()
+    query_vector, _ = local_get_embedding([user_input])
 
     hits = qdrant_client.search(
         limit=5,
         collection_name=source_name,
-        query_vector=get_embedding([user_input], local=config["local_mode"])[0],
+        query_vector=query_vector[0],
     )
     hits = [{"score": hit.score, "payload": hit.payload} for hit in hits]
     return hits
@@ -259,7 +252,7 @@ def delete_remote_qdrant_db(collection_name="test"):
     return response.json()
 
 
-def delete_qdrant_db(collection_name="test"):
-    qdrant_client = get_qdrant_db()
+def delete_local_qdrant_db(collection_name="test"):
+    qdrant_client = get_local_qdrant_db()
     qdrant_client.delete_collection(collection_name=collection_name)
     set_sources()

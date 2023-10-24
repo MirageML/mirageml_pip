@@ -1,4 +1,4 @@
-from .utils.vectordb import delete_qdrant_db, delete_remote_qdrant_db
+from .utils.vectordb import delete_local_qdrant_db, delete_remote_qdrant_db
 
 
 def delete_source(names: list[str]):
@@ -24,6 +24,6 @@ def delete_source(names: list[str]):
                 break
 
         typer.secho(f"Deleting Source: {name}...", fg=typer.colors.BRIGHT_RED)
-        delete_qdrant_db(name)
+        delete_local_qdrant_db(name)
         delete_remote_qdrant_db(name)
         print(f"Deleted Source: {name}")
