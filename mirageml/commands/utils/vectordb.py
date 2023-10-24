@@ -23,7 +23,7 @@ from ...constants import (
     get_headers,
 )
 from ..list_sources import set_sources
-from .brain import _chunk_data, local_get_embedding
+from .llm import _chunk_data, local_get_embedding
 from .local_source import crawl_files
 from .web_source import crawl_website
 
