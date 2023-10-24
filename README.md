@@ -10,7 +10,8 @@ This requires Python 3.9 or later. Install the package with:
 pip install -U mirageml
 ```
 
-## Commands
+## Usage
+You can use 'mirageml', 'mirage', or 'mml' to call the package.
 ```
 mirage [OPTIONS] COMMAND [ARGS]
 ```
