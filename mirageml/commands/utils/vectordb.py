@@ -108,7 +108,7 @@ def create_remote_qdrant_db(collection_name, link=None, path=None):
                     link = chunk.decode("utf-8")
                     live.update(
                         Panel(
-                            f"Indexing: {link}",
+                            f"{link}",
                             title="[bold green]Indexer[/bold green]",
                             border_style="green",
                         )
