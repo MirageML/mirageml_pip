@@ -114,7 +114,7 @@ def chat_command(
 ):
     """Chat with MirageML"""
     for url in urls:
-        if not url.startswith("http://"):
+        if not url.startswith("http"):
             typer.echo("Every url must start with http://")
             raise typer.Exit()
 
@@ -184,12 +184,12 @@ def add_source_command(link: str = typer.Argument(default="", help="Link to the 
     """Add a new source"""
     from .commands import add_source
 
-    if not link.startswith("https://"):
+    if not link.startswith("http"):
         if link:
             typer.secho("Please enter a valid link starting with https://", fg=typer.colors.RED, bold=True)
         while True:
             link = input("Link for the source: ")
-            if not link.startswith("https://"):
+            if not link.startswith("http"):
                 typer.secho("Please enter a valid link starting with https://", fg=typer.colors.RED, bold=True)
                 continue
             break
