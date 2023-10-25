@@ -16,8 +16,10 @@ def crawl_files(start_dir="."):
         except Exception:
             # If unable to read a file, you can print an error or continue to the next file
             typer.secho(f"Unable to read file: {start_dir}", fg=typer.colors.BRIGHT_RED, bold=True)
+            return None, None
     elif not os.path.isdir(start_dir):
         typer.secho(f"Unable to read dir: {start_dir}", fg=typer.colors.BRIGHT_RED, bold=True)
+        return None, None
     else:
         for dirpath, dirnames, filenames in os.walk(os.path.abspath(start_dir)):
             for filename in filenames:

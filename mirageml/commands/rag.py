@@ -1,6 +1,7 @@
 import sys
 
 import typer
+import tiktoken
 from rich.box import HORIZONTALS
 from rich.console import Console
 from rich.live import Live
@@ -148,9 +149,22 @@ def rag_chat(sources, transient_sources):
         auto_refresh=True,
         refresh_per_second=8,
     ) as live:
+        transient_data = ""
+        tsources = []
+        for data, metadata in transient_sources:
+            transient_data += "\n\n" + data[0]
+            tsources.append(metadata[0]["source"])
+            enc = tiktoken.get_encoding("cl100k_base")
+            if len(enc.encode(transient_data)) < 75000:
+                transient_sources = None
+
         sorted_hits = search_and_rank(live, user_input, sources, transient_sources)
         sources_used = list(set([hit["payload"]["source"] for hit in sorted_hits]))
         context = create_context(sorted_hits)
+
+        if not transient_sources and len(transient_data) > 0:
+            context += transient_data
+            sources_used.extend(tsources)
 
         # Chat history that will be sent to the AI model
         chat_history = [
