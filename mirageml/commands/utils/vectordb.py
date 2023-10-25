@@ -68,9 +68,10 @@ def create_remote_qdrant_db(collection_name, link=None, path=None):
         if response.status_code == 200:
             for chunk in response.iter_lines():
                 # process line here
+                link = chunk.decode("utf-8")
                 live.update(
                     Panel(
-                        f"Indexing: {chunk.decode()}",
+                        f"{link}",
                         title="[bold green]Indexer[/bold green]",
                         border_style="green",
                     )
