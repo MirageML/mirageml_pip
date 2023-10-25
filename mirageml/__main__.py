@@ -26,12 +26,15 @@ add_app = typer.Typer(name="add", help="Add a new resource", no_args_is_help=Tru
 list_app = typer.Typer(name="list", help="List resources", no_args_is_help=True)
 # sync_app = typer.Typer(name="sync", help="Sync resources", no_args_is_help=True)
 delete_app = typer.Typer(name="delete", help="Delete resources", no_args_is_help=True)
+remove_app = typer.Typer(name="remove", help="Remove resources", no_args_is_help=True)
+
 
 app.add_typer(config_app, rich_help_panel="Utils and Configs")
 app.add_typer(add_app, rich_help_panel="Manage Resources")
 app.add_typer(list_app, rich_help_panel="Manage Resources")
 # app.add_typer(sync_app, rich_help_panel="Manage Resources")
 app.add_typer(delete_app, rich_help_panel="Manage Resources")
+app.add_typer(remove_app, rich_help_panel="Manage Resources", hidden=True)
 
 
 @app.callback()
@@ -205,6 +208,7 @@ def generate_delete_help_text():
 
 
 # Delete Commands
+@remove_app.command(name="source", no_args_is_help=True, hidden=True)
 @delete_app.command(name="source", no_args_is_help=True)
 def delete_source_command(names: List[str] = typer.Argument(help=generate_delete_help_text())):
     """Delete sources"""
