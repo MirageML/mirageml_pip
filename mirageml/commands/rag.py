@@ -66,7 +66,15 @@ def search(live, user_input, sources, transient_sources=None):
         )
 
         for future in futures:
-            hits.extend(future.result())
+            try:
+                hits.extend(future.result())
+            except Exception as e:
+                error_msg = f"Failed to search in source: {source_name}. Try again! You may need to re-add the source with mirage add source"
+                typer.secho(
+                    error_msg,
+                    fg=typer.colors.RED,
+                    bold=True,
+                )
 
     if transient_sources:
         live.update(
@@ -157,37 +165,25 @@ def rag_chat(sources, transient_sources):
 
         # Fetch the AI's response
         ai_response = ""
-        live.update(
-            Panel(
-                "Found relevant sources! Answering question...",
-                title="[bold blue]Assistant[/bold blue]",
-                box=HORIZONTALS,
-                border_style="blue",
-            )
-        )
-        response = llm_call(
-            chat_history,
-            model=config["model"],
-            stream=True,
-            local=config["local_mode"],
-        )
-
-        if config["local_mode"]:
-            for chunk in response:
-                ai_response += chunk
-                live.update(
-                    Panel(
-                        Markdown(ai_response),
-                        title="[bold blue]Assistant[/bold blue]",
-                        box=HORIZONTALS,
-                        border_style="blue",
-                    )
+        try:
+            live.update(
+                Panel(
+                    "Found relevant sources! Answering question...",
+                    title="[bold blue]Assistant[/bold blue]",
+                    box=HORIZONTALS,
+                    border_style="blue",
                 )
-        else:
-            for chunk in response.iter_content(chunk_size=512):
-                if chunk:
-                    decoded_chunk = chunk.decode("utf-8")
-                    ai_response += decoded_chunk
+            )
+            response = llm_call(
+                chat_history,
+                model=config["model"],
+                stream=True,
+                local=config["local_mode"],
+            )
+
+            if config["local_mode"]:
+                for chunk in response:
+                    ai_response += chunk
                     live.update(
                         Panel(
                             Markdown(ai_response),
@@ -196,14 +192,19 @@ def rag_chat(sources, transient_sources):
                             border_style="blue",
                         )
                     )
-        chat_history.append({"role": "assistant", "content": ai_response})
-        indexed_ai_response = add_indices_to_code_blocks(ai_response)
-        console.print(
-            Panel(
-                Markdown(indexed_ai_response),
-                title="[bold blue]Assistant[/bold blue]",
-                box=HORIZONTALS,
-                border_style="blue",
-            )
-        )
+            else:
+                for chunk in response.iter_content(chunk_size=512):
+                    if chunk:
+                        decoded_chunk = chunk.decode("utf-8")
+                        ai_response += decoded_chunk
+                        live.update(
+                            Panel(
+                                Markdown(ai_response),
+                                title="[bold blue]Assistant[/bold blue]",
+                                box=HORIZONTALS,
+                                border_style="blue",
+                            )
+                        )
+        except KeyboardInterrupt:
+            pass
     return chat_history, ai_response
