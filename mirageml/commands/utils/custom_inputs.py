@@ -13,6 +13,15 @@ def _(event):
     buffer.insert_text("\n")
 
 
+@kb.add(Keys.ControlC)
+def _(event):
+    buffer = event.current_buffer
+    if len(buffer.text) == 0:
+        event.app.exit(exception=KeyboardInterrupt, style="class:aborting")
+    else:
+        buffer.text = ""
+
+
 @kb.add(Keys.Enter)
 def _(event):
     event.current_buffer.validate_and_handle()
