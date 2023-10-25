@@ -51,7 +51,11 @@ def main(ctx: typer.Context):
     if not user_id and (ctx.invoked_subcommand != "login" or ctx.invoked_subcommand != "signup"):
         typer.echo("Please login first. Run `mirageml signup`")
         raise typer.Exit()
-    elif expires_at and float(expires_at) < time.time() and (ctx.invoked_subcommand != "login" or ctx.invoked_subcommand != "signup"):
+    elif (
+        expires_at
+        and float(expires_at) < time.time()
+        and (ctx.invoked_subcommand != "login" or ctx.invoked_subcommand != "signup")
+    ):
         try:
             fetch_new_access_token()
             analytics.identify(user_id)
@@ -71,12 +75,14 @@ def custom_help():
 
     os.system("mml --help")
 
+
 @app.command(name="signup")
 def signup_command():
     """Signup for Mirage ML"""
     from .commands import signup
 
     signup()
+
 
 @app.command(name="login")
 def login_command():

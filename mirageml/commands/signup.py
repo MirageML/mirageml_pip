@@ -1,11 +1,13 @@
-import typer
-import keyring
 import os
+
+import keyring
 import segment.analytics as analytics
+import typer
 
 from ..constants import ANALYTICS_WRITE_KEY, SERVICE_ID, supabase
 
 analytics.write_key = ANALYTICS_WRITE_KEY
+
 
 def signup():
     try:
@@ -13,10 +15,7 @@ def signup():
         email = typer.prompt("Email")
         password = typer.prompt("Password", hide_input=True, confirmation_prompt="Confirm Password")
 
-        response = supabase.auth.sign_up({
-            "email": email,
-            "password": password
-        })
+        response = supabase.auth.sign_up({"email": email, "password": password})
         user = response.user
         session = response.session
 
