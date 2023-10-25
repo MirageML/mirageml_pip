@@ -73,7 +73,8 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
                         )
                     )
                     data, metadata = extractor(source)
-                    transient_sources.append((data, metadata))
+                    if data:
+                        transient_sources.append((data, metadata))
 
     while True:
         chat_history = [{"role": "system", "content": "You are a helpful assistant."}]
