@@ -80,6 +80,14 @@ def login_command():
     login()
 
 
+@app.command(name="profile", hidden=True)
+def profile_command():
+    """View your profile"""
+    from .commands import profile
+
+    profile()
+
+
 def generate_chat_help_text():
     from .constants import help_list_sources
 
