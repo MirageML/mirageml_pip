@@ -48,10 +48,10 @@ def main(ctx: typer.Context):
 
     user_id = keyring.get_password(SERVICE_ID, "user_id")
     expires_at = keyring.get_password(SERVICE_ID, "expires_at")
-    if not user_id and ctx.invoked_subcommand != "login":
+    if not user_id and (ctx.invoked_subcommand != "login"):
         typer.echo("Please login first. Run `mirageml login`")
         raise typer.Exit()
-    elif expires_at and float(expires_at) < time.time() and ctx.invoked_subcommand != "login":
+    elif expires_at and float(expires_at) < time.time() and (ctx.invoked_subcommand != "login"):
         try:
             fetch_new_access_token()
             analytics.identify(user_id)
@@ -78,6 +78,14 @@ def login_command():
     from .commands import login
 
     login()
+
+
+@app.command(name="profile", hidden=True)
+def profile_command():
+    """View your profile"""
+    from .commands import profile
+
+    profile()
 
 
 def generate_chat_help_text():
