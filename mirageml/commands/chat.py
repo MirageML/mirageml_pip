@@ -1,3 +1,5 @@
+import os
+
 import typer
 from rich.box import HORIZONTALS
 from rich.console import Console
@@ -5,6 +7,7 @@ from rich.live import Live
 from rich.markdown import Markdown
 from rich.panel import Panel
 
+from .add_source import add_local_source
 from .config import load_config
 from .list_sources import get_sources
 from .rag import rag_chat
@@ -29,6 +32,11 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
             index_local = True
             sources.remove("local")
 
+        for file in files:
+            if os.path.isdir(file):
+                sources.append(add_local_source(file))
+                files.remove(file)
+
         local_sources, remote_sources = get_sources()
         all_sources = list(set(local_sources + remote_sources))
         for source in sources:
@@ -41,8 +49,6 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
                 sources.remove(source)
 
         if index_local:
-            from .add_source import add_local_source
-
             sources.append(add_local_source("local"))
 
         if files or urls:
