@@ -11,9 +11,23 @@ analytics.write_key = ANALYTICS_WRITE_KEY
 
 def login():
     try:
+        user_id = keyring.get_password(SERVICE_ID, "user_id")
         email = typer.prompt("Email")
-        password = typer.prompt("Password", hide_input=True)
-        response = supabase.auth.sign_in_with_password({"email": email, "password": password})
+        password = typer.prompt(
+            "Password", hide_input=True, confirmation_prompt="Confirm Password" if user_id is None else False
+        )
+        response = None
+        try:
+            if user_id:
+                response = supabase.auth.sign_in_with_password({"email": email, "password": password})
+            else:
+                response = supabase.auth.sign_up({"email": email, "password": password})
+        except Exception as e:
+            if str(e) == "User already registered":
+                response = supabase.auth.sign_in_with_password({"email": email, "password": password})
+            else:
+                raise e
+
         user = response.user
         session = response.session
 

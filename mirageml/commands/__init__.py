@@ -10,12 +10,10 @@ from .delete_source import delete_source
 from .list_plugins import list_plugins
 from .list_sources import list_sources
 from .login import login
-from .signup import signup
 from .sync_plugin import sync_plugin
 
 __all__ = [
     "login",
-    "signup",
     "set_config",
     "show_config",
     "chat",
