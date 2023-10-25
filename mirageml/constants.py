@@ -4,6 +4,7 @@ SERVICE_ID = "mirageml"
 
 PORT = 9998
 REDIRECT_URI = f"http://localhost:{PORT}/callback"
+USER_CHECK_ENDPOINT = "https://mirageml--miragecli-authentication-check-email.modal.run"
 SUPABASE_URL = "https://kfskvbhwrwpbruczecka.supabase.co"
 SUPABASE_KEY = (
     "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9."
