@@ -1,19 +1,21 @@
-import os
 import typer
 import keyring
+import os
 import segment.analytics as analytics
 
 from ..constants import ANALYTICS_WRITE_KEY, SERVICE_ID, supabase
 
 analytics.write_key = ANALYTICS_WRITE_KEY
 
-def login():
+def signup():
     try:
+        # use typer to get user email and password
         email = typer.prompt("Email")
-        password = typer.prompt("Password", hide_input=True)
-        response = supabase.auth.sign_in_with_password({
-            'email': email,
-            'password': password
+        password = typer.prompt("Password", hide_input=True, confirmation_prompt="Confirm Password")
+
+        response = supabase.auth.sign_up({
+            "email": email,
+            "password": password
         })
         user = response.user
         session = response.session
@@ -35,9 +37,8 @@ def login():
                 "email": email,
             },
         )
-        typer.secho(f"Successfully logged in", fg=typer.colors.BRIGHT_GREEN, bold=True)
+        typer.secho(f"Successfully signed up as {email}", fg=typer.colors.BRIGHT_GREEN, bold=True)
         os._exit(0)
     except Exception as e:
-        print(e)
-        typer.secho(f"Error logging in. Please try again", fg=typer.colors.BRIGHT_RED, bold=True)
+        typer.secho(f"Error signing up: {e}", fg=typer.colors.BRIGHT_RED, bold=True)
         os._exit(1)
