@@ -114,8 +114,8 @@ def chat_command(
 ):
     """Chat with MirageML"""
     for url in urls:
-        if not url.startswith("https://"):
-            typer.echo("Every url must start with https://")
+        if not url.startswith("http://"):
+            typer.echo("Every url must start with http://")
             raise typer.Exit()
 
     if len(sources + urls + filepaths) > 0:
