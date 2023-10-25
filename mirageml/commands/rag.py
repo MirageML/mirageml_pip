@@ -6,7 +6,6 @@ from rich.markdown import Markdown
 from rich.panel import Panel
 
 from .config import load_config
-from .utils.codeblocks import add_indices_to_code_blocks
 from .utils.custom_inputs import multiline_input
 from .utils.llm import llm_call
 from .utils.prompt_templates import RAG_TEMPLATE
@@ -68,7 +67,7 @@ def search(live, user_input, sources, transient_sources=None):
         for future in futures:
             try:
                 hits.extend(future.result())
-            except Exception as e:
+            except Exception:
                 error_msg = f"Failed to search in source: {source_name}. Try again! You may need to re-add the source with mirage add source"
                 typer.secho(
                     error_msg,
