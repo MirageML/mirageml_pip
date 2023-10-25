@@ -1,3 +1,5 @@
+import sys
+
 import typer
 from rich.box import HORIZONTALS
 from rich.console import Console
@@ -129,10 +131,10 @@ def rag_chat(sources, transient_sources):
         user_input = multiline_input(f"Ask a question over these sources ({', '.join(all_sources)})")
         if user_input.lower().strip() == "exit":
             typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
-            return
+            sys.exit()
     except KeyboardInterrupt:
         typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
-        return
+        sys.exit()
 
     # Live display while searching for relevant sources
     with Live(
