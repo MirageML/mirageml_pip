@@ -1,7 +1,7 @@
 import sys
 
-import typer
 import tiktoken
+import typer
 from rich.box import HORIZONTALS
 from rich.console import Console
 from rich.live import Live
