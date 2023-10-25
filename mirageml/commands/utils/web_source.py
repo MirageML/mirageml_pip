@@ -48,9 +48,9 @@ def validate_all_scraped(visited_links, urls):
     )
     user_input = user_input.strip()
     if user_input and not user_input.lower().startswith("n"):
-        link = user_input if user_input.lower().startswith("http://") else input("Link for the source (exit to skip): ")
+        link = user_input if user_input.lower().startswith("http") else input("Link for the source (exit to skip): ")
 
-        while not link.lower().startswith("http://") and link.lower().strip() != "exit":
+        while not link.lower().startswith("http") and link.lower().strip() != "exit":
             link = input("Please enter a valid link starting with http:// or type 'exit' to skip: ")
 
         to_visit = [link + "/" if not link.endswith("/") else link] if link.lower().strip() != "exit" else []
