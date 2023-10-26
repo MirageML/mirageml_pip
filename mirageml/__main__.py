@@ -111,7 +111,7 @@ def chat_command(
         help="URLs to use as context. \n\n\n**" + sys.argv[0].split("/")[-1] + " chat -u {url1} -u {url2}**",
     ),
     sources: List[str] = typer.Option(None, "--sources", "-s", help=generate_chat_help_text()),
-    sp: str = typer.Option(None, "--sp", "-sp", help="Name of the system prompt to use"),
+    sp: str = typer.Option(None, "--system-prompt", "-sp", help="Name of the system prompt to use"),
 ):
     """Chat with MirageML"""
     for url in urls:
