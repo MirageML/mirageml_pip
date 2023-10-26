@@ -1,7 +1,6 @@
 import json
 import os
 import uuid
-from concurrent.futures import ThreadPoolExecutor
 
 import keyring
 import requests
@@ -17,14 +16,11 @@ from ...constants import (
     SERVICE_ID,
     SUPABASE_KEY,
     SUPABASE_URL,
-    VECTORDB_CREATE_ENDPOINT,
     VECTORDB_DELETE_ENDPOINT,
     VECTORDB_LIST_ENDPOINT,
     VECTORDB_SEARCH_ENDPOINT,
-    VECTORDB_UPSERT_ENDPOINT,
     get_headers,
 )
-
 from ..list_sources import set_sources
 from .llm import _chunk_data, local_get_embedding
 from .local_source import crawl_files
@@ -59,14 +55,18 @@ def create_remote_qdrant_db(collection_name, link=None, path=None):
         "apikey": SUPABASE_KEY,
         "Authorization": f"Bearer {keyring.get_password(SERVICE_ID, 'access_token')}",
         "Content-Type": "application/json",
-        "Prefer": "return=minimal"
+        "Prefer": "return=minimal",
     }
-    response = requests.post(
+    requests.post(
         f"{SUPABASE_URL}/rest/v1/user_collection_requests",
         json=json,
         headers=headers,
     )
-    typer.secho(f"Creating Remote Source: {collection_name}. You will receive an email once its ready", fg=typer.colors.GREEN, bold=True)
+    typer.secho(
+        f"Creating Remote Source: {collection_name}. You will receive an email once its ready",
+        fg=typer.colors.GREEN,
+        bold=True,
+    )
 
     return True
 

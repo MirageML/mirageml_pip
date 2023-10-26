@@ -10,6 +10,7 @@ def get_sources():
 def set_sources():
     from .config import set_var_config
     from .utils.vectordb import list_local_qdrant_db, list_remote_qdrant_db
+
     remote_sources = list_remote_qdrant_db()
 
     set_var_config({"local": list_local_qdrant_db(), "remote": remote_sources})

@@ -1,25 +1,27 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
-
 from pathlib import Path
+
+import typer
 from pathspec import PathSpec
 from pathspec.patterns import GitWildMatchPattern
-import typer
 
 
 def load_gitignore_patterns(gitignore_path):
-    with open(gitignore_path, 'r') as f:
+    with open(gitignore_path, "r") as f:
         lines = f.readlines()
 
     return [line.strip() for line in lines if line.strip() and not line.startswith("#")]
 
+
 def is_ignored(path, spec):
     return spec.match_file(path)
+
 
 def get_unignored_files(start_dir):
     gitignore_path = Path(start_dir) / ".gitignore"
     if not gitignore_path.exists():
-        return [f for f in Path(start_dir).rglob('*') if f.is_file()]
+        return [f for f in Path(start_dir).rglob("*") if f.is_file()]
 
     patterns = load_gitignore_patterns(gitignore_path)
     spec = PathSpec.from_lines(GitWildMatchPattern, patterns)
@@ -31,11 +33,12 @@ def get_unignored_files(start_dir):
 
         for file in files:
             filepath = os.path.join(root, file)
-            if not is_ignored(filepath, spec) and not filepath.split("/")[1].startswith(".") and not ".git" in filepath:
+            if not is_ignored(filepath, spec) and not filepath.split("/")[1].startswith(".") and ".git" not in filepath:
                 unignored_files.append(filepath)
 
     final_files = [os.path.abspath(f) for f in unignored_files]
     return final_files
+
 
 def read_file(filepath):
     try:
