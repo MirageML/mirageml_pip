@@ -18,7 +18,6 @@ def fix_name(name):
 def add_web_source(link, name=None, remote=False):
     config = load_config()
     remote = False if config["local_mode"] else True
-    print(f"Indexing {link}...")
 
     if not name:
         name = fix_name(link)
@@ -28,6 +27,7 @@ def add_web_source(link, name=None, remote=False):
     if remote:
         create_remote_qdrant_db(collection_name=name, link=link)
     else:
+        print(f"Indexing {link}...")
         create_local_qdrant_db(collection_name=name, link=link, remote=remote)
     return name
 
