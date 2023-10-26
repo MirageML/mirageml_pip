@@ -28,25 +28,20 @@ def add_web_source(link, name=None, remote=False):
         create_remote_qdrant_db(collection_name=name, link=link)
     else:
         print(f"Indexing {link}...")
-        create_local_qdrant_db(collection_name=name, link=link, remote=remote)
+        create_local_qdrant_db(collection_name=name, link=link)
     return name
 
 
 def add_local_source(path=None, name=None):
-    config = load_config()
     if path == "local":
         path = "."
-    remote = False if config["local_mode"] or config["keep_files_local"] else True
     print("Indexing Local Files...")
 
     # collection_name should be absolute path
     collection_name = os.path.abspath(path) if name is None else name
     collection_name = fix_name(collection_name)
-    if remote:
-        create_remote_qdrant_db(collection_name=collection_name, path=path)
-    else:
-        create_local_qdrant_db(collection_name=collection_name, path=path)
 
+    create_local_qdrant_db(collection_name=collection_name, path=path)
     return collection_name
 
 
