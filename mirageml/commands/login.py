@@ -17,6 +17,8 @@ def login():
         if email.strip() != "":
             already_exists = requests.post(USER_CHECK_ENDPOINT, json={"email": email}).json()["exists"]
 
+        if not already_exists:
+            print("Looks like you don't have an account yet. Let's create one!")
         password = typer.prompt(
             "Password", hide_input=True, confirmation_prompt="Confirm Password" if not already_exists else None
         )
