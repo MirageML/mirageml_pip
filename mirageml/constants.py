@@ -94,7 +94,7 @@ def help_list_sources(command_prompt):
     else:
         command_flag = "-s " if command_prompt.split()[0] == "chat" else ""
         final_string = (
-            f"Specify sources to delete:\n\n\nEx: "
+            f"Specify sources:\n\n\nEx: "
             f"**{invoked_alias} {command_prompt} {all_sources[0]} "
             f"{command_flag}{all_sources[1]}**\n\n\n\n"
         )

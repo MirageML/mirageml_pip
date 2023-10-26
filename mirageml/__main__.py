@@ -118,9 +118,9 @@ def chat_command(
             typer.echo("Every url must start with http://")
             raise typer.Exit()
 
-    if len(sources + urls + filepaths) > 0:
+    if len(urls + filepaths) > 0:
         typer.secho(
-            "Indexing new sources...",
+            "Indexing sources...",
             fg=typer.colors.BRIGHT_GREEN,
             bold=True,
         )

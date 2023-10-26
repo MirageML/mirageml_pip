@@ -2,15 +2,18 @@ import os
 import sys
 from io import StringIO
 
+import keyring
 import requests
 
 from ...constants import (
     LLM_GPT_ENDPOINT,
+    SERVICE_ID,
     get_headers,
 )
 
 PACKAGE_DIR = os.path.dirname(__file__)
 os.environ["TRANSFORMERS_CACHE"] = os.path.join(PACKAGE_DIR, "models")
+os.environ["NUMEXPR_MAX_THREADS"] = "8"
 
 
 def _chunk_data(data, metadata):
@@ -26,10 +29,6 @@ def _chunk_data(data, metadata):
 
 
 def local_get_embedding(text_list, embedding_model_id="BAAI/bge-base-en-v1.5"):
-    from sentence_transformers import SentenceTransformer
-
-    os.environ["TOKENIZERS_PARALLELISM"] = "false"
-
     model_dir = os.path.join(PACKAGE_DIR, "models", embedding_model_id)
     if not os.path.exists(model_dir):
         os.makedirs(model_dir, exist_ok=True)
@@ -40,19 +39,22 @@ def local_get_embedding(text_list, embedding_model_id="BAAI/bge-base-en-v1.5"):
     original_stdout, original_stderr = sys.stdout, sys.stderr
     sys.stdout, sys.stderr = StringIO(), StringIO()
 
-    model = SentenceTransformer(embedding_model_id, cache_folder=model_dir)
-    embeddings = model.encode(text_list, normalize_embeddings=False)
+    # # Restore stdout/stderr
+    from fastembed.embedding import FlagEmbedding as Embedding
 
-    # Restore stdout/stderr
+    embedding_model = Embedding(model_name=embedding_model_id, max_length=512, cache_dir=model_dir)
+    embeddings = list(embedding_model.embed(text_list))
     sys.stdout, sys.stderr = original_stdout, original_stderr
 
     # Convert the embeddings to a list
-    embeddings = embeddings.tolist()  # size = 768
+    embeddings = [x.tolist() for x in embeddings]  # size = 768
     return embeddings
 
 
-def local_llm_call(messages, llm_model_id="TheBloke/Llama-2-7b-Chat-GGUF", stream=False):
+def local_llm_call(messages, llm_model_id="TheBloke/Llama-2-7b-Chat-GGUF", stream=False, live=None):
     from ctransformers import AutoModelForCausalLM
+    from rich.box import HORIZONTALS
+    from rich.panel import Panel
 
     os.environ["TOKENIZERS_PARALLELISM"] = "false"
 
@@ -60,7 +62,15 @@ def local_llm_call(messages, llm_model_id="TheBloke/Llama-2-7b-Chat-GGUF", strea
     if not os.path.exists(model_dir):
         os.makedirs(model_dir, exist_ok=True)
         print("Downloading model to:", model_dir)
-        print("This will take a few minutes and only happen once!")
+        if live:
+            live.update(
+                Panel(
+                    "This will take a few minutes and only happen once!",
+                    title="[bold blue]Assistant[/bold blue]",
+                    box=HORIZONTALS,
+                    border_style="blue",
+                )
+            )
 
     # Suppress stdout/stderr
     original_stdout, original_stderr = sys.stdout, sys.stderr
@@ -74,7 +84,9 @@ def local_llm_call(messages, llm_model_id="TheBloke/Llama-2-7b-Chat-GGUF", strea
 
     # Restore stdout/stderr
     sys.stdout, sys.stderr = original_stdout, original_stderr
-    formatted_messages = "\n".join([x["content"] for x in messages])
+
+    ## Workaround for now, max context length is 512
+    formatted_messages = "\n".join([x["content"] for x in messages])[-1000:]
 
     if stream:
         return llm(formatted_messages, stream=True)
@@ -86,8 +98,9 @@ def get_embedding(text_list, model="BAAI/bge-small-en-v1.5"):
     raise NotImplementedError
 
 
-def llm_call(messages, model="gpt-3.5-turbo", stream=False, local=False):
+def llm_call(messages, model="gpt-3.5-turbo", stream=False, local=False, live=None):
     if local:
-        return local_llm_call(messages, stream=stream)
-    json_data = {"model": model, "messages": messages, "stream": stream}
+        return local_llm_call(messages, stream=stream, live=live)
+    user_id = keyring.get_password(SERVICE_ID, "user_id")
+    json_data = {"user_id": user_id, "model": model, "messages": messages, "stream": stream}
     return requests.post(LLM_GPT_ENDPOINT, json=json_data, headers=get_headers(), stream=stream)

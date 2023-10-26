@@ -36,7 +36,7 @@ def add_local_source(path=None, name=None):
     config = load_config()
     if path == "local":
         path = "."
-    remote = False if config["local_mode"] else True
+    remote = False if config["local_mode"] or config["keep_files_local"] else True
     print("Indexing Local Files...")
 
     # collection_name should be absolute path
@@ -45,7 +45,7 @@ def add_local_source(path=None, name=None):
     if remote:
         create_remote_qdrant_db(collection_name=collection_name, path=path)
     else:
-        create_local_qdrant_db(collection_name=collection_name, path=path, remote=remote)
+        create_local_qdrant_db(collection_name=collection_name, path=path)
 
     return collection_name
 
