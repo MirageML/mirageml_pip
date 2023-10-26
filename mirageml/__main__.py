@@ -111,6 +111,7 @@ def chat_command(
         help="URLs to use as context. \n\n\n**" + sys.argv[0].split("/")[-1] + " chat -u {url1} -u {url2}**",
     ),
     sources: List[str] = typer.Option(None, "--sources", "-s", help=generate_chat_help_text()),
+    sp: str = typer.Option(None, "--sp", "-sp", help="Name of the system prompt to use"),
 ):
     """Chat with MirageML"""
     for url in urls:
@@ -130,9 +131,10 @@ def chat_command(
             fg=typer.colors.BRIGHT_GREEN,
             bold=True,
         )
+
     from .commands import chat
 
-    chat(files=filepaths, urls=urls, sources=sources)
+    chat(files=filepaths, urls=urls, sources=sources, sp=sp)
 
 
 @config_app.command(name="show")
@@ -154,6 +156,13 @@ def set_config_command():
 
 
 # List Commands
+@list_app.command(name="sp", hidden=True)
+def list_system_prompts():
+    from .commands import list_system_prompts
+
+    list_system_prompts()
+
+
 @list_app.command(name="plugins", hidden=True)
 def list_plugins_command():
     """List connected plugins"""
@@ -177,6 +186,14 @@ def add_plugin_command(name: str):
     from .commands import add_plugin
 
     add_plugin({"plugin": name})
+
+
+# Add System Prompt
+@add_app.command(name="sp", hidden=True)
+def add_system_prompt_command(name: str = typer.Argument(default="", help="Name of the system prompt")):
+    from .commands import add_system_prompt
+
+    add_system_prompt({"name": name})
 
 
 @add_app.command(name="source")
@@ -209,13 +226,20 @@ def add_sources_command(link: str = typer.Argument(default="")):
     return
 
 
+# Delete Commands
+@delete_app.command(name="sp", hidden=True)
+def delete_system_prompt(name: str = typer.Argument(default="", help="Name of the system prompt")):
+    from .commands import delete_system_prompt
+
+    delete_system_prompt({"name": name})
+
+
 def generate_delete_help_text():
     from .constants import help_list_sources
 
     return help_list_sources("delete source")
 
 
-# Delete Commands
 @remove_app.command(name="source", no_args_is_help=True, hidden=True)
 @delete_app.command(name="source", no_args_is_help=True)
 def delete_source_command(names: List[str] = typer.Argument(help=generate_delete_help_text())):

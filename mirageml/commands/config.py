@@ -23,6 +23,7 @@ def load_config():
         "keep_files_local": curr_config.get("keep_files_local", True),
         "local": curr_config.get("local", []),
         "remote": curr_config.get("remote", []),
+        "system_prompts": curr_config.get("system_prompts", []),
     }
     save_config(curr_config)
     return curr_config
@@ -70,4 +71,22 @@ def set_var_config(json_data):
     config = load_config()
     for key, value in json_data.items():
         config[key] = value
+    save_config(config)
+
+
+def append_var_config(key, value):
+    config = load_config()
+    if key not in config:
+        config[key] = [value]
+    else:
+        config[key].append(value)
+    save_config(config)
+
+
+def delete_var_config(key, value):
+    config = load_config()
+    if key not in config:
+        return
+    filtered_values = [x for x in config[key] if x["name"] != value]
+    config[key] = filtered_values
     save_config(config)

@@ -1,6 +1,7 @@
 import os
 
 import typer
+from rich import print
 from rich.box import HORIZONTALS
 from rich.console import Console
 from rich.live import Live
@@ -23,7 +24,7 @@ console = Console()
 config = load_config()
 
 
-def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
+def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = [], sp: str = ""):
     # Beginning of the chat sequence
     transient_sources = []
     if files or urls or sources:
@@ -78,9 +79,19 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
 
     while True:
         chat_history = [{"role": "system", "content": "You are a helpful assistant."}]
+
         ai_response = ""
         if sources or transient_sources:
             chat_history, ai_response = rag_chat(sources, transient_sources)
+
+        set_sp = False
+        if sp:
+            new_system_prompts = list(filter(lambda x: x["name"] == sp, config["system_prompts"]))
+            if len(new_system_prompts) == 0:
+                typer.secho("Please enter a valid system prompt name", fg=typer.colors.RED, bold=True)
+            else:
+                set_sp = True
+                chat_history[0]["content"] = new_system_prompts[0]["prompt"]
 
         while True:
             # Loop for follow-up questions
@@ -112,12 +123,38 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
                         user_input = multiline_input("Ask a follow-up. Type reset to search again. Ctrl+C to interrupt")
                 else:
                     if len(chat_history) == 1:
-                        user_input = multiline_input("Chat with Mirage")
+                        base_message = "Chat with Mirage"
+                        if set_sp:
+                            base_message += f" using system prompt: {sp}."
+                        user_input = multiline_input(base_message)
                     else:
                         user_input = multiline_input("Ask a follow-up. Type reset to search again. Ctrl+C to interrupt")
+
                 if user_input.lower().strip() == "exit":
                     typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
                     return
+                elif user_input.lower().strip().startswith("/sp"):
+                    user_input_split = user_input.split(" ")
+                    if len(user_input_split) == 1:
+                        from .list_system_prompts import list_system_prompts
+
+                        print(f"[bold green]Current System Prompt: [/green bold]{chat_history[0]['content']}")
+                        list_system_prompts()
+                    elif user_input_split[1] == "set" and len(user_input_split) == 2:
+                        typer.secho("Please enter a system prompt name", fg=typer.colors.RED, bold=True)
+                    elif user_input_split[1] == "set" and len(user_input_split == 3):
+                        system_prompt_name = user_input_split[2]
+                        new_system_prompts = list(
+                            filter(lambda x: x["name"] == system_prompt_name, config["system_prompts"])
+                        )
+                        if len(new_system_prompts) == 0:
+                            typer.secho("Please enter a valid system prompt name", fg=typer.colors.RED, bold=True)
+                        else:
+                            chat_history[0]["content"] = new_system_prompts[0]["prompt"]
+                            typer.secho(
+                                f"System prompt set to {system_prompt_name}", fg=typer.colors.BRIGHT_GREEN, bold=True
+                            )
+                    continue
                 elif (
                     user_input.lower().strip() == "reset"
                     or user_input.lower().strip() == "restart"
