@@ -144,10 +144,10 @@ def rag_chat(sources, transient_sources):
     ) as live:
         transient_data = ""
         tsources = []
+        enc = tiktoken.get_encoding("cl100k_base")
         for data, metadata in transient_sources:
             transient_data += "\n\n" + data[0]
             tsources.append(metadata[0]["source"])
-            enc = tiktoken.get_encoding("cl100k_base")
         if len(enc.encode(transient_data)) < 75000:
             transient_sources = None
 
