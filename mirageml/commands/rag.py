@@ -24,7 +24,7 @@ console = Console()
 config = load_config()
 
 
-def search(live, user_input, sources, transient_sources=None):
+def search(user_input, sources, transient_sources=None, live=None):
     from concurrent.futures import ThreadPoolExecutor
 
     hits = []
@@ -35,37 +35,27 @@ def search(live, user_input, sources, transient_sources=None):
     remote_sources = [source for source in sources if source in remote]
 
     for source_name in local_sources:
-        live.update(
-            Panel(
-                "Searching through local sources...",
-                title="[bold blue]Assistant[/bold blue]",
-                border_style="blue",
+        if live:
+            live.update(
+                Panel(
+                    "Searching through local sources...",
+                    title="[bold blue]Assistant[/bold blue]",
+                    border_style="blue",
+                )
             )
-        )
-        try:
-            # Search for matches in each source based on user input
-            hits.extend(local_qdrant_search(source_name, user_input))
-        except Exception:
-            # Handle potential errors with mismatched embedding models
-            error_msg_local = f"Source: {source_name} was created with OpenAI's embedding model. Please run with `local_mode=False` or reindex with `mirageml delete source {source_name}; mirageml add source {source_name}`."
-            error_msg_openai = f"Source: {source_name} was created with a local embedding model. Please run with `local_mode=True` or reindex with `mirageml delete source {source_name}; mirageml add source {source_name}`."
-
-            typer.secho(
-                error_msg_local if config["local_mode"] else error_msg_openai,
-                fg=typer.colors.RED,
-                bold=True,
-            )
-            return
+        # Search for matches in each source based on user input
+        hits.extend(local_qdrant_search(source_name, user_input))
 
     with ThreadPoolExecutor() as executor:
         futures = [executor.submit(remote_qdrant_search, source_name, user_input) for source_name in remote_sources]
-        live.update(
-            Panel(
-                "Searching through remote sources...",
-                title="[bold blue]Assistant[/bold blue]",
-                border_style="blue",
+        if live:
+            live.update(
+                Panel(
+                    "Searching through remote sources...",
+                    title="[bold blue]Assistant[/bold blue]",
+                    border_style="blue",
+                )
             )
-        )
 
         for future in futures:
             try:
@@ -79,23 +69,26 @@ def search(live, user_input, sources, transient_sources=None):
                 )
 
     if transient_sources:
-        live.update(
-            Panel(
-                "Searching through files and urls...",
-                title="[bold blue]Assistant[/bold blue]",
-                border_style="blue",
+        if live:
+            live.update(
+                Panel(
+                    "Searching through files and urls...",
+                    title="[bold blue]Assistant[/bold blue]",
+                    border_style="blue",
+                )
             )
-        )
-        if config["local_mode"]:
+        # TODO: Optimize this
+        if config["local_mode"] or config["keep_files_local"]:
             for data, metadata in transient_sources:
                 hits.extend(transient_qdrant_search(user_input, data, metadata))
-                live.update(
-                    Panel(
-                        "Searching through files and urls...",
-                        title="[bold blue]Assistant[/bold blue]",
-                        border_style="blue",
+                if live:
+                    live.update(
+                        Panel(
+                            "Searching through files and urls locally...",
+                            title="[bold blue]Assistant[/bold blue]",
+                            border_style="blue",
+                        )
                     )
-                )
         else:
             source_name = "transient"
             with ThreadPoolExecutor() as executor:
@@ -120,8 +113,8 @@ def create_context(sorted_hits):
     return "\n\n".join([str(x["payload"]["source"]) + ": " + x["payload"]["data"] for x in sorted_hits])
 
 
-def search_and_rank(live, user_input, sources, transient_sources):
-    hits = search(live, user_input, sources, transient_sources)
+def search_and_rank(user_input, sources, transient_sources, live):
+    hits = search(user_input, sources, transient_sources, live)
     sorted_hits = rank_hits(hits)
     return sorted_hits
 
@@ -155,10 +148,10 @@ def rag_chat(sources, transient_sources):
             transient_data += "\n\n" + data[0]
             tsources.append(metadata[0]["source"])
             enc = tiktoken.get_encoding("cl100k_base")
-            if len(enc.encode(transient_data)) < 75000:
-                transient_sources = None
+        if len(enc.encode(transient_data)) < 75000:
+            transient_sources = None
 
-        sorted_hits = search_and_rank(live, user_input, sources, transient_sources)
+        sorted_hits = search_and_rank(user_input, sources, transient_sources, live)
         sources_used = list(set([hit["payload"]["source"] for hit in sorted_hits]))
         context = create_context(sorted_hits)
 
@@ -181,19 +174,21 @@ def rag_chat(sources, transient_sources):
         # Fetch the AI's response
         ai_response = ""
         try:
-            live.update(
-                Panel(
-                    "Found relevant sources! Answering question...",
-                    title="[bold blue]Assistant[/bold blue]",
-                    box=HORIZONTALS,
-                    border_style="blue",
+            if live:
+                live.update(
+                    Panel(
+                        "Found relevant sources! Answering question...",
+                        title="[bold blue]Assistant[/bold blue]",
+                        box=HORIZONTALS,
+                        border_style="blue",
+                    )
                 )
-            )
             response = llm_call(
                 chat_history,
                 model=config["model"],
                 stream=True,
                 local=config["local_mode"],
+                live=live,
             )
 
             if config["local_mode"]:

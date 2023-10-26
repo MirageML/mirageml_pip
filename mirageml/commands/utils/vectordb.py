@@ -90,7 +90,7 @@ def create_remote_qdrant_db(collection_name, link=None, path=None):
         vertical_overflow="visible",
     ) as live:
         if data:
-            with ThreadPoolExecutor(max_workers=10) as executor:
+            with ThreadPoolExecutor() as executor:
                 args_list = [(i, curr_data, metadata[i], live) for i, curr_data in enumerate(data)]
                 list(executor.map(make_request, args_list))
         else:
@@ -131,30 +131,37 @@ def create_local_qdrant_db(collection_name="test", link=None, path=None):
     console = Console()
     with Live(
         Panel(
-            "Indexing files...",
+            "Creating Embeddings...",
             title="[bold green]Indexer[/bold green]",
             border_style="green",
         ),
         console=console,
         transient=True,
-        auto_refresh=True,
-        vertical_overflow="visible",
     ) as live:
         # For each data chunk it based on number of tokens
-        live.update(
-            Panel(
-                "Creating Embeddings...",
-                title="[bold green]Indexer[/bold green]",
-                border_style="green",
-            )
-        )
-
         final_data, final_metadata, vectors = [], [], []
         for dat, meta in zip(data, metadata):
+            live.update(
+                Panel(
+                    f"Embedding: {meta['source']}",
+                    title="[bold green]Indexer[/bold green]",
+                    border_style="green",
+                ),
+                refresh=True,
+            )
             chunk_data, chunk_meta, chunk_vec = _chunk_data(dat, meta)
             final_data.extend(chunk_data)
             final_metadata.extend(chunk_meta)
             vectors.extend(chunk_vec)
+
+        live.update(
+            Panel(
+                "Creating Index...",
+                title="[bold green]Indexer[/bold green]",
+                border_style="green",
+            ),
+            refresh=True,
+        )
 
         qdrant_client.recreate_collection(
             collection_name=collection_name,
@@ -169,7 +176,8 @@ def create_local_qdrant_db(collection_name="test", link=None, path=None):
                     f"Indexing: {filepath}",
                     title="[bold green]Indexer[/bold green]",
                     border_style="green",
-                )
+                ),
+                refresh=True,
             )
 
             qdrant_client.upsert(
@@ -225,7 +233,7 @@ def local_qdrant_search(source_name, user_input):
     hits = qdrant_client.search(
         limit=5,
         collection_name=source_name,
-        query_vector=query_vector[0],
+        query_vector=query_vector,
     )
     hits = [{"score": hit.score, "payload": hit.payload} for hit in hits]
     return hits

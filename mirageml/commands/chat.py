@@ -109,11 +109,12 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = []):
                         except ValueError:
                             user_input = selected_indices
                     else:
-                        user_input = multiline_input(
-                            "Ask a follow-up. Type reset to search again. Ctrl+C to stop generating"
-                        )
+                        user_input = multiline_input("Ask a follow-up. Type reset to search again. Ctrl+C to interrupt")
                 else:
-                    user_input = multiline_input("Chat with Mirage")
+                    if len(chat_history) == 1:
+                        user_input = multiline_input("Chat with Mirage")
+                    else:
+                        user_input = multiline_input("Ask a follow-up. Type reset to search again. Ctrl+C to interrupt")
                 if user_input.lower().strip() == "exit":
                     typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
                     return
