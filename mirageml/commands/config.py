@@ -13,6 +13,7 @@ def show_config():
 
 def load_config():
     config_path = os.path.expanduser("~/.mirageml.json")
+    curr_config = {}
     if os.path.exists(config_path):
         with open(config_path, "r") as f:
             curr_config = json.load(f)
