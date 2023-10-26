@@ -20,6 +20,8 @@ def load_config():
         "local_mode": curr_config.get("local_mode", False),
         "model": curr_config.get("model", "gpt-4"),
         "keep_files_local": curr_config.get("keep_files_local", True),
+        "local": curr_config.get("local", []),
+        "remote": curr_config.get("remote", []),
     }
     save_config(curr_config)
     return curr_config

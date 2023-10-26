@@ -1,13 +1,46 @@
 import os
 from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
 
-import pathspec
 import typer
+from pathspec import PathSpec
+from pathspec.patterns import GitWildMatchPattern
 
 
-def read_file(args):
-    dirpath, filename = args
-    filepath = os.path.join(dirpath, filename)
+def load_gitignore_patterns(gitignore_path):
+    with open(gitignore_path, "r") as f:
+        lines = f.readlines()
+
+    return [line.strip() for line in lines if line.strip() and not line.startswith("#")]
+
+
+def is_ignored(path, spec):
+    return spec.match_file(path)
+
+
+def get_unignored_files(start_dir):
+    gitignore_path = Path(start_dir) / ".gitignore"
+    if not gitignore_path.exists():
+        return [f for f in Path(start_dir).rglob("*") if f.is_file()]
+
+    patterns = load_gitignore_patterns(gitignore_path)
+    spec = PathSpec.from_lines(GitWildMatchPattern, patterns)
+
+    unignored_files = []
+    for root, dirs, files in os.walk(start_dir):
+        # Remove dirs that are ignored to avoid traversing them
+        dirs[:] = [d for d in dirs if not is_ignored(os.path.join(root, d), spec)]
+
+        for file in files:
+            filepath = os.path.join(root, file)
+            if not is_ignored(filepath, spec) and not filepath.split("/")[1].startswith(".") and ".git" not in filepath:
+                unignored_files.append(filepath)
+
+    final_files = [os.path.abspath(f) for f in unignored_files]
+    return final_files
+
+
+def read_file(filepath):
     try:
         with open(filepath, "r", encoding="utf-8") as file:
             return file.read(), filepath
@@ -35,23 +68,7 @@ def crawl_files(start_dir="."):
     else:
         # Get .gitignore file content in all directories within the root directory.
         start_dir = os.path.abspath(start_dir)
-        gitignore_specs = []
-        for dirpath, dirnames, filenames in os.walk(start_dir):
-            if ".gitignore" in filenames:
-                with open(os.path.join(dirpath, ".gitignore"), "r") as f:
-                    gitignore = f.readlines()
-                    # Compile the list of rules into a single PathSpec which can be called upon later
-                    spec = pathspec.PathSpec.from_lines("gitwildmatch", gitignore)
-                    gitignore_specs.append(spec)
-
-        all_files = [
-            (dirpath, filename)
-            for dirpath, _, filenames in os.walk(start_dir)
-            for filename in filenames
-            if not (filename.startswith(".") or dirpath.split("/")[-1].startswith(".") or ".git" in dirpath)
-            # Check the files against all gitignore rules
-            and all(not spec.match_file(os.path.join(dirpath, filename)) for spec in gitignore_specs)
-        ]
+        all_files = get_unignored_files(start_dir)
 
         with ThreadPoolExecutor() as executor:
             file_data = list(executor.map(read_file, all_files))

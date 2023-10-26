@@ -1,7 +1,6 @@
 import json
 import os
 import uuid
-from concurrent.futures import ThreadPoolExecutor
 
 import keyring
 import requests
@@ -15,11 +14,11 @@ from rich.progress import Progress
 
 from ...constants import (
     SERVICE_ID,
-    VECTORDB_CREATE_ENDPOINT,
+    SUPABASE_KEY,
+    SUPABASE_URL,
     VECTORDB_DELETE_ENDPOINT,
     VECTORDB_LIST_ENDPOINT,
     VECTORDB_SEARCH_ENDPOINT,
-    VECTORDB_UPSERT_ENDPOINT,
     get_headers,
 )
 from ..list_sources import set_sources
@@ -47,73 +46,28 @@ def exists_qdrant_db(collection_name="test"):
 def create_remote_qdrant_db(collection_name, link=None, path=None):
     user_id = keyring.get_password(SERVICE_ID, "user_id")
 
-    if link:
-        data, metadata = None, None
-    if path:
-        data, metadata = crawl_files(path)
+    json = {
+        "user_id": user_id,
+        "collection_name": collection_name,
+        "link": link,
+    }
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {keyring.get_password(SERVICE_ID, 'access_token')}",
+        "Content-Type": "application/json",
+        "Prefer": "return=minimal",
+    }
+    requests.post(
+        f"{SUPABASE_URL}/rest/v1/user_collection_requests",
+        json=json,
+        headers=headers,
+    )
+    typer.secho(
+        f"Creating Remote Source: {collection_name}. You will receive an email once its ready",
+        fg=typer.colors.GREEN,
+        bold=True,
+    )
 
-    def make_request(args):
-        i, curr_data, metadata_value, live = args
-        json_data = {
-            "user_id": user_id,
-            "collection_name": collection_name,
-            "data": [curr_data],
-            "metadata": [metadata_value],
-        }
-        if i == 0:
-            response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
-        else:
-            response = requests.post(VECTORDB_UPSERT_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
-
-        if response.status_code == 200:
-            for chunk in response.iter_lines():
-                # process line here
-                link = chunk.decode("utf-8")
-                live.update(
-                    Panel(
-                        f"{link}",
-                        title="[bold green]Indexer[/bold green]",
-                        border_style="green",
-                    )
-                )
-
-    console = Console()
-    with Live(
-        Panel(
-            "Creating Embeddings...",
-            title="[bold green]Indexer[/bold green]",
-            border_style="green",
-        ),
-        console=console,
-        transient=True,
-        auto_refresh=True,
-        vertical_overflow="visible",
-    ) as live:
-        if data:
-            with ThreadPoolExecutor() as executor:
-                args_list = [(i, curr_data, metadata[i], live) for i, curr_data in enumerate(data)]
-                list(executor.map(make_request, args_list))
-        else:
-            json_data = {
-                "user_id": user_id,
-                "collection_name": collection_name,
-                "url": link,
-            }
-            response = requests.post(VECTORDB_CREATE_ENDPOINT, json=json_data, headers=get_headers(), stream=True)
-            if response.status_code == 200:
-                for chunk in response.iter_lines():
-                    # process line here
-                    link = chunk.decode("utf-8")
-                    live.update(
-                        Panel(
-                            f"{link}",
-                            title="[bold green]Indexer[/bold green]",
-                            border_style="green",
-                        )
-                    )
-
-    typer.secho(f"Created Source: {collection_name}", fg=typer.colors.GREEN, bold=True)
-    set_sources()
     return True
 
 

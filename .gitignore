@@ -165,6 +165,7 @@ dist/
 mirageml.egg-info/
 .lock
 meta.json
+mirageml/commands/utils/models/*
 mirageml/commands/utils/collection/*
 
 # Lint files
