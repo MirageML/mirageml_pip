@@ -16,7 +16,7 @@ def fix_name(name):
     return name
 
 
-def add_model(model_name, link):
+def add_model(model_name, links):
     from .list_models import get_models
     model_name = fix_name(model_name)
 
@@ -25,7 +25,12 @@ def add_model(model_name, link):
         return
 
     user_id = keyring.get_password(SERVICE_ID, "user_id")
-    json_data = {"user_id": user_id, "finetune_model_name": model_name, "links": [link]}
+    json_data = {"user_id": user_id, "finetune_model_name": model_name, "links": links}
     requests.post(FINETUNE_CREATE_ENDPOINT, json=json_data, headers=get_headers())
+    typer.secho(
+        f"Creating Finetuned Model: {model_name}. You will receive an email once its ready!",
+        fg=typer.colors.GREEN,
+        bold=True,
+    )
     return True
 

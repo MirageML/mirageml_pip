@@ -24,6 +24,7 @@ def load_config():
         "local": curr_config.get("local", []),
         "remote": curr_config.get("remote", []),
         "system_prompts": curr_config.get("system_prompts", []),
+        "custom_models": curr_config.get("custom_models", []),
     }
     save_config(curr_config)
     return curr_config
@@ -38,9 +39,11 @@ def save_config(config):
 def set_config():
     config = load_config()
 
+    choices = ["gpt-3.5-turbo", "gpt-4", "claude"] + config["custom_models"]
+
     valid = {
+        "model": (choices, str),
         "local_mode": (("True (not recommended without GPU)", "False"), json.loads),
-        "model": (("gpt-3.5-turbo", "gpt-4"), str),
         "keep_files_local": (("True", "False"), json.loads),
     }
 

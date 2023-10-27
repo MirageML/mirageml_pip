@@ -1,18 +1,25 @@
 import sys
 import typer
 import keyring
-from ..constants import (
-    supabase,
-    SERVICE_ID
-)
+import requests
+from mirageml.constants import SERVICE_ID, SUPABASE_KEY, SUPABASE_URL
 
 
 def get_models():
+    access_token = keyring.get_password(SERVICE_ID, "access_token")
     user_id = keyring.get_password(SERVICE_ID, "user_id")
-    response = supabase.table("user_finetunes").select("model_name").eq("user_id", user_id).execute()
+    headers = {
+        "apikey": SUPABASE_KEY,
+        "Authorization": f"Bearer {access_token}",
+        "Content-Type": "application/json",
+    }
+
+    response = requests.get(f"{SUPABASE_URL}/rest/v1/user_finetunes?user_id=eq.{user_id}&select=model_name", headers=headers)
+
+    response_data = response.json()
     model_names = []
-    if len(response.data) > 0:
-        model_names = [data["model_name"] for data in response.data]
+    if len(response_data) > 0:
+        model_names = [data["model_name"] for data in response_data]
 
     return model_names
 

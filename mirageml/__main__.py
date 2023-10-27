@@ -145,6 +145,14 @@ def show_config_command():
     show_config()
 
 
+@config_app.command(name="get", hidden=True)
+def get_config_command():
+    """Show the current config"""
+    from .commands import show_config
+
+    show_config()
+
+
 @config_app.command(name="set")
 def set_config_command():
     """
@@ -234,8 +242,8 @@ def add_sources_command(link: str = typer.Argument(default="")):
     return
 
 
-@add_app.command(name="model")
-def add_model_command(links: List[str] = typer.Argument(..., help="Links to the sources")):
+@add_app.command(name="model", no_args_is_help=True)
+def add_model_command(links: List[str] = typer.Argument(..., help="Links to finetune on separated by spaces\n\n\nEx: mirage add model https://modal.com https://apple.com")):
     """Add a new source"""
     from .commands import add_model
 
@@ -250,8 +258,8 @@ def add_model_command(links: List[str] = typer.Argument(..., help="Links to the 
     name = parsed_url.netloc.split(".")[0]
     if name in ["docs", "www", "en", "platform", "blog"]:
         name = parsed_url.netloc.split(".")[1]
-    name = input(f"Name for the source [default: {name}]: ") or name
-    # add_model(name, link)
+    name = input(f"Name for the model [default: {name}]: ") or name
+    add_model(name, links)
 
 
 @add_app.command(name="models", hidden=True)
