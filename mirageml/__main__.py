@@ -243,7 +243,12 @@ def add_sources_command(link: str = typer.Argument(default="")):
 
 
 @add_app.command(name="model", no_args_is_help=True)
-def add_model_command(links: List[str] = typer.Argument(..., help="Links to finetune on separated by spaces\n\n\nEx: mirage add model https://modal.com https://apple.com")):
+def add_model_command(
+    links: List[str] = typer.Argument(
+        ...,
+        help="Links to finetune on separated by spaces\n\n\nEx: mirage add model https://modal.com https://apple.com",
+    )
+):
     """Add a new source"""
     from .commands import add_model
 

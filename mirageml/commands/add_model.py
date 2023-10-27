@@ -1,9 +1,9 @@
-import os
-import typer
 import keyring
 import requests
+import typer
 
-from ..constants import SERVICE_ID, FINETUNE_CREATE_ENDPOINT, get_headers
+from ..constants import FINETUNE_CREATE_ENDPOINT, SERVICE_ID, get_headers
+
 
 def fix_name(name):
     if name.startswith("http"):
@@ -18,6 +18,7 @@ def fix_name(name):
 
 def add_model(model_name, links):
     from .list_models import get_models
+
     model_name = fix_name(model_name)
 
     if model_name in get_models():
@@ -33,4 +34,3 @@ def add_model(model_name, links):
         bold=True,
     )
     return True
-

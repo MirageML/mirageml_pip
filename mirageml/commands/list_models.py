@@ -1,7 +1,9 @@
 import sys
-import typer
+
 import keyring
 import requests
+import typer
+
 from mirageml.constants import SERVICE_ID, SUPABASE_KEY, SUPABASE_URL
 
 
@@ -14,7 +16,9 @@ def get_models():
         "Content-Type": "application/json",
     }
 
-    response = requests.get(f"{SUPABASE_URL}/rest/v1/user_finetunes?user_id=eq.{user_id}&select=model_name", headers=headers)
+    response = requests.get(
+        f"{SUPABASE_URL}/rest/v1/user_finetunes?user_id=eq.{user_id}&select=model_name", headers=headers
+    )
 
     response_data = response.json()
     model_names = []
