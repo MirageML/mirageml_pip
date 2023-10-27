@@ -43,7 +43,7 @@ def get_unignored_files(start_dir):
 def read_file(filepath):
     try:
         with open(filepath, "r", encoding="utf-8") as file:
-            return file.read(), filepath
+            return file.read(), str(filepath)
     except Exception:
         pass
 
