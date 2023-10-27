@@ -145,6 +145,14 @@ def show_config_command():
     show_config()
 
 
+@config_app.command(name="get", hidden=True)
+def get_config_command():
+    """Show the current config"""
+    from .commands import show_config
+
+    show_config()
+
+
 @config_app.command(name="set")
 def set_config_command():
     """
@@ -177,6 +185,14 @@ def list_sources_command():
     from .commands import list_sources
 
     list_sources()
+
+
+@list_app.command(name="models")
+def list_models_command():
+    """List created models"""
+    from .commands import list_models
+
+    list_models()
 
 
 # Add Commands
@@ -223,6 +239,37 @@ def add_source_command(link: str = typer.Argument(default="", help="Link to the 
 @add_app.command(name="sources", hidden=True)
 def add_sources_command(link: str = typer.Argument(default="")):
     typer.secho("Did you mean 'add source'?", fg=typer.colors.YELLOW)
+    return
+
+
+@add_app.command(name="model", no_args_is_help=True)
+def add_model_command(
+    links: List[str] = typer.Argument(
+        ...,
+        help="Links to finetune on separated by spaces\n\n\nEx: mirage add model https://modal.com https://apple.com",
+    )
+):
+    """Add a new source"""
+    from .commands import add_model
+
+    for link in links:
+        if not link.startswith("http"):
+            typer.secho("Please ensure links start with https://", fg=typer.colors.RED, bold=True)
+            raise typer.Exit()
+
+    from urllib.parse import urlparse
+
+    parsed_url = urlparse(links[0])
+    name = parsed_url.netloc.split(".")[0]
+    if name in ["docs", "www", "en", "platform", "blog"]:
+        name = parsed_url.netloc.split(".")[1]
+    name = input(f"Name for the model [default: {name}]: ") or name
+    add_model(name, links)
+
+
+@add_app.command(name="models", hidden=True)
+def add_models_command(links: List[str] = typer.Argument(...)):
+    typer.secho("Did you mean 'add model'?", fg=typer.colors.YELLOW)
     return
 
 

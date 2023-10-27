@@ -105,7 +105,15 @@ def search(user_input, sources, transient_sources=None, live=None):
 
 def rank_hits(hits):
     # Rank the hits based on their relevance
-    sorted_hits = sorted(hits, key=lambda x: x["score"], reverse=True)[:10]
+    num_hits = 5
+    if config["model"] == "claude":
+        num_hits = 40
+    elif config["model"] == "gpt-3.5-turbo":
+        num_hits = 20
+    elif config["model"] == "gpt-4":
+        num_hits = 10
+
+    sorted_hits = sorted(hits, key=lambda x: x["score"], reverse=True)[:num_hits]
     return sorted_hits
 
 
