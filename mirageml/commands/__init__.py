@@ -17,6 +17,7 @@ from .list_system_prompts import list_system_prompts
 from .login import login
 from .profile import profile
 from .sync_plugin import sync_plugin
+from .tutorial import tutorial
 
 __all__ = [
     "login",
@@ -35,4 +36,5 @@ __all__ = [
     "delete_source",
     "delete_system_prompt",
     "sync_plugin",
+    "tutorial",
 ]

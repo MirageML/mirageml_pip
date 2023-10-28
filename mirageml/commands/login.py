@@ -1,28 +1,18 @@
 import os
+from multiprocessing import Event, Process
 
 import keyring
 import requests
 import segment.analytics as analytics
 import typer
 
-from ..constants import ANALYTICS_WRITE_KEY, SERVICE_ID, USER_CHECK_ENDPOINT, supabase
+from mirageml.constants import ANALYTICS_WRITE_KEY, SERVICE_ID, USER_CHECK_ENDPOINT, supabase
 
 analytics.write_key = ANALYTICS_WRITE_KEY
 
 
-def login():
+def login_process(e, already_exists, email, password):
     try:
-        already_exists = False
-        email = typer.prompt("Email")
-        if email.strip() != "":
-            already_exists = requests.post(USER_CHECK_ENDPOINT, json={"email": email}).json()["exists"]
-
-        if not already_exists:
-            print("Looks like you don't have an account yet. Let's create one!")
-        password = typer.prompt(
-            "Password", hide_input=True, confirmation_prompt="Confirm Password" if not already_exists else None
-        )
-        response = None
         if already_exists:
             response = supabase.auth.sign_in_with_password({"email": email, "password": password})
         else:
@@ -48,8 +38,36 @@ def login():
                 "email": email,
             },
         )
+        e.set()
+        return
+    except Exception as e:
+        print(e)
+        typer.secho("Error logging in. Please try again", fg=typer.colors.BRIGHT_RED, bold=True)
+        os._exit(1)
+
+
+def login():
+    try:
+        already_exists = False
+        email = typer.prompt("Email")
+        if email.strip() != "":
+            already_exists = requests.post(USER_CHECK_ENDPOINT, json={"email": email}).json()["exists"]
+
+        if not already_exists:
+            print("Looks like you don't have an account yet. Let's create one!")
+        password = typer.prompt(
+            "Password", hide_input=True, confirmation_prompt="Confirm Password" if not already_exists else None
+        )
+
+        # Use multiprocessing to end the process if it takes too long
+        e = Event()
+        p = Process(target=login_process, args=(e, already_exists, email, password))
+        p.start()
+        e.wait()
+        p.terminate()
+
         typer.secho("Successfully logged in", fg=typer.colors.BRIGHT_GREEN, bold=True)
-        os._exit(0)
+        return
     except Exception as e:
         print(e)
         typer.secho("Error logging in. Please try again", fg=typer.colors.BRIGHT_RED, bold=True)

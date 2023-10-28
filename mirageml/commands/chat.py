@@ -77,9 +77,8 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = [], s
                     if data:
                         transient_sources.append((data, metadata))
 
+    chat_history = [{"role": "system", "content": "You are a helpful assistant."}]
     while True:
-        chat_history = [{"role": "system", "content": "You are a helpful assistant."}]
-
         ai_response = ""
         if sources or transient_sources:
             chat_history, ai_response = rag_chat(sources, transient_sources)
