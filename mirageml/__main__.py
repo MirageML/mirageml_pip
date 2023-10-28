@@ -80,11 +80,10 @@ def login_command():
     login()
 
 
-
 @app.command(name="tutorial")
 def tutorial():
     """Walk through the basics of using mirageml"""
-    from .commands import tutorial, login
+    from .commands import login, tutorial
 
     typer.secho("Welcome to the MirageML tutorial!", fg=typer.colors.BRIGHT_GREEN, bold=True)
     typer.secho("Here, you will learn how to use the main features of MirageML.", fg=typer.colors.BRIGHT_GREEN)
@@ -92,7 +91,6 @@ def tutorial():
     typer.secho("First we will sign you up:", fg=typer.colors.BRIGHT_GREEN)
     login()
     tutorial()
-
 
 
 @app.command(name="profile", hidden=True)

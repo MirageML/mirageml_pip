@@ -36,5 +36,5 @@ __all__ = [
     "delete_source",
     "delete_system_prompt",
     "sync_plugin",
-    "tutorial"
+    "tutorial",
 ]

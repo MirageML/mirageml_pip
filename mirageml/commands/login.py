@@ -1,10 +1,10 @@
 import os
+from multiprocessing import Event, Process
 
 import keyring
 import requests
 import segment.analytics as analytics
 import typer
-from multiprocessing import Process, Event
 
 from mirageml.constants import ANALYTICS_WRITE_KEY, SERVICE_ID, USER_CHECK_ENDPOINT, supabase
 
@@ -44,6 +44,7 @@ def login_process(e, already_exists, email, password):
         print(e)
         typer.secho("Error logging in. Please try again", fg=typer.colors.BRIGHT_RED, bold=True)
         os._exit(1)
+
 
 def login():
     try:
