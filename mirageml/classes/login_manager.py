@@ -13,6 +13,7 @@ import typer
 
 from mirageml.constants import (
     ANALYTICS_WRITE_KEY,
+    GMAIL_SYNC_ENDPOINT,
     NOTION_SYNC_ENDPOINT,
     PORT,
     SERVICE_ID,
@@ -41,8 +42,8 @@ class LoginManager:
     def select_handler(self):
         if self._handler == "mirage_auth_handler":
             return Handler
-        elif self._handler == "google_auth_handler":
-            return GoogleHandler
+        elif self._handler == "gmail_auth_handler":
+            return GMailHandler
         elif self._handler == "notion_auth_handler":
             return NotionHandler
 
@@ -106,19 +107,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # Serve an HTML page with JavaScript to send the fragment to the server
         self.wfile.write(
             b"""
-    <html>
-        <body>
-            <script>
-                // Send the fragment to the server
-                fetch('/capture_fragment?' + location.hash.substr(1))
-                .then(() => {
-                    document.body.innerHTML = 'All set, feel free to close this tab';
-                    window.close();
-                });
-            </script>
-        </body>
-    </html>
-    """
+                <html>
+                    <body>
+                        <script>
+                            // Send the fragment to the server
+                            fetch('/capture_fragment?' + location.hash.substr(1))
+                            .then(() => {
+                                document.body.innerHTML = 'All set, feel free to close this tab';
+                                window.close();
+                            });
+                        </script>
+                    </body>
+                </html>
+            """
         )
 
     def capture_fragment_handler(self):
@@ -139,7 +140,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.capture_fragment_handler()
 
 
-class GoogleHandler(Handler):
+class GMailHandler(Handler):
     def capture_fragment_handler(self):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
@@ -152,8 +153,9 @@ class GoogleHandler(Handler):
 
         provider_token = info["provider_token"]
         provider_refresh_token = urllib.parse.unquote(info["provider_refresh_token"])
-
         if provider_token and provider_refresh_token:
+            keyring.set_password(SERVICE_ID, "gmail_provider_token", provider_token)
+            keyring.set_password(SERVICE_ID, "gmail_provider_refresh_token", provider_refresh_token)
             params = {
                 "user_id": user_id,
                 "provider_token": provider_token,
@@ -166,11 +168,28 @@ class GoogleHandler(Handler):
                 "Prefer": "resolution=merge-duplicates",
             }
             requests.post(
-                f"{SUPABASE_URL}/rest/v1/user_google_tokens",
+                f"{SUPABASE_URL}/rest/v1/user_gmail_tokens",
                 json=params,
                 headers=headers,
             )
-
+            headers = {
+                "Authorization": f"Bearer {access_token}",
+            }
+            sync_response = requests.post(GMAIL_SYNC_ENDPOINT, json={}, headers=headers)
+            sync_response_data = sync_response.json()
+            if "error" in sync_response_data:
+                typer.secho(
+                    f"Error syncing gmail: {sync_response_data['error']}",
+                    fg=typer.colors.BRIGHT_RED,
+                    bold=True,
+                )
+            else:
+                typer.secho(
+                    "Syncing gmail triggered successfully. You will receive an email when the sync is complete.",
+                    fg=typer.colors.BRIGHT_GREEN,
+                    bold=True,
+                )
+            typer.secho("Syncing gmail triggered successfully.", fg=typer.colors.BRIGHT_GREEN, bold=True)
         sys.exit(0)
 
 

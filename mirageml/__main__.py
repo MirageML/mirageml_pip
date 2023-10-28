@@ -127,6 +127,11 @@ def chat_command(
     sp: str = typer.Option(None, "--system-prompt", "-sp", help="Name of the system prompt to use"),
 ):
     """Chat with MirageML"""
+    if "gmail" in sources:
+        from .commands import gmail_chat
+        gmail_chat()
+        return
+
     for url in urls:
         if not url.startswith("http"):
             typer.echo("Every url must start with http://")

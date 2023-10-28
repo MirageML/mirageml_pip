@@ -6,6 +6,7 @@ from .add_model import add_model
 from .add_plugin import add_plugin
 from .add_source import add_source
 from .add_system_prompt import add_system_prompt
+from .gmail_chat import gmail_chat
 from .chat import chat
 from .config import set_config, show_config
 from .delete_source import delete_source
@@ -24,6 +25,7 @@ __all__ = [
     "profile",
     "set_config",
     "show_config",
+    "gmail_chat",
     "chat",
     "list_system_prompts",
     "list_plugins",

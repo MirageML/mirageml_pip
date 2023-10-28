@@ -12,7 +12,9 @@ SUPABASE_KEY = (
     "3plY2thIiwicm9sZSI6ImFub24iLCJpYXQiOjE2OTcwNTI5MDYsImV4cCI6MjAxMjYyODkwNn0."
     "KZoU1QMfvh72QfKJK_HD3EQ_246g-QbggSzPbT83Su8"
 )
-NOTION_SYNC_ENDPOINT = " https://mirageml--notion-sync-trigger-notion-sync.modal.run"
+NOTION_SYNC_ENDPOINT = "https://mirageml--notion-sync-trigger-notion-sync.modal.run"
+GMAIL_SYNC_ENDPOINT = "https://mirageml--gmail-trigger-gmail-sync-stripuramallu3-dev.modal.run"
+GMAIL_DATA_ENDPOINT = "https://mirageml--gmail-gmail-data-stripuramallu3-dev.modal.run"
 ANALYTICS_WRITE_KEY = "WeKYF6EZAYtVxUwlx8g3sG1JKDMMv6jY"
 
 WEB_SCRAPE_LINKS_ENDPOINT = "https://mirageml--web-scraper-recursive-links.modal.run"
