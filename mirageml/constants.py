@@ -13,8 +13,9 @@ SUPABASE_KEY = (
     "KZoU1QMfvh72QfKJK_HD3EQ_246g-QbggSzPbT83Su8"
 )
 NOTION_SYNC_ENDPOINT = "https://mirageml--notion-sync-trigger-notion-sync.modal.run"
-GMAIL_SYNC_ENDPOINT = "https://mirageml--gmail-trigger-gmail-sync-stripuramallu3-dev.modal.run"
-GMAIL_DATA_ENDPOINT = "https://mirageml--gmail-gmail-data-stripuramallu3-dev.modal.run"
+GMAIL_SYNC_ENDPOINT = "https://mirageml--gmail-sync.modal.run"
+GMAIL_DATA_ENDPOINT = "https://mirageml--gmail-gmail-data.modal.run"
+GMAIL_THREAD_FORMAT_ENDPOINT = "https://mirageml--gmail-get-formatted-email.modal.run"
 ANALYTICS_WRITE_KEY = "WeKYF6EZAYtVxUwlx8g3sG1JKDMMv6jY"
 
 WEB_SCRAPE_LINKS_ENDPOINT = "https://mirageml--web-scraper-recursive-links.modal.run"
