@@ -80,6 +80,7 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = [], s
     chat_history = [{"role": "system", "content": "You are a helpful assistant."}]
     while True:
         ai_response = ""
+        code_blocks = []
         if sources or transient_sources:
             chat_history, ai_response = rag_chat(sources, transient_sources)
 
@@ -107,19 +108,7 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = [], s
                         )
                     )
                     code_blocks = extract_code_from_markdown(ai_response)
-                    if code_blocks:
-                        selected_indices = multiline_input(
-                            "Enter the numbers of the code blocks you want to copy, separated by commas (e.g. '1,3,4') or ask a follow-up. Type reset to search again"
-                        )
-                        try:
-                            selected_indices = list(map(int, selected_indices.split(",")))
-                            copy_code_to_clipboard(code_blocks, selected_indices)
-                            ai_response = ""
-                            continue
-                        except ValueError:
-                            user_input = selected_indices
-                    else:
-                        user_input = multiline_input("Ask a follow-up. Type reset to search again. Ctrl+C to interrupt")
+                    user_input = multiline_input("Ask a follow-up. Type reset to search again. Ctrl+C to interrupt")
                 else:
                     if len(chat_history) == 1:
                         base_message = "Chat with Mirage"
@@ -132,6 +121,29 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = [], s
                 if user_input.lower().strip() == "exit":
                     typer.secho("Ending chat. Goodbye!", fg=typer.colors.BRIGHT_GREEN, bold=True)
                     return
+                elif user_input.lower().strip() == "/help" or user_input.lower().strip() == "help":
+                    typer.secho("Use this chat to talk to mirage", fg=typer.colors.BRIGHT_GREEN, bold=True)
+                    typer.echo("'exit' to end the chat.")
+                    typer.echo("'reset' to start over.")
+                    typer.echo("'/help' to see this message again.")
+                    typer.echo("'/copy {index}' to copy a code block to your clipboard. (Note: code block indicies start at 1)")
+                    typer.echo("'/sp set {system_prompt_name}' to set the system prompt.")
+                    continue
+                elif user_input.lower().strip().startswith("/copy"):
+                    user_input_split = user_input.split(" ")
+                    if len(code_blocks) == 0:
+                        typer.secho("No code blocks to copy", fg=typer.colors.RED, bold=True)
+                    elif len(user_input_split) == 1:
+                        typer.secho("Please enter a code block index", fg=typer.colors.RED, bold=True)
+                    elif len(user_input_split) == 2:
+                        try:
+                            selected_indicies = list(map(int, user_input_split[1].split(",")))
+                            copy_code_to_clipboard(code_blocks, selected_indicies)
+                            typer.secho("Copied code to clipboard", fg=typer.colors.BRIGHT_GREEN, bold=True)
+                            ai_response = ""
+                        except:
+                            typer.secho("Could not copy. Please enter a valid code block index", fg=typer.colors.RED, bold=True)
+                    continue
                 elif user_input.lower().strip().startswith("/sp"):
                     user_input_split = user_input.split(" ")
                     if len(user_input_split) == 1:
