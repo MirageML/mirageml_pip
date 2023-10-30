@@ -13,7 +13,6 @@ import typer
 
 from mirageml.constants import (
     ANALYTICS_WRITE_KEY,
-    GMAIL_SYNC_ENDPOINT,
     NOTION_SYNC_ENDPOINT,
     PORT,
     SERVICE_ID,
@@ -172,24 +171,6 @@ class GMailHandler(Handler):
                 json=params,
                 headers=headers,
             )
-            headers = {
-                "Authorization": f"Bearer {access_token}",
-            }
-            sync_response = requests.post(GMAIL_SYNC_ENDPOINT, json={}, headers=headers)
-            sync_response_data = sync_response.json()
-            if "error" in sync_response_data:
-                typer.secho(
-                    f"Error syncing gmail: {sync_response_data['error']}",
-                    fg=typer.colors.BRIGHT_RED,
-                    bold=True,
-                )
-            else:
-                typer.secho(
-                    "Syncing gmail triggered successfully. You will receive an email when the sync is complete.",
-                    fg=typer.colors.BRIGHT_GREEN,
-                    bold=True,
-                )
-            typer.secho("Syncing gmail triggered successfully.", fg=typer.colors.BRIGHT_GREEN, bold=True)
         sys.exit(0)
 
 

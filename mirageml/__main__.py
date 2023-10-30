@@ -225,6 +225,7 @@ def add_plugin_command(name: str):
 # Add System Prompt
 @add_app.command(name="sp", hidden=True)
 def add_system_prompt_command(name: str = typer.Argument(default="", help="Name of the system prompt")):
+    """Add a new system prompt"""
     from .commands import add_system_prompt
 
     add_system_prompt({"name": name})
@@ -267,7 +268,7 @@ def add_model_command(
         help="Links to finetune on separated by spaces\n\n\nEx: mirage add model https://modal.com https://apple.com",
     )
 ):
-    """Add a new source"""
+    """Add a new model"""
     from .commands import add_model
 
     for link in links:
