@@ -19,10 +19,10 @@ from .utils.codeblocks import (
 )
 from .utils.custom_inputs import multiline_input
 from .utils.llm import llm_call
+from .utils.type_check import is_convertable_to_int
 
 console = Console()
 config = load_config()
-
 
 def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = [], sp: str = ""):
     # Beginning of the chat sequence
@@ -130,6 +130,11 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = [], s
                         "'/copy {index}' to copy a code block to your clipboard. (Note: code block indicies start at 1)"
                     )
                     typer.echo("'/sp set {system_prompt_name}' to set the system prompt.")
+                    continue
+                elif is_convertable_to_int(user_input.lower().strip()) and len(code_blocks) >= int(user_input.lower().strip()):
+                    copy_code_to_clipboard(code_blocks, [int(user_input.lower().strip()) - 1])
+                    typer.secho("Copied code to clipboard", fg=typer.colors.BRIGHT_GREEN, bold=True)
+                    ai_response = ""
                     continue
                 elif user_input.lower().strip().startswith("/copy"):
                     user_input_split = user_input.split(" ")
