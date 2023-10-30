@@ -126,7 +126,9 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = [], s
                     typer.echo("'exit' to end the chat.")
                     typer.echo("'reset' to start over.")
                     typer.echo("'/help' to see this message again.")
-                    typer.echo("'/copy {index}' to copy a code block to your clipboard. (Note: code block indicies start at 1)")
+                    typer.echo(
+                        "'/copy {index}' to copy a code block to your clipboard. (Note: code block indicies start at 1)"
+                    )
                     typer.echo("'/sp set {system_prompt_name}' to set the system prompt.")
                     continue
                 elif user_input.lower().strip().startswith("/copy"):
@@ -141,8 +143,10 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = [], s
                             copy_code_to_clipboard(code_blocks, selected_indicies)
                             typer.secho("Copied code to clipboard", fg=typer.colors.BRIGHT_GREEN, bold=True)
                             ai_response = ""
-                        except:
-                            typer.secho("Could not copy. Please enter a valid code block index", fg=typer.colors.RED, bold=True)
+                        except Exception:
+                            typer.secho(
+                                "Could not copy. Please enter a valid code block index", fg=typer.colors.RED, bold=True
+                            )
                     continue
                 elif user_input.lower().strip().startswith("/sp"):
                     user_input_split = user_input.split(" ")
