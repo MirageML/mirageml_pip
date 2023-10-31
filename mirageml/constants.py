@@ -30,7 +30,7 @@ VECTORDB_CREATE_ENDPOINT = "https://mirageml--vectordb-create-db.modal.run"
 VECTORDB_UPSERT_ENDPOINT = "https://mirageml--vectordb-upsert-db.modal.run"
 VECTORDB_DELETE_ENDPOINT = "https://mirageml--vectordb-delete-db.modal.run"
 
-FINETUNE_CREATE_ENDPOINT = "https://mirageml--finetune-create-model-from-links.modal.run"
+FINETUNE_CREATE_ENDPOINT = "https://mirageml--finetune-create-model.modal.run"
 
 supabase = create_client(SUPABASE_URL, SUPABASE_KEY)
 
