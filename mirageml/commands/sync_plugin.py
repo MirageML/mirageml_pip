@@ -2,7 +2,7 @@ import keyring
 import requests
 import typer
 
-from mirageml.constants import NOTION_SYNC_ENDPOINT, SERVICE_ID
+from ..constants import NOTION_SYNC_ENDPOINT, SERVICE_ID
 
 
 def sync_plugin(args):
@@ -16,24 +16,23 @@ def sync_plugin(args):
                 bold=True,
             )
             return
+        access_token = keyring.get_password(SERVICE_ID, "access_token")
+        headers = {
+            "Authorization": f"Bearer {access_token}",
+        }
+        sync_response = requests.post(NOTION_SYNC_ENDPOINT, json={}, headers=headers)
+        sync_response_data = sync_response.json()
+        if "error" in sync_response_data:
+            typer.secho(sync_response_data["error"], fg=typer.colors.BRIGHT_RED, bold=True)
         else:
-            access_token = keyring.get_password(SERVICE_ID, "access_token")
-            headers = {
-                "Authorization": f"Bearer {access_token}",
-            }
-            sync_response = requests.post(NOTION_SYNC_ENDPOINT, json={}, headers=headers)
-            sync_response_data = sync_response.json()
-            if "error" in sync_response_data:
-                typer.secho(sync_response_data["error"], fg=typer.colors.BRIGHT_RED, bold=True)
-            else:
-                typer.secho(
-                    "Syncing notion triggered successfully. You will receive an email when the sync is complete.",
-                    fg=typer.colors.BRIGHT_GREEN,
-                    bold=True,
-                )
+            typer.secho(
+                "Syncing notion triggered successfully. You will receive an email when the sync is complete.",
+                fg=typer.colors.BRIGHT_GREEN,
+                bold=True,
+            )
     else:
         typer.secho(
-            "Only notion plugin is supported for now.",
+            "Only notion plugins is supported for now.",
             fg=typer.colors.BRIGHT_RED,
             bold=True,
         )

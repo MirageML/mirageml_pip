@@ -41,8 +41,8 @@ class LoginManager:
     def select_handler(self):
         if self._handler == "mirage_auth_handler":
             return Handler
-        elif self._handler == "google_auth_handler":
-            return GoogleHandler
+        elif self._handler == "gmail_auth_handler":
+            return GMailHandler
         elif self._handler == "notion_auth_handler":
             return NotionHandler
 
@@ -106,19 +106,19 @@ class Handler(http.server.SimpleHTTPRequestHandler):
         # Serve an HTML page with JavaScript to send the fragment to the server
         self.wfile.write(
             b"""
-    <html>
-        <body>
-            <script>
-                // Send the fragment to the server
-                fetch('/capture_fragment?' + location.hash.substr(1))
-                .then(() => {
-                    document.body.innerHTML = 'All set, feel free to close this tab';
-                    window.close();
-                });
-            </script>
-        </body>
-    </html>
-    """
+                <html>
+                    <body>
+                        <script>
+                            // Send the fragment to the server
+                            fetch('/capture_fragment?' + location.hash.substr(1))
+                            .then(() => {
+                                document.body.innerHTML = 'All set, feel free to close this tab';
+                                window.close();
+                            });
+                        </script>
+                    </body>
+                </html>
+            """
         )
 
     def capture_fragment_handler(self):
@@ -139,7 +139,7 @@ class Handler(http.server.SimpleHTTPRequestHandler):
             self.capture_fragment_handler()
 
 
-class GoogleHandler(Handler):
+class GMailHandler(Handler):
     def capture_fragment_handler(self):
         self.send_response(200)
         self.send_header("Content-type", "text/html")
@@ -152,8 +152,9 @@ class GoogleHandler(Handler):
 
         provider_token = info["provider_token"]
         provider_refresh_token = urllib.parse.unquote(info["provider_refresh_token"])
-
         if provider_token and provider_refresh_token:
+            keyring.set_password(SERVICE_ID, "gmail_provider_token", provider_token)
+            keyring.set_password(SERVICE_ID, "gmail_provider_refresh_token", provider_refresh_token)
             params = {
                 "user_id": user_id,
                 "provider_token": provider_token,
@@ -166,11 +167,10 @@ class GoogleHandler(Handler):
                 "Prefer": "resolution=merge-duplicates",
             }
             requests.post(
-                f"{SUPABASE_URL}/rest/v1/user_google_tokens",
+                f"{SUPABASE_URL}/rest/v1/user_gmail_tokens",
                 json=params,
                 headers=headers,
             )
-
         sys.exit(0)
 
 
