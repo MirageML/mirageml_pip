@@ -2,7 +2,8 @@ import keyring
 import requests
 import typer
 
-from ..constants import SERVICE_ID, NOTION_SYNC_ENDPOINT
+from ..constants import NOTION_SYNC_ENDPOINT, SERVICE_ID
+
 
 def sync_plugin(args):
     plugin_name = args["plugin"]

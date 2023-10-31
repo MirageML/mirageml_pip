@@ -24,6 +24,7 @@ from .utils.type_check import is_convertable_to_int
 console = Console()
 config = load_config()
 
+
 def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = [], sp: str = ""):
     # Beginning of the chat sequence
     transient_sources = []
@@ -108,13 +109,22 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = [], s
                         )
                     )
                     code_blocks = extract_code_from_markdown(ai_response)
-                    user_input = multiline_input("Ask a follow-up. Type reset to search again. Ctrl+C to interrupt")
+                    if len(code_blocks) > 0:
+                        user_input = multiline_input(
+                            "Enter the number(s) of the code blocks you want to copy, separated by commas (e.g. '1,3,4') or ask a follow-up. Type reset to search again. Ctrl+C to interrupt"
+                        )
+                    else:
+                        user_input = multiline_input("Ask a follow-up. Type reset to search again. Ctrl+C to interrupt")
                 else:
                     if len(chat_history) == 1:
                         base_message = "Chat with Mirage"
                         if set_sp:
                             base_message += f" using system prompt: {sp}."
                         user_input = multiline_input(base_message)
+                    elif len(code_blocks) > 0:
+                        user_input = multiline_input(
+                            "Enter the number(s) of the code blocks you want to copy, separated by commas (e.g. '1,3,4') or ask a follow-up. Type reset to search again. Ctrl+C to interrupt"
+                        )
                     else:
                         user_input = multiline_input("Ask a follow-up. Type reset to search again. Ctrl+C to interrupt")
 
@@ -131,9 +141,10 @@ def chat(files: list[str] = [], urls: list[str] = [], sources: list[str] = [], s
                     )
                     typer.echo("'/sp set {system_prompt_name}' to set the system prompt.")
                     continue
-                elif is_convertable_to_int(user_input.lower().strip()) and len(code_blocks) >= int(user_input.lower().strip()):
-                    copy_code_to_clipboard(code_blocks, [int(user_input.lower().strip()) - 1])
-                    typer.secho("Copied code to clipboard", fg=typer.colors.BRIGHT_GREEN, bold=True)
+                elif is_convertable_to_int(user_input.lower().strip()) and len(code_blocks) >= int(
+                    user_input.lower().strip()
+                ):
+                    copy_code_to_clipboard(code_blocks, [int(user_input.lower().strip())])
                     ai_response = ""
                     continue
                 elif user_input.lower().strip().startswith("/copy"):

@@ -1,5 +1,3 @@
-
-
 def is_convertable_to_int(value):
     try:
         int(value)

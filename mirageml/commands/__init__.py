@@ -6,11 +6,11 @@ from .add_model import add_model
 from .add_plugin import add_plugin
 from .add_source import add_source
 from .add_system_prompt import add_system_prompt
-from .gmail_chat import gmail_chat
 from .chat import chat
 from .config import set_config, show_config
 from .delete_source import delete_source
 from .delete_system_prompt import delete_system_prompt
+from .gmail_chat import gmail_chat
 from .list_models import list_models
 from .list_plugins import list_plugins
 from .list_sources import list_sources

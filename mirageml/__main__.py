@@ -129,6 +129,7 @@ def chat_command(
     """Chat with MirageML"""
     if "gmail" in sources:
         from .commands import gmail_chat
+
         gmail_chat()
         return
 
