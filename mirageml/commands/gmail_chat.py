@@ -1,6 +1,7 @@
 import queue
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from datetime import datetime
 
 import keyring
 import pyperclip
@@ -22,8 +23,8 @@ def worker(q):
         item = q.get()
         if item is None:
             break
-        thread_id, g = item
-        generate_response(thread_id, g)
+        thread_id, prompt, g = item
+        generate_response(thread_id, prompt, g)
 
 
 def llm_call(headers, user_id, model, messages, temperature):
@@ -41,25 +42,30 @@ def llm_call(headers, user_id, model, messages, temperature):
     return generated_message
 
 
-def generate_response(thread_id, g):
+def generate_response(thread_id, prompt, g):
     formatted_email_response = requests.post(
         GMAIL_THREAD_FORMAT_ENDPOINT, headers=g.headers, json={"thread_id": thread_id}
     )
     formatted_email = formatted_email_response.json()
+    date = datetime.now().strftime("%a, %b %d")
+    temperatures = [0, 0.8]
     g_messages = []
     messages = [
         {
             "role": "system",
-            "content": "You are an email assistant designed to help users compose emails in their own unique voice.",
+            "content": "You are an email assistant designed to help users compose emails in their own unique voice."
+            + f"\n\nToday is {date}\n\n{prompt}",
         },
         {"role": "user", "content": f"{formatted_email}"},
     ]
     with ThreadPoolExecutor() as executor:
-        futures = [executor.submit(llm_call, g.headers, g.user_id, g.model, messages, 0.8 - 0.1 * i) for i in range(3)]
+        futures = [
+            executor.submit(llm_call, g.headers, g.user_id, g.model, messages, temperatures[i]) for i in range(2)
+        ]
         for future in futures:
             g_messages.append(future.result())
 
-    g.third_box_text_area.text = "Generated Response. Use `1`, `2`, `3` to copy the response to your clipboard."
+    g.third_box_text_area.text = "Generated Response. Use `1` or `2` to copy the response to your clipboard."
     g.third_box_text_area.text += "\n----------------------------------------\n"
     g.third_box_text_area.text += "\n----------------------------------------\n".join(g_messages)
     g.generated_responses = g_messages
@@ -98,12 +104,6 @@ class GmailChat:
         def _(event):
             event.app.exit()
 
-        @self.kb.add("g")
-        def _(event):
-            self.third_box_text_area.text = "Generating response..."
-            current_thread_id = self.radios.current_value
-            self.queue.put((current_thread_id, self))
-
         @self.kb.add("1")
         def _(event):
             if len(self.generated_responses) > 0:
@@ -114,15 +114,13 @@ class GmailChat:
             if len(self.generated_responses) > 1:
                 pyperclip.copy(self.generated_responses[1])
 
-        @self.kb.add("3")
+        @self.kb.add("c-r")
+        @self.kb.add("c-g")
         def _(event):
-            if len(self.generated_responses) > 2:
-                pyperclip.copy(self.generated_responses[2])
-
-        @self.kb.add("4")
-        def _(event):
-            if len(self.generated_responses) > 3:
-                pyperclip.copy(self.generated_responses[3])
+            current_prompt = self.third_box_text_area.text.replace("Enter a prompt and use `ctrl+g` to generate:\n", "")
+            self.third_box_text_area.text = "Generating response..."
+            current_thread_id = self.radios.current_value
+            self.queue.put((current_thread_id, current_prompt, self))
 
         self.create_radio(threads)
         self.create_first_box()
@@ -163,7 +161,7 @@ class GmailChat:
             new_value = self.radios.values[self.radios._selected_index][0]
             self.radios.current_value = new_value
             self.second_box_text_area.text = self.fetch_thread_messages(threads, new_value)
-            self.third_box_text_area.text = "Use `g` to generate a response"
+            self.third_box_text_area.text = "Enter a prompt and use `ctrl+g` to generate:\n"
             self.generated_responses = []
             self.third_box.body = self.third_box_text_area
 
@@ -187,7 +185,7 @@ class GmailChat:
         )
 
     def create_third_box(self):
-        self.third_box_text_area = TextArea("Use `g` to generate a response", read_only=True)
+        self.third_box_text_area = TextArea("Enter a prompt and use `ctrl+g` to generate:\n")
         self.third_box = Box(
             body=self.third_box_text_area,
             padding_top=0,
