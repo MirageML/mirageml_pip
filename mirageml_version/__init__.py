@@ -4,7 +4,7 @@
 from ._version_generated import build_number
 
 # As long as we're on 0.*, all versions are published automatically
-major_number = 0
+major_number = 1
 
 # Bump this manually on any major changes
 minor_number = 1

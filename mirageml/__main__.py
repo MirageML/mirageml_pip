@@ -127,12 +127,6 @@ def chat_command(
     sp: str = typer.Option(None, "--system-prompt", "-sp", help="Name of the system prompt to use"),
 ):
     """Chat with MirageML"""
-    if "gmail" in sources:
-        from .commands import gmail_chat
-
-        gmail_chat()
-        return
-
     for url in urls:
         if not url.startswith("http"):
             typer.echo("Every url must start with http://")
@@ -190,14 +184,6 @@ def list_system_prompts():
     list_system_prompts()
 
 
-@list_app.command(name="plugins", hidden=True)
-def list_plugins_command():
-    """List connected plugins"""
-    from .commands import list_plugins
-
-    list_plugins()
-
-
 @list_app.command(name="sources")
 def list_sources_command():
     """List created sources"""
@@ -212,15 +198,6 @@ def list_models_command():
     from .commands import list_models
 
     list_models()
-
-
-# Add Commands
-@add_app.command(name="plugin", hidden=True)
-def add_plugin_command(name: str):
-    """Add a plugin by name"""
-    from .commands import add_plugin
-
-    add_plugin({"plugin": name})
 
 
 # Add System Prompt
@@ -314,15 +291,6 @@ def delete_source_command(names: List[str] = typer.Argument(help=generate_delete
     from .commands import delete_source
 
     delete_source(names)
-
-
-# Sync Commands
-@sync_app.command(name="plugin", hidden=True)
-def sync_plugin_command(name: str):
-    """Sync a plugin"""
-    from .commands import sync_plugin
-
-    sync_plugin({"plugin": name})
 
 
 if __name__ == "__main__":
