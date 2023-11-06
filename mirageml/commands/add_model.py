@@ -27,8 +27,8 @@ def add_model(model_name, links):
         return
 
     user_id = keyring.get_password(SERVICE_ID, "user_id")
-
     json_data = {"user_id": user_id, "finetune_model_name": model_name, "links": links}
+
     requests.post(FINETUNE_CREATE_ENDPOINT, json=json_data, headers=get_headers())
     typer.secho(
         f"Creating Finetuned Model: {model_name}. You will receive an email once its ready!",
