@@ -5,12 +5,12 @@ from io import StringIO
 import keyring
 import requests
 
-from ..config import load_config
 from ...constants import (
     LLM_GPT_ENDPOINT,
     SERVICE_ID,
     get_headers,
 )
+from ..config import load_config
 
 PACKAGE_DIR = os.path.dirname(__file__)
 os.environ["TRANSFORMERS_CACHE"] = os.path.join(PACKAGE_DIR, "models")

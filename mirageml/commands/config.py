@@ -54,13 +54,13 @@ def set_config():
             continue
         curvalue = value
         while True:
-            options = f"[{', '.join(valid[key][0])}]" if valid[key][0] else ''
+            options = f"[{', '.join(valid[key][0])}]" if valid[key][0] else ""
             question = f"Enter the value for '{key}' {options} (current value: {curvalue}): "
             value = input(question)
             if value == "":
                 break
             if value not in [x.split()[0] for x in valid[key][0]]:
-                options = f"{[x.split()[0] for x in valid[key][0]]}" if valid[key][0] else ''
+                options = f"{[x.split()[0] for x in valid[key][0]]}" if valid[key][0] else ""
                 typer.secho(
                     f"Invalid value for '{key}'. Please use one of these options {options}",
                     fg=typer.colors.BRIGHT_RED,
