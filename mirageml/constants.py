@@ -22,7 +22,7 @@ WEB_SCRAPE_LINKS_ENDPOINT = "https://mirageml--web-scraper-recursive-links.modal
 WEB_SCRAPE_EXTRACT_ENDPOINT = "https://mirageml--web-scraper-extract-from-url.modal.run"
 
 VECTORDB_EMBED_ENDPOINT = "https://mirageml--vectordb-embed-text.modal.run"
-LLM_GPT_ENDPOINT = "https://mirageml--llm-gpt.modal.run"
+LLM_GPT_ENDPOINT = "https://mirageml--llm-cli-gpt.modal.run"
 
 VECTORDB_SEARCH_ENDPOINT = "https://mirageml--vectordb-search-db.modal.run"
 VECTORDB_LIST_ENDPOINT = "https://mirageml--vectordb-list-db.modal.run"
