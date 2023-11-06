@@ -5,6 +5,7 @@ from io import StringIO
 import keyring
 import requests
 
+from ..config import load_config
 from ...constants import (
     LLM_GPT_ENDPOINT,
     SERVICE_ID,
@@ -101,6 +102,10 @@ def get_embedding(text_list, model="BAAI/bge-small-en-v1.5"):
 def llm_call(messages, model="gpt-3.5-turbo", stream=False, local=False, live=None):
     if local:
         return local_llm_call(messages, stream=stream, live=live)
+    config = load_config()
+    openai_key = config["openai_key"] if len(config["openai_key"]) > 0 else None
     user_id = keyring.get_password(SERVICE_ID, "user_id")
     json_data = {"user_id": user_id, "model": model, "messages": messages, "stream": stream}
+    if openai_key:
+        json_data["openai_key"] = openai_key
     return requests.post(LLM_GPT_ENDPOINT, json=json_data, headers=get_headers(), stream=stream)

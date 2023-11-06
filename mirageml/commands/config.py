@@ -25,6 +25,7 @@ def load_config():
         "remote": curr_config.get("remote", []),
         "system_prompts": curr_config.get("system_prompts", []),
         "custom_models": curr_config.get("custom_models", []),
+        "openai_key": curr_config.get("openai_key", ""),
     }
     save_config(curr_config)
     return curr_config
@@ -45,6 +46,7 @@ def set_config():
         "model": (choices, str),
         "local_mode": (("True (not recommended without GPU)", "False"), json.loads),
         "keep_files_local": (("True", "False"), json.loads),
+        "openai_key": ([], str),
     }
 
     for key, value in config.items():
@@ -52,13 +54,15 @@ def set_config():
             continue
         curvalue = value
         while True:
-            question = f"Enter the value for '{key}' [{', '.join(valid[key][0])}] (current value: {curvalue}): "
+            options = f"[{', '.join(valid[key][0])}]" if valid[key][0] else ''
+            question = f"Enter the value for '{key}' {options} (current value: {curvalue}): "
             value = input(question)
             if value == "":
                 break
             if value not in [x.split()[0] for x in valid[key][0]]:
+                options = f"{[x.split()[0] for x in valid[key][0]]}" if valid[key][0] else ''
                 typer.secho(
-                    f"Invalid value for '{key}'. Please use one of these options {[x.split()[0] for x in valid[key][0]]}",
+                    f"Invalid value for '{key}'. Please use one of these options {options}",
                     fg=typer.colors.BRIGHT_RED,
                 )
                 continue
