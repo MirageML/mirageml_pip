@@ -3,8 +3,6 @@ import requests
 import typer
 
 from ..constants import FINETUNE_CREATE_ENDPOINT, SERVICE_ID, get_headers
-from .config import load_config
-
 
 def fix_name(name):
     if name.startswith("http"):
