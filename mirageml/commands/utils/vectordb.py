@@ -14,8 +14,7 @@ from rich.progress import Progress
 
 from ...constants import (
     SERVICE_ID,
-    SUPABASE_KEY,
-    SUPABASE_URL,
+    VECTORDB_CREATE_WEB_COLLECTION,
     VECTORDB_DELETE_ENDPOINT,
     VECTORDB_LIST_ENDPOINT,
     VECTORDB_SEARCH_ENDPOINT,
@@ -45,29 +44,27 @@ def exists_qdrant_db(collection_name="test"):
 
 def create_remote_qdrant_db(collection_name, link=None, path=None):
     user_id = keyring.get_password(SERVICE_ID, "user_id")
+    console = Console()
+    with Live(
+        Panel("Creating Embedding....", title="[bold green]Indexer[/bold green]", border_style="green"),
+        console=console,
+        transient=True,
+        auto_refresh=True,
+        vertical_overflow="visible",
+    ) as live:
+        json_data = {
+            "user_id": user_id,
+            "collection_name": collection_name,
+            "url": link,
+        }
+        response = requests.post(VECTORDB_CREATE_WEB_COLLECTION, json=json_data, headers=get_headers(), stream=True)
+        if response.status_code == 200:
+            for chunk in response.iter_lines():
+                link = chunk.decode("utf-8")
+                live.update(Panel(f"{link}", title="[bold green]Indexer[/bold green]", border_style="green"))
 
-    json = {
-        "user_id": user_id,
-        "collection_name": collection_name,
-        "link": link,
-    }
-    headers = {
-        "apikey": SUPABASE_KEY,
-        "Authorization": f"Bearer {keyring.get_password(SERVICE_ID, 'access_token')}",
-        "Content-Type": "application/json",
-        "Prefer": "return=minimal",
-    }
-    requests.post(
-        f"{SUPABASE_URL}/rest/v1/user_collection_requests",
-        json=json,
-        headers=headers,
-    )
-    typer.secho(
-        f"Creating Remote Source: {collection_name}. You will receive an email once its ready",
-        fg=typer.colors.GREEN,
-        bold=True,
-    )
-
+    typer.secho(f"Created Source: {collection_name}", fg=typer.colors.GREEN, bold=True)
+    set_sources()
     return True
 
 

@@ -25,6 +25,7 @@ VECTORDB_LIST_ENDPOINT = "https://mirageml--vectordb-list-db.modal.run"
 VECTORDB_CREATE_ENDPOINT = "https://mirageml--vectordb-create-db.modal.run"
 VECTORDB_UPSERT_ENDPOINT = "https://mirageml--vectordb-upsert-db.modal.run"
 VECTORDB_DELETE_ENDPOINT = "https://mirageml--vectordb-delete-db.modal.run"
+VECTORDB_CREATE_WEB_COLLECTION = "https://mirageml--vectordb-create-web-collection.modal.run/"
 
 FINETUNE_CREATE_ENDPOINT = "https://mirageml--finetune-create-model.modal.run"
 
