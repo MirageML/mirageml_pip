@@ -4,6 +4,7 @@ import typer
 
 from ..constants import FINETUNE_CREATE_ENDPOINT, SERVICE_ID, get_headers
 
+
 def fix_name(name):
     if name.startswith("http"):
         name = "-".join(name.split("/")[1:])
