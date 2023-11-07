@@ -6,10 +6,15 @@ import typer
 
 def tutorial():
     from . import add_source, chat
+    from .config import set_var_config
 
     invoked_alias = sys.argv[0].split("/")[-1]
 
     typer.secho("\nGreat, you are now logged in.\n", fg=typer.colors.BRIGHT_GREEN)
+
+    typer.secho("Now let's set your OpenAI Key!", fg=typer.colors.BRIGHT_BLUE)
+    openai_key = input("OpenAI Key: ")
+    set_var_config({"openai_key": openai_key})
 
     typer.secho(
         "Next, let's add a knowledge source for the web (ex: https://modal.com/docs)!", fg=typer.colors.BRIGHT_BLUE
