@@ -10,6 +10,9 @@ This requires Python 3.9 or later. Install the package with:
 pip install -U mirageml
 ```
 
+## Tutorial
+You can run `mirage tutorial` to get started with MirageML. This will walk you through the process of creating a source, adding files to it, and using it to chat with MirageML.
+
 ## Usage
 You can use 'mirageml', 'mirage', or 'mml' to call the package.
 ```
