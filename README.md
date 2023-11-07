@@ -19,22 +19,22 @@ You can use 'mirageml', 'mirage', or 'mml' to call the package.
 mirage [OPTIONS] COMMAND [ARGS]
 ```
 ```
-╭─ Options ─────────────────────────────────────────────────────────────────────────────────╮
-│ --help          Show this message and exit.                                               │
-╰───────────────────────────────────────────────────────────────────────────────────────────╯
-╭─ Commands ────────────────────────────────────────────────────────────────────────────────╮
-│ chat   Chat with MirageML                                                                 │
-│ login  Login to MirageML                                                                  │
-╰───────────────────────────────────────────────────────────────────────────────────────────╯
-╭─ Manage Source ───────────────────────────────────────────────────────────────────────────╮
-│ add     Add a new source                                                                  │
-│ delete  Delete sources                                                                    │
-│ list    List sources                                                                      │
-│ sync    Sync sources                                                                      │
-╰───────────────────────────────────────────────────────────────────────────────────────────╯
-╭─ Utils and Configs ───────────────────────────────────────────────────────────────────────╮
-│ config  Manage the config                                                                 │
-╰───────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────╮
+│ --help          Show this message and exit.                                  │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Commands ───────────────────────────────────────────────────────────────────╮
+│ chat      Chat with MirageML                                                 │
+│ login     Login to Mirage ML                                                 │
+│ tutorial  Walk through the basics of using mirageml                          │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Manage Resources ───────────────────────────────────────────────────────────╮
+│ add     Add a new resource                                                   │
+│ delete  Delete resources                                                     │
+│ list    List resources                                                       │
+╰──────────────────────────────────────────────────────────────────────────────╯
+╭─ Utils and Configs ──────────────────────────────────────────────────────────╮
+│ config  Manage the config                                                    │
+╰──────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ## Chat Commands
@@ -42,24 +42,29 @@ mirage [OPTIONS] COMMAND [ARGS]
 mirage chat [OPTIONS]
 ```
 ```
-╭─ Options ─────────────────────────────────────────────────────────────────────────────────╮
-│ --files    -f      TEXT  Path to files/directories to use as context.                     │
-│                                                                                           │
-│                          mirage chat -f {filepath}                                        │
-│                          [default: None]                                                  │
-│ --urls     -u      TEXT  URLs to use as context.                                          │
-│                                                                                           │
-│                          mirage chat -u {url}                                             │
-│                          [default: None]                                                  │
-│ --sources  -s      TEXT  Specify sources to use as context:                               │
-│                                                                                           │
-│                          Ex: mirage chat -s disney-robot                                  │
-│                                                                                           │
-│                          Sources:                                                         │
-│                                                                                           │
-│                           • disney-robot                                                  │
-│ --help                   Show this message and exit.                                      │
-╰───────────────────────────────────────────────────────────────────────────────────────────╯
+╭─ Options ────────────────────────────────────────────────────────────────────╮
+│ --files          -f       TEXT  Path to files/directories to use as context. │
+│                                                                              │
+│                                 mml chat -f {filepath} -f {directory}        │
+│                                 [default: None]                              │
+│ --urls           -u       TEXT  URLs to use as context.                      │
+│                                                                              │
+│                                 mml chat -u {url1} -u {url2}                 │
+│                                 [default: None]                              │
+│ --sources        -s       TEXT  Specify sources:                             │
+│                                                                              │
+│                                 Ex: mml chat -s modal -s electronjs          │
+│                                                                              │
+│                                 Sources:                                     │
+│                                                                              │
+│                                  • modal                                     │
+│                                  • electronjs                                │
+│                                  • notion                                    │
+│                                 [default: None]                              │
+│ --system-prompt  -sp      TEXT  Name of the system prompt to use             │
+│                                 [default: None]                              │
+│ --help                          Show this message and exit.                  │
+╰──────────────────────────────────────────────────────────────────────────────╯
 ```
 
 ## Contributing
