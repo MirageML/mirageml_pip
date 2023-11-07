@@ -59,6 +59,10 @@ def set_config():
             value = input(question)
             if value == "":
                 break
+            if key == "openai_key":
+                config[key] = value
+                save_config(config)
+                break
             if value not in [x.split()[0] for x in valid[key][0]]:
                 options = f"{[x.split()[0] for x in valid[key][0]]}" if valid[key][0] else ""
                 typer.secho(
